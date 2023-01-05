@@ -1,0 +1,44 @@
+version: '3.8'
+
+volumes:
+  postgres-data:
+  redis-data:
+
+services:
+  app:
+    build: 
+      context: .
+      dockerfile: Dockerfile
+    env_file:
+      - .env
+    volumes:
+      - ../..:/workspaces:cached
+    command: sleep infinity
+    network_mode: host
+
+  postgres:
+    image: postgres:15.1
+    restart: unless-stopped
+    volumes:
+      - postgres-data:/var/lib/postgresql/data
+    env_file:
+      - .env
+    network_mode: host
+      
+  redis:
+    image: bitnami/redis:7.0.5
+    restart: unless-stopped
+    env_file:
+      - .env
+    volumes:
+      - redis-data:/bitnami'
+    network_mode: host
+  
+  minio:
+    image: bitnami/minio:2022.12.12-debian-11-r7
+    restart: unless-stopped
+    env_file:
+      - .env
+    volumes:
+      - redis-data:/bitnami'
+    network_mode: host

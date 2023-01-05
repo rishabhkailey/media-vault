@@ -1,0 +1,20 @@
+on login error
+    * invalid credentials -> show at login page
+    * internal server error -> show at login page
+    * return uri missing -> show at login page
+on post authorize error (need to redirect every time)
+    * return uri domain not matching -> google does it in auth servie (it's like a config error with one time )
+    * return uri missing -> redirect to user accounts page?
+    * internal server error -> redirect to client
+    * client authentication failed -> redirect to client
+on get authorize error (need to redirect every time)
+    * return uri domain not matching -> google does it in auth servie (it's like a config error with one time )
+    * return uri missing -> redirect to auth service error page
+    # mostly handled by oauth library
+    * internal server error -> redirect to client
+    * client authentication failed -> redirect to client
+
+
+Tests
+after login if user doesn't give the consent. then on new login request user should be redirected to consent page
+on directly opening consent page user should be redirected to login or give user a optoin to go to login. should be done in the vue
