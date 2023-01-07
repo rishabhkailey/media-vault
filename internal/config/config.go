@@ -1,12 +1,9 @@
 package config
 
 import (
-	"crypto/rsa"
-	"encoding/base64"
 	"fmt"
 	"os"
 
-	"github.com/golang-jwt/jwt"
 	"github.com/spf13/viper"
 )
 
@@ -23,24 +20,6 @@ type ServerConfig struct {
 	Port    int
 	BaseURL string
 }
-
-// type JWTConfig struct {
-// 	privateKey string
-// 	publicKey  string
-// }
-
-type JWTSigningKey struct {
-	Kid             string
-	PrivateKey      *rsa.PrivateKey
-	PublicKey       *rsa.PublicKey
-	PrivateKeyBytes []byte
-	PublicKeyBytes  []byte
-}
-
-// todo multiple signing keys for rotation
-// type JWTSigningKeys struct {
-
-// }
 
 type Database struct {
 	Host     string
@@ -59,14 +38,22 @@ type WebUIConfig struct {
 	BaseURL   string
 }
 
+type MinioConfig struct {
+	Host     string
+	Port     int
+	User     string
+	Password string
+	SSL      bool
+}
+
 type Config struct {
 	Cache RedisCacheConfig
 	// JWT        *JWTConfig
-	Server        ServerConfig
-	Database      Database
-	JWTSigningKey *JWTSigningKey
-	Session       Session
-	WebUIConfig   WebUIConfig
+	Server      ServerConfig
+	Database    Database
+	Session     Session
+	WebUIConfig WebUIConfig
+	MinioConfig MinioConfig
 }
 
 // todo validation
@@ -74,19 +61,6 @@ func GetConfig() (*Config, error) {
 	err := configInit()
 	if err != nil {
 		return nil, err
-	}
-
-	signingKey, err := signingKeyFromBase64(viper.GetString("jwt.privateKey"), viper.GetString("jwt.publicKey"))
-	if err != nil {
-		return nil, err
-	}
-
-	webUIConfig := WebUIConfig{
-		Directory: viper.GetString("webUI.directory"),
-		BaseURL:   viper.GetString("webUI.baseURL"),
-	}
-	if len(webUIConfig.BaseURL) == 0 {
-		webUIConfig.BaseURL = viper.GetString("server.baseURL")
 	}
 
 	config := Config{
@@ -102,7 +76,6 @@ func GetConfig() (*Config, error) {
 			Port:    viper.GetInt("server.port"),
 			BaseURL: viper.GetString("server.baseURL"),
 		},
-		JWTSigningKey: signingKey,
 		Database: Database{
 			Host:     viper.GetString("database.postgres.host"),
 			Port:     viper.GetInt("database.postgres.port"),
@@ -113,7 +86,13 @@ func GetConfig() (*Config, error) {
 		Session: Session{
 			Secret: viper.GetString("session.secret"),
 		},
-		WebUIConfig: webUIConfig,
+		MinioConfig: MinioConfig{
+			Host:     viper.GetString("minio.host"),
+			Port:     viper.GetInt("minio.port"),
+			User:     viper.GetString("minio.user"),
+			Password: viper.GetString("minio.password"),
+			SSL:      viper.GetBool("minio.ssl"),
+		},
 	}
 	return &config, nil
 }
@@ -137,35 +116,6 @@ func configInit() error {
 		return fmt.Errorf("[GetConfig]: Config file found but unable to read: %w", err)
 	}
 	return nil
-}
-
-func signingKeyFromBase64(b64PrivateKey, b64PublicKey string) (*JWTSigningKey, error) {
-	// todo add support for private key with password
-
-	privateKeyBytes, err := base64.StdEncoding.DecodeString(viper.GetString("jwt.privateKey"))
-	if err != nil {
-		return nil, fmt.Errorf("error decoding base64 private key from config: %w", err)
-	}
-	publicKeyBytes, err := base64.StdEncoding.DecodeString(viper.GetString("jwt.publicKey"))
-	if err != nil {
-		return nil, fmt.Errorf("error decoding base64 public key from config: %w", err)
-	}
-
-	privateKey, err := jwt.ParseRSAPrivateKeyFromPEM(privateKeyBytes)
-	if err != nil {
-		return nil, fmt.Errorf("invalid private key: %w", err)
-	}
-	publicKey, err := jwt.ParseRSAPublicKeyFromPEM(publicKeyBytes)
-	if err != nil {
-		return nil, fmt.Errorf("invalid public key: %w", err)
-	}
-	return &JWTSigningKey{
-		Kid:             "0",
-		PublicKey:       publicKey,
-		PrivateKey:      privateKey,
-		PublicKeyBytes:  publicKeyBytes,
-		PrivateKeyBytes: privateKeyBytes,
-	}, nil
 }
 
 // validate function??

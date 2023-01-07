@@ -3,6 +3,7 @@ version: '3.8'
 volumes:
   postgres-data:
   redis-data:
+  minio-data:
 
 services:
   app:
@@ -40,5 +41,5 @@ services:
     env_file:
       - .env
     volumes:
-      - redis-data:/bitnami'
+      - minio-data:/data'
     network_mode: host

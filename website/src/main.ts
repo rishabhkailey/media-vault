@@ -13,6 +13,8 @@ import axios from "axios";
 import VueAxios from "vue-axios";
 import router from "./router";
 
+import VueVideoPlayer from "@videojs-player/vue";
+
 import "./assets/main.css";
 
 const app = createApp(App);
@@ -31,6 +33,7 @@ const vuetify = createVuetify({
 
 app.use(router);
 app.use(vuetify);
+app.use(VueVideoPlayer);
 app.use(VueAxios, axios);
 
 app.mount("#app");

@@ -12,6 +12,7 @@ database:
     user: "postgres"
     password: "postgres"
     dbname: "postgres"
+    ssl: false
 server:
   port: 8080
   host: localhost
@@ -29,7 +30,7 @@ webUI:
   # allowedOrigins: 
   #   - localhost:5173
 minio:
-  host:
-  port:
-  user:
-  password:
+  host: localhost
+  port: 9000
+  user: minio-root-user
+  password: minio-root-password
