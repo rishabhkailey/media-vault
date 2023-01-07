@@ -50,6 +50,7 @@ func (server *Server) TestGetVideo(c *gin.Context) {
 	})
 }
 
+// todo cache headers cache-control, x-cache ...
 // todo io.CopyBuffer
 
 // todo dumb cache
@@ -79,14 +80,32 @@ func (server *Server) TestGetVideoWithRange(c *gin.Context) {
 	}
 	// todo support for multiple ranges
 	if parsedRangeHeader == nil || len(parsedRangeHeader.ranges) != 1 {
-		// server.TestGetFullVideo(c)
-		server.TestGetRangeVideo(c, Range{
-			start: 0,
-			end:   -1,
-		})
+		server.TestGetVideoFirstRequest(c)
+		// server.TestGetRangeVideo(c, Range{
+		// 	start: 0,
+		// 	end:   -1,
+		// })
 		return
 	}
 	server.TestGetRangeVideo(c, parsedRangeHeader.ranges[0])
+}
+
+func (server *Server) TestGetVideoFirstRequest(c *gin.Context) {
+	object, err := server.Minio.GetObject(c.Request.Context(), "test", "test.mp4", minio.GetObjectOptions{})
+	if err != nil {
+		logrus.Error(err)
+	}
+	objInfo, err := object.Stat()
+	if err != nil {
+		logrus.Error(err)
+	}
+	// this is for giving client the hint that response is a video file
+	contentLength := objInfo.Size
+	c.Header("Content-Length", fmt.Sprintf("%d", contentLength))
+	c.Header("Content-Type", "video/mp4")
+	c.Header("Connection", "keep-alive")
+	c.Header("Accept-Ranges", "bytes")
+	c.Status(http.StatusPartialContent)
 }
 
 // todo browsers which don't support range requests
