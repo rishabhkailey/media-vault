@@ -78,23 +78,25 @@ func (server *Server) TestGetVideoWithRange(c *gin.Context) {
 			logrus.Error(err)
 		}
 	}
+	object, err := server.Minio.GetObject(c.Request.Context(), "test", "test.mp4", minio.GetObjectOptions{})
+	if err != nil {
+		logrus.Error(err)
+		c.AbortWithStatus(http.StatusInternalServerError)
+		return
+	}
 	// todo support for multiple ranges
 	if parsedRangeHeader == nil || len(parsedRangeHeader.ranges) != 1 {
-		server.TestGetVideoFirstRequest(c)
+		server.TestGetVideoFirstRequest(c, object)
 		// server.TestGetRangeVideo(c, Range{
 		// 	start: 0,
 		// 	end:   -1,
 		// })
 		return
 	}
-	server.TestGetRangeVideo(c, parsedRangeHeader.ranges[0])
+	server.TestGetRangeVideo(c, parsedRangeHeader.ranges[0], object)
 }
 
-func (server *Server) TestGetVideoFirstRequest(c *gin.Context) {
-	object, err := server.Minio.GetObject(c.Request.Context(), "test", "test.mp4", minio.GetObjectOptions{})
-	if err != nil {
-		logrus.Error(err)
-	}
+func (server *Server) TestGetVideoFirstRequest(c *gin.Context, object *minio.Object) {
 	objInfo, err := object.Stat()
 	if err != nil {
 		logrus.Error(err)
@@ -113,12 +115,8 @@ func (server *Server) TestGetVideoFirstRequest(c *gin.Context) {
 // https://vjs.zencdn.net/v/oceans.mp4 this return a 200 response with content length only?
 // if range end not provided
 const defaultRangeSize int64 = 1000000 // 1mb
-func (server *Server) TestGetRangeVideo(c *gin.Context, r Range) {
+func (server *Server) TestGetRangeVideo(c *gin.Context, r Range, object *minio.Object) {
 
-	object, err := server.Minio.GetObject(c.Request.Context(), "test", "test.mp4", minio.GetObjectOptions{})
-	if err != nil {
-		logrus.Error(err)
-	}
 	objInfo, err := object.Stat()
 	if err != nil {
 		logrus.Error(err)

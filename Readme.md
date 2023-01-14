@@ -14,3 +14,9 @@ atleast 1 of range-start or range-end should be present. both will also work. if
 
 ## Todo
 * check requests with multiple ranages https://www.ietf.org/archive/id/draft-ietf-httpbis-p5-range-09.html#internet.media.type.multipart.byteranges
+
+## Test video files
+
+https://samples.mplayerhq.hu/
+https://file-examples.com/index.php/sample-video-files/
+https://sample-videos.com/

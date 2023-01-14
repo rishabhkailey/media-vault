@@ -123,3 +123,55 @@ func (server *Server) TestNormalUpload(c *gin.Context) {
 		"fileInfo", uploadedInfo,
 	).Info("file uploaded")
 }
+
+func (server *Server) TestGetEncryptedVideo(c *gin.Context) {
+	rangeHeader := c.Request.Header["Range"]
+	var parsedRangeHeader *RangeHeader
+	if len(rangeHeader) != 0 && len(rangeHeader[0]) != 0 {
+		var err error
+		parsedRangeHeader, err = parseRangeHeader(rangeHeader[0])
+		if err != nil {
+			logrus.Error(err)
+		}
+	}
+	fileName := c.Request.FormValue("file")
+	if len(fileName) == 0 {
+		logrus.WithField(
+			"file", fileName,
+		).Error("not found")
+		c.AbortWithStatus(http.StatusNotFound)
+		return
+	}
+	bucketname := "test-encrypted"
+	password := "abc"
+	// New SSE-C where the cryptographic key is derived from a password and the objectname + bucketname as salt
+	encryption := encrypt.DefaultPBKDF([]byte(password), []byte(bucketname+fileName))
+	// todo no error on object not existing
+	object, err := server.Minio.GetObject(c.Request.Context(), bucketname, fileName, minio.GetObjectOptions{ServerSideEncryption: encryption})
+	if err != nil {
+		logrus.Error(err)
+		c.AbortWithStatus(http.StatusInternalServerError)
+		return
+	}
+
+	if parsedRangeHeader == nil || len(parsedRangeHeader.ranges) != 1 {
+		server.TestGetVideoFirstRequest(c, object)
+		return
+	}
+	server.TestGetRangeVideo(c, parsedRangeHeader.ranges[0], object)
+}
+
+// func (server *Server) GetEncryptedVideo(c *gin.Context) {
+// 	bucketname := "test-encrypted"
+// 	fileName := "test.mp4"
+// 	// in app we can have something like lock
+// 	// each user will have encrypted and non encrypted buckets
+// 	password := "abc"
+// 	// New SSE-C where the cryptographic key is derived from a password and the objectname + bucketname as salt
+// 	encryption := encrypt.DefaultPBKDF([]byte(password), []byte(bucketname+fileName))
+// 	// Encrypt file content and upload to the server
+// 	object, err := server.Minio.GetObject(context.Background(), bucketname, fileName, minio.GetObjectOptions{ServerSideEncryption: encryption})
+
+// 	// url, err := server.Minio.PresignedGetObject(context.Background(), bucketname, fileName, minio.GetObjectOptions{ServerSideEncryption: encryption})
+
+// }
