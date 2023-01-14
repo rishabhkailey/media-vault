@@ -1,6 +1,6 @@
 <script setup lang="ts">
 import router from "@/router";
-import {ref, onMounted} from "vue";
+import { ref, onMounted } from "vue";
 import { useRoute } from "vue-router";
 
 const route = useRoute();
