@@ -25,7 +25,7 @@ func (server *Server) TestEncryptedUpload(c *gin.Context) {
 	}
 	// objectName := "my-objectname"
 
-	file, header, err := c.Request.FormFile("file")
+	file, _, err := c.Request.FormFile("file")
 	if err != nil {
 		logrus.WithField(
 			"error", err,
