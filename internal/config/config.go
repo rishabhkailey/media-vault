@@ -43,7 +43,10 @@ type MinioConfig struct {
 	Port     int
 	User     string
 	Password string
-	SSL      bool
+	// todo create struct for tl
+	TLS              bool
+	TLSSkipVerify    bool
+	CustomRootCAPath string
 }
 
 type Config struct {
@@ -87,11 +90,13 @@ func GetConfig() (*Config, error) {
 			Secret: viper.GetString("session.secret"),
 		},
 		MinioConfig: MinioConfig{
-			Host:     viper.GetString("minio.host"),
-			Port:     viper.GetInt("minio.port"),
-			User:     viper.GetString("minio.user"),
-			Password: viper.GetString("minio.password"),
-			SSL:      viper.GetBool("minio.ssl"),
+			Host:             viper.GetString("minio.host"),
+			Port:             viper.GetInt("minio.port"),
+			User:             viper.GetString("minio.user"),
+			Password:         viper.GetString("minio.password"),
+			TLS:              viper.GetBool("minio.tls.enabled"),
+			TLSSkipVerify:    viper.GetBool("minio.tls.skipVerify"),
+			CustomRootCAPath: viper.GetString("minio.tls.customRootCAPath"),
 		},
 	}
 	return &config, nil

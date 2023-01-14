@@ -35,11 +35,27 @@ services:
       - redis-data:/bitnami'
     network_mode: host
   
+  # bitnami minio issues with TLS
+  # minio:
+  #   image: bitnami/minio:2022.12.12-debian-11-r7
+  #   restart: unless-stopped
+  #   env_file:
+  #     - .env
+  #   volumes:
+  #     - minio-data:/data'
+  #   network_mode: host
+
   minio:
-    image: bitnami/minio:2022.12.12-debian-11-r7
+    image: quay.io/minio/minio:RELEASE.2023-01-06T18-11-18Z
     restart: unless-stopped
+    command:
+      - server
+      - /data
+      - --console-address
+      - ":9090"
     env_file:
       - .env
     volumes:
       - minio-data:/data'
+      - ./certs:/root/.minio/certs
     network_mode: host

@@ -8,12 +8,21 @@ import (
 	"github.com/gin-gonic/gin"
 	"github.com/minio/minio-go/v7"
 	"github.com/minio/minio-go/v7/pkg/encrypt"
+	"github.com/rishabhkailey/media-service/internal/utils"
 	"github.com/sirupsen/logrus"
 )
 
 func (server *Server) TestEncryptedUpload(c *gin.Context) {
 
 	bucketname := "test-encrypted"
+	err := utils.CreateBucketIfMissing(c.Request.Context(), *server.Minio, bucketname)
+	if err != nil {
+		logrus.WithField(
+			"error", err,
+		).Error("bucket creation failed")
+		c.AbortWithStatus(http.StatusInternalServerError)
+		return
+	}
 	// objectName := "my-objectname"
 
 	file, header, err := c.Request.FormFile("file")
@@ -41,8 +50,7 @@ func (server *Server) TestEncryptedUpload(c *gin.Context) {
 		return
 	}
 	logrus.WithFields(logrus.Fields{
-		"file":   file,
-		"header": header,
+		"file": file,
 	}).Info("file request")
 
 	// in app we can have something like lock
@@ -66,6 +74,14 @@ func (server *Server) TestEncryptedUpload(c *gin.Context) {
 
 func (server *Server) TestNormalUpload(c *gin.Context) {
 	bucketname := "test"
+	err := utils.CreateBucketIfMissing(c.Request.Context(), *server.Minio, bucketname)
+	if err != nil {
+		logrus.WithField(
+			"error", err,
+		).Error("bucket creation failed")
+		c.AbortWithStatus(http.StatusInternalServerError)
+		return
+	}
 	// objectName := "my-objectname"
 
 	file, header, err := c.Request.FormFile("file")

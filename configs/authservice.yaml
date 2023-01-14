@@ -12,7 +12,6 @@ database:
     user: "postgres"
     password: "postgres"
     dbname: "postgres"
-    ssl: false
 server:
   port: 8080
   host: localhost
@@ -34,3 +33,7 @@ minio:
   port: 9000
   user: minio-root-user
   password: minio-root-password
+  tls: 
+    enabled: true
+    customRootCAPath: "./.devcontainer/certs/public.crt"
+    skipVerify: false
