@@ -49,6 +49,12 @@ type MinioConfig struct {
 	CustomRootCAPath string
 }
 
+type AuthService struct {
+	ID     string
+	Secret string
+	URL    string
+}
+
 type Config struct {
 	Cache RedisCacheConfig
 	// JWT        *JWTConfig
@@ -57,6 +63,7 @@ type Config struct {
 	Session     Session
 	WebUIConfig WebUIConfig
 	MinioConfig MinioConfig
+	AuthService AuthService
 }
 
 // todo validation
@@ -97,6 +104,11 @@ func GetConfig() (*Config, error) {
 			TLS:              viper.GetBool("minio.tls.enabled"),
 			TLSSkipVerify:    viper.GetBool("minio.tls.skipVerify"),
 			CustomRootCAPath: viper.GetString("minio.tls.customRootCAPath"),
+		},
+		AuthService: AuthService{
+			URL:    viper.GetString("auth-service.url"),
+			Secret: viper.GetString("auth-service.client.ID"),
+			ID:     viper.GetString("auth-service.client.secret"),
 		},
 	}
 	return &config, nil

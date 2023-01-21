@@ -34,7 +34,9 @@ func NewRouter(v1ApiServer *v1Api.Server, config config.Config) (*gin.Engine, er
 		v1.POST("/testNormalUpload", v1ApiServer.TestNormalUpload)
 		v1.POST("/testEncryptedUpload", v1ApiServer.TestEncryptedUpload)
 		v1.GET("/testGetEncryptedVideo", v1ApiServer.TestGetEncryptedVideo)
+		v1.GET("/testGetEncryptedImage", v1ApiServer.TestGetEncryptedImage)
 	}
+	v1.Use(v1ApiServer.AuthMiddleware)
 
 	return router, nil
 }
@@ -55,5 +57,5 @@ func Start() error {
 	if err != nil {
 		return fmt.Errorf("[Server.Start] failed to create router: %w", err)
 	}
-	return router.Run()
+	return router.Run(fmt.Sprintf("%s:%d", config.Server.Host, config.Server.Port))
 }

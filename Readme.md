@@ -13,10 +13,23 @@ atleast 1 of range-start or range-end should be present. both will also work. if
 
 
 ## Todo
-* check requests with multiple ranages https://www.ietf.org/archive/id/draft-ietf-httpbis-p5-range-09.html#internet.media.type.multipart.byteranges
+* check requests with multiple ranages https://www.ietf.org/archive/id/draft-ietf-httpbis-p5-range-09.html#internet.media.type.multipart.byteranges, https://developer.mozilla.org/en-US/docs/Web/HTTP/Range_requests#multipart_ranges
 
 ## Test video files
 
 https://samples.mplayerhq.hu/
 https://file-examples.com/index.php/sample-video-files/
 https://sample-videos.com/
+
+
+
+## Setup
+
+
+Register client in auth server
+```bash
+docker exec media-service_devcontainer-auth-service-1 /etc/auth-server/auth-server --help
+docker exec media-service_devcontainer-auth-service-1 /etc/auth-server/auth-server client create --scopes user --scopes admin --defaultScopes user --domain localhost --id media-service --secret aslkjfdalksdfjlksadfjlkasjlkfjasdfjlkasjd --returnUri localhost:8090
+# to verify if client is registered try <auth-service-url>/v1/<client-id>/.well-known/openid-configuration
+# e.g. http://localhost:8080/v1/media-service/.well-known/openid-configuration
+```

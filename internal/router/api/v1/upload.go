@@ -2,6 +2,7 @@ package v1
 
 import (
 	"context"
+	"io"
 	"net/http"
 	"strconv"
 
@@ -159,6 +160,40 @@ func (server *Server) TestGetEncryptedVideo(c *gin.Context) {
 		return
 	}
 	server.TestGetRangeVideo(c, parsedRangeHeader.ranges[0], object)
+}
+
+func (server *Server) TestGetEncryptedImage(c *gin.Context) {
+	fileName := c.Request.FormValue("file")
+	if len(fileName) == 0 {
+		logrus.WithField(
+			"file", fileName,
+		).Error("not found")
+		c.AbortWithStatus(http.StatusBadRequest)
+		return
+	}
+	bucketname := "test-encrypted"
+	password := "abc"
+	// New SSE-C where the cryptographic key is derived from a password and the objectname + bucketname as salt
+	encryption := encrypt.DefaultPBKDF([]byte(password), []byte(bucketname+fileName))
+	// todo no error on object not existing
+	object, err := server.Minio.GetObject(c.Request.Context(), bucketname, fileName, minio.GetObjectOptions{ServerSideEncryption: encryption})
+	if err != nil {
+		logrus.Error(err)
+		c.AbortWithStatus(http.StatusInternalServerError)
+		return
+	}
+
+	c.Header("Content-Type", "image/png")
+	// c.SSEvent()
+	// todo use of stream?
+	n, err := io.Copy(c.Writer, object)
+	logrus.WithField("bytes", n).Info("sent")
+	if err != nil {
+		logrus.Error(err)
+		c.Status(http.StatusInternalServerError)
+		return
+	}
+	c.Status(http.StatusOK)
 }
 
 // func (server *Server) GetEncryptedVideo(c *gin.Context) {

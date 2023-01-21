@@ -59,3 +59,10 @@ services:
       - minio-data:/data'
       - ./certs:/root/.minio/certs
     network_mode: host
+
+  auth-service:
+    image: ghcr.io/rishabhkailey/authservice:intial-setup
+    restart: unless-stopped
+    env_file:
+      - .env
+    network_mode: host

@@ -13,7 +13,7 @@ database:
     password: "postgres"
     dbname: "postgres"
 server:
-  port: 8080
+  port: 8090
   host: localhost
   # todo - dev setup doc
   baseURL: http://localhost:5173 
@@ -37,3 +37,8 @@ minio:
     enabled: true
     customRootCAPath: "./.devcontainer/certs/public.crt"
     skipVerify: false
+auth-service:
+  url: http://localhost:8090/v1/media-service
+  client:
+    ID: media-service
+    secret: aslkjfdalksdfjlksadfjlkasjlkfjasdfjlkasjd
