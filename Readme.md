@@ -33,3 +33,8 @@ docker exec media-service_devcontainer-auth-service-1 /etc/auth-server/auth-serv
 # to verify if client is registered try <auth-service-url>/v1/<client-id>/.well-known/openid-configuration
 # e.g. http://localhost:8080/v1/media-service/.well-known/openid-configuration
 ```
+
+scopes
+* user
+* admin
+* anonymous

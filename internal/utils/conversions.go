@@ -10,6 +10,7 @@ func UintToString(i uint) string {
 	return strconv.FormatUint(uint64(i), 10)
 }
 
+// todo add check that incomfing value is a pointer similar to json.unmarshall
 func UnmarshalInterface[T comparable](input interface{}, output T) error {
 	rawJson, err := json.Marshal(input)
 	if err != nil {

@@ -28,6 +28,7 @@ func NewRouter(v1ApiServer *v1Api.Server, config config.Config) (*gin.Engine, er
 
 	v1 := router.Group("/v1")
 	{
+		v1.GET("/login", v1ApiServer.LoginHandler)
 		v1.GET("/testGetVideo", v1ApiServer.TestGetVideo)
 		v1.GET("/testGetVideoWithRange", v1ApiServer.TestGetVideoWithRange)
 		v1.GET("/testGetVideoWithRange/test.mp4", v1ApiServer.TestGetVideoWithRange)
@@ -36,7 +37,16 @@ func NewRouter(v1ApiServer *v1Api.Server, config config.Config) (*gin.Engine, er
 		v1.GET("/testGetEncryptedVideo", v1ApiServer.TestGetEncryptedVideo)
 		v1.GET("/testGetEncryptedImage", v1ApiServer.TestGetEncryptedImage)
 	}
-	v1.Use(v1ApiServer.AuthMiddleware)
+
+	// authorized endpoints
+	authorized := router.Group("/")
+	authorized.Use(v1ApiServer.AuthMiddleware)
+	{
+		v1 := authorized.Group("/v1")
+		{
+			v1.GET("/testProtectedGetEncryptedImage", v1ApiServer.TestGetEncryptedImage)
+		}
+	}
 
 	return router, nil
 }

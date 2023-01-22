@@ -50,9 +50,9 @@ type MinioConfig struct {
 }
 
 type AuthService struct {
-	ID     string
-	Secret string
-	URL    string
+	ClientID     string
+	ClientSecret string
+	URL          string
 }
 
 type Config struct {
@@ -106,9 +106,9 @@ func GetConfig() (*Config, error) {
 			CustomRootCAPath: viper.GetString("minio.tls.customRootCAPath"),
 		},
 		AuthService: AuthService{
-			URL:    viper.GetString("auth-service.url"),
-			Secret: viper.GetString("auth-service.client.ID"),
-			ID:     viper.GetString("auth-service.client.secret"),
+			URL:          viper.GetString("auth-service.url"),
+			ClientSecret: viper.GetString("auth-service.client.secret"),
+			ClientID:     viper.GetString("auth-service.client.ID"),
 		},
 	}
 	return &config, nil
