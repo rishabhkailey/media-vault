@@ -40,6 +40,9 @@ func NewRouter(v1ApiServer *v1Api.Server, config config.Config) (*gin.Engine, er
 
 	// authorized endpoints
 	authorized := router.Group("/")
+	// is it good to have redirects at backend?
+	// we will have the AuthMiddleware just for authentication check and will move the redirect part to /login method
+	// add current /login will be renamed to afterLogin or postlogin
 	authorized.Use(v1ApiServer.AuthMiddleware)
 	{
 		v1 := authorized.Group("/v1")

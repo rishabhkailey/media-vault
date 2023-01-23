@@ -10,11 +10,11 @@ const fileName = ref<string>("file_example_AVI_1920_2_3MG.avi");
   <v-col>
     <v-row>
       <v-text-field
-            v-model="fileName"
-            :counter="10"
-            label="File Input"
-            required
-          ></v-text-field>
+        v-model="fileName"
+        :counter="10"
+        label="File Input"
+        required
+      ></v-text-field>
     </v-row>
     <!-- :src="`/v1/testGetEncryptedVideo?file=${file}`" -->
     <!-- src="/v1/testGetVideoWithRange/test.mp4" -->
