@@ -217,7 +217,12 @@ store.dispatch('actionA').then(() => {
 
 })
 
+// modules - https://vuex.vuejs.org/guide/modules.html
 ```
 
+
+### Provide / inject
+Provide used by parent to define properties
+Inject used by any children or children of children to get the value defined by parent
 
 todo - https://vuex.vuejs.org/guide/modules.html

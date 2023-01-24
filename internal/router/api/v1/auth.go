@@ -6,7 +6,6 @@ import (
 	"encoding/base64"
 	"io"
 	"net/http"
-	"net/url"
 	"time"
 
 	"github.com/coreos/go-oidc/v3/oidc"
@@ -67,6 +66,39 @@ func (server Server) AuthMiddleware(c *gin.Context) {
 		return
 	}
 
+	c.AbortWithStatus(http.StatusUnauthorized)
+	return
+}
+
+func (server Server) LoginHandler(c *gin.Context) {
+	// todo check if user is already logged in
+	store, err := session.Start(c.Request.Context(), c.Writer, c.Request)
+	if err != nil {
+		logrus.WithFields(logrus.Fields{
+			"error":    err,
+			"function": "server.AuthMiddleware",
+		}).Errorf("session start failed")
+		// todo error response
+		c.Status(http.StatusInternalServerError)
+		return
+	}
+
+	var returnUri string
+	if c.Request.Form == nil {
+		if err := c.Request.ParseForm(); err != nil {
+			logrus.WithFields(logrus.Fields{
+				"function": "server.AuthMiddleware",
+			}).Errorf("request form parse failed")
+			c.Status(http.StatusInternalServerError)
+			return
+		}
+	}
+	returnUri = c.Request.FormValue("returnUri")
+	if len(returnUri) == 0 {
+		// todo get home endpoint from config or some other source?
+		returnUri = "/"
+	}
+
 	state, err := randString(16)
 	if err != nil {
 		// todo error response
@@ -84,21 +116,11 @@ func (server Server) AuthMiddleware(c *gin.Context) {
 		// todo error response
 		c.Status(http.StatusInternalServerError)
 	}
-	if c.Request.Form == nil {
-		if err := c.Request.ParseForm(); err != nil {
-			logrus.WithFields(logrus.Fields{
-				"function": "server.AuthMiddleware",
-			}).Errorf("request form parse failed")
-			c.Status(http.StatusInternalServerError)
-			return
-		}
-	}
 
 	store.Set("state", state)
 	store.Set("nonce", nonce)
 	store.Set("code_challenge", codeChallenge)
-	store.Set("original_request_uri", c.Request.RequestURI)
-	store.Set("original_request_form", c.Request.Form)
+	store.Set("return_uri", returnUri)
 	store.Save()
 
 	// code challenge vs nonce
@@ -109,10 +131,11 @@ func (server Server) AuthMiddleware(c *gin.Context) {
 		oidc.Nonce(nonce),
 	)
 	c.Redirect(http.StatusFound, authURI)
+
 }
 
 // handle request from auth server and read the saved request and redirect user to the that endpoint
-func (server Server) LoginHandler(c *gin.Context) {
+func (server Server) AuthHandler(c *gin.Context) {
 	store, err := session.Start(c.Request.Context(), c.Writer, c.Request)
 	if err != nil {
 		logrus.WithFields(logrus.Fields{
@@ -214,33 +237,22 @@ func (server Server) LoginHandler(c *gin.Context) {
 		return
 	}
 
-	var originalRequestURI string
-	if value, ok := store.Get("original_request_uri"); ok {
-		if originalRequestURI, ok = value.(string); !ok {
-			logrus.Errorf("[PostOAuthAuthorizeHandler]: get original_request_uri from session failed %v")
+	var returnUri string
+	if value, ok := store.Get("return_uri"); ok {
+		if returnUri, ok = value.(string); !ok {
+			logrus.Errorf("[PostOAuthAuthorizeHandler]: get return_uri from session failed %v")
 			c.Status(http.StatusInternalServerError)
 			return
 		}
 	}
-	store.Delete("original_request_uri")
-	store.Save()
-
-	var originalRequestForm url.Values
-	if value, ok := store.Get("original_request"); ok {
-		if utils.UnmarshalInterface(value, &originalRequestForm) != nil {
-			logrus.Errorf("[PostOAuthAuthorizeHandler]: get original_request from session failed %v", err)
-			c.Status(http.StatusInternalServerError)
-			return
-		}
-	}
-	store.Delete("original_request")
+	store.Delete("return_uri")
 	store.Save()
 
 	store.Set("id_token", idToken)
 	store.Set("access_token", token)
 	store.Save()
 
-	c.Redirect(http.StatusFound, originalRequestURI)
+	c.Redirect(http.StatusFound, returnUri)
 
 }
 
@@ -255,4 +267,97 @@ func randString(nByte int) (string, error) {
 func genCodeChallengeS256(s string) string {
 	s256 := sha256.Sum256([]byte(s))
 	return base64.URLEncoding.EncodeToString(s256[:])
+}
+
+func (server Server) SaveRequestAndRedicrectAuthMiddleware(c *gin.Context) {
+	store, err := session.Start(c.Request.Context(), c.Writer, c.Request)
+	if err != nil {
+		logrus.WithFields(logrus.Fields{
+			"error":    err,
+			"function": "server.AuthMiddleware",
+		}).Errorf("session start failed")
+		// todo error response
+		c.Status(http.StatusInternalServerError)
+		return
+	}
+	var accessToken oauth2.Token
+	if value, ok := store.Get("access_token"); ok {
+		if err := utils.UnmarshalInterface(value, &accessToken); err != nil {
+			logrus.WithFields(logrus.Fields{
+				"function": "server.AuthMiddleware",
+				"error":    err,
+			}).Errorf("access token type cast failed")
+			// todo error response
+			c.Status(http.StatusInternalServerError)
+			return
+		}
+	}
+
+	var idToken oidc.IDToken
+	if value, ok := store.Get("id_token"); ok {
+		if err := utils.UnmarshalInterface(value, &idToken); err != nil {
+			logrus.WithFields(logrus.Fields{
+				"function": "server.AuthMiddleware",
+				"error":    err,
+			}).Errorf("id token type cast failed")
+			// todo error response
+			c.Status(http.StatusInternalServerError)
+			return
+		}
+	}
+
+	// also check expire time of access token + jwt signature key verification
+	// we will only verify the jwt signature after getting the access token not here, here we will only check the id token expiret time
+	if len(idToken.Subject) != 0 && len(accessToken.AccessToken) != 0 && accessToken.Expiry.After(time.Now()) {
+		c.Set("access_token", accessToken)
+		c.Set("id_token", idToken)
+		// ?
+		// c.AddParam("access_token", accessToken)
+		// c.AddParam("id_token", idToken)
+		c.Next()
+		return
+	}
+
+	state, err := randString(16)
+	if err != nil {
+		// todo error response
+		c.Status(http.StatusInternalServerError)
+	}
+
+	nonce, err := randString(16)
+	if err != nil {
+		// todo error response
+		c.Status(http.StatusInternalServerError)
+	}
+
+	codeChallenge, err := randString(16)
+	if err != nil {
+		// todo error response
+		c.Status(http.StatusInternalServerError)
+	}
+	if c.Request.Form == nil {
+		if err := c.Request.ParseForm(); err != nil {
+			logrus.WithFields(logrus.Fields{
+				"function": "server.AuthMiddleware",
+			}).Errorf("request form parse failed")
+			c.Status(http.StatusInternalServerError)
+			return
+		}
+	}
+
+	store.Set("state", state)
+	store.Set("nonce", nonce)
+	store.Set("code_challenge", codeChallenge)
+	store.Set("original_request_uri", c.Request.RequestURI)
+	store.Set("original_request_form", c.Request.Form)
+	store.Save()
+
+	// code challenge vs nonce
+	// https://danielfett.de/2020/05/16/pkce-vs-nonce-equivalent-or-not/
+	authURI := server.OidcClient.oauth2Config.AuthCodeURL(state,
+		oauth2.SetAuthURLParam("code_challenge", genCodeChallengeS256(codeChallenge)),
+		oauth2.SetAuthURLParam("code_challenge_method", "S256"),
+		oidc.Nonce(nonce),
+	)
+	c.Redirect(http.StatusFound, authURI)
 }

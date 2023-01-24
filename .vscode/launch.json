@@ -5,28 +5,12 @@
     "version": "0.2.0",
     "configurations": [
         {
-            "name": "[Debug] Launch Auth Server",
+            "name": "[Debug] Launch Media Server",
             "type": "go",
             "request": "launch",
             "mode": "debug",
-            "program": "${workspaceFolder}/cmd/auth-server/main.go",
+            "program": "${workspaceFolder}/cmd/media-service/main.go",
             "cwd": "${workspaceFolder}"
-        },
-        {
-            "name": "[Debug] Launch Example OIDC Client",
-            "type": "go",
-            "request": "launch",
-            "mode": "debug",
-            "program": "${workspaceFolder}/examples/go-oidc-client/main.go",
-            "cwd": "${workspaceFolder}"
-        },
-        {
-            "name": "[Debug] Launch Example OAuth Client",
-            "type": "go",
-            "request": "launch",
-            "mode": "debug",
-            "program": "${workspaceFolder}/examples/go-oauth2-client/main.go",
-            "cwd": "${workspaceFolder}"
-        }
+        }    
     ]
 }

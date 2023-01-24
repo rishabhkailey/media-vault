@@ -87,7 +87,7 @@ func NewServer(config *config.Config) (*Server, error) {
 		return nil, err
 	}
 
-	redirectURI, err := url.JoinPath(config.Server.BaseURL, "/v1/login")
+	redirectURI, err := url.JoinPath(config.Server.BaseURL, "/v1/authorize")
 	if err != nil {
 		return nil, err
 	}

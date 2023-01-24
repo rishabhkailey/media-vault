@@ -1,4 +1,5 @@
 import { createApp } from "vue";
+
 import App from "./App.vue";
 import "@/assets/main.css";
 
@@ -12,6 +13,7 @@ import { aliases, mdi } from "vuetify/iconsets/mdi";
 import axios from "axios";
 import VueAxios from "vue-axios";
 import router from "./router";
+import store from "./store";
 
 import VueVideoPlayer from "@videojs-player/vue";
 
@@ -32,6 +34,7 @@ const vuetify = createVuetify({
 });
 
 app.use(router);
+app.use(store);
 app.use(vuetify);
 app.use(VueVideoPlayer);
 app.use(VueAxios, axios);

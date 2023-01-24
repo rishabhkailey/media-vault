@@ -24,6 +24,7 @@
 * as this will be self hosted MINM/proxied verify end to end cert?
 * do we need to close reader bodies of minio object? 
 * do we need to cache minio objects?
+* getting `time="2023-01-24T02:19:24Z" level=error msg="write tcp 127.0.0.1:8090->127.0.0.1:57824: write: broken pipe"`
 
 ## Pilain
 * every user will have 2 buckets 
