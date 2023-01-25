@@ -226,3 +226,6 @@ Provide used by parent to define properties
 Inject used by any children or children of children to get the value defined by parent
 
 todo - https://vuex.vuejs.org/guide/modules.html
+
+https://next.vuetifyjs.com/en/components/navigation-drawers/
+https://next.vuetifyjs.com/en/components/app-bars/

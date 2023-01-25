@@ -68,7 +68,18 @@ const authModule: Module<AuthModuleState, any> = {
       });
     },
   },
-  getters: {},
+  // type of this?
+  getters: {
+    authenticated (state) {
+      return state.authenticated
+    },
+    userName (state) {
+      return state.userName
+    },
+    email (state) {
+      return state.email
+    }
+  },
 };
 
 export default authModule;

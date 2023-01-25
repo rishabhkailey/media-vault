@@ -6,6 +6,7 @@
 * try js blob for custom encrypted stream https://github.com/videojs/video.js/issues/5926
 * dash + aes https://github.com/Dash-Industry-Forum/dash.js/issues/1993
 * check Minio.GetObject they do seems to have logic on caching and range we may don't need to do that
+* thumbnails
 
 
 ## Problems
@@ -32,3 +33,5 @@
     * unencrypted and without any lock
 * able to show photos and videos like a gallery on local storage, as well as server storage
 * able to upload normal files for backup
+* file names in minio random/uuid. we will store the actual name in the DB
+* we will need to have something similar to range requests and every request should have total count so we can have placeholders in application so user can just keep on scrolling without loading. we will have lazy load for images/videos.
