@@ -4,6 +4,7 @@
 * image/video stream 
 * encryption
 * try js blob for custom encrypted stream https://github.com/videojs/video.js/issues/5926
+* try https://developer.mozilla.org/en-US/docs/Web/API/Service_Worker_API for updating incoming stream
 * dash + aes https://github.com/Dash-Industry-Forum/dash.js/issues/1993
 * check Minio.GetObject they do seems to have logic on caching and range we may don't need to do that
 * thumbnails

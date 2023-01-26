@@ -35,7 +35,7 @@ const SubmitHandler: (e: SubmitEventPromise) => any = (e: SubmitEventPromise) =>
 </script>
 
 <template>
-  <v-form min-width="400px" ref="form" :submit.prevent="SubmitHandler">
+  <v-form min-width="400px" ref="form" @submit.prevent="SubmitHandler">
     <v-file-input
       style="min-width: 400px"
       v-model="uploadFiles"
