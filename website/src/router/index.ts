@@ -3,6 +3,7 @@ import NotFound from "../views/NotFoundView.vue";
 import ErrorScreenView from "../views/ErrorScreenView.vue";
 import TestVideoScreen from "../views/TestVideoScreen.vue";
 import FileUploadView from "../views/FileUploadView.vue";
+import TestScreenViewVue from "@/views/TestScreenView.vue";
 
 // todo pages without redirect from vue should be lazy loaded on external/server redirect
 const router = createRouter({
@@ -28,6 +29,11 @@ const router = createRouter({
       name: "FileUploadView",
       component: FileUploadView,
     },
+    {
+      path: "/testScreen",
+      name: "testScreen",
+      component: TestScreenViewVue,
+    }
   ],
 });
 

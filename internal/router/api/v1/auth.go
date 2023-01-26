@@ -84,8 +84,8 @@ func (server Server) AuthMiddleware(c *gin.Context) {
 
 	// also check expire time of access token + jwt signature key verification
 	// we will only verify the jwt signature after getting the access token not here, here we will only check the id token expiret time
-	c.Set("access_token", accessToken)
-	c.Set("id_token", idToken)
+	c.Set("access_token", *accessToken)
+	c.Set("id_token", *idToken)
 	c.Next()
 }
 
@@ -296,26 +296,28 @@ type UserInfoResponse struct {
 }
 
 func (server Server) UserInfo(c *gin.Context) {
-	store, err := session.Start(c.Request.Context(), c.Writer, c.Request)
-	if err != nil {
-		logrus.WithFields(logrus.Fields{"error": err, "function": "server.userInfo"}).Errorf("session start failed")
+	var accessToken oauth2.Token
+	{
+		var value any
+		var exists bool
+		if value, exists = c.Get("access_token"); !exists {
+			c.Status(http.StatusInternalServerError)
+			return
+		}
+		var ok bool
+		if accessToken, ok = value.(oauth2.Token); !ok {
+			c.Status(http.StatusInternalServerError)
+			return
+		}
+	}
+	// todo refresh?
+	if accessToken.Expiry.Before(time.Now()) {
 		// todo error response
-		c.Status(http.StatusInternalServerError)
+		c.AbortWithStatus(http.StatusUnauthorized)
 		return
 	}
 
-	accessToken, _, err := getTokensFromSession(store)
-	if errors.Is(err, ErrTokenNotFound) {
-		c.AbortWithStatus(http.StatusUnauthorized)
-		return
-	}
-	// todo refresh?
-	if err != nil || accessToken.Expiry.Before(time.Now()) {
-		// todo error response
-		c.AbortWithStatus(http.StatusUnauthorized)
-		return
-	}
-	userInfo, err := server.OidcClient.provider.UserInfo(c.Request.Context(), oauth2.StaticTokenSource(accessToken))
+	userInfo, err := server.OidcClient.provider.UserInfo(c.Request.Context(), oauth2.StaticTokenSource(&accessToken))
 	if err != nil {
 		// todo error response
 		c.AbortWithStatus(http.StatusInternalServerError)

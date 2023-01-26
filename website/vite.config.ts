@@ -13,7 +13,7 @@ export default defineConfig({
   },
   server: {
     proxy: {
-      "/v1": "http://localhost:8080/", //todo - dev setup?
+      "/v1": "http://localhost:8090/", //todo - dev setup?
     },
   },
 });

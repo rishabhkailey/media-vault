@@ -1,7 +1,11 @@
 import type { Module } from "vuex";
-import type { AxiosError, AxiosResponse } from "axios";
-
+import type { AxiosResponse } from "axios";
 import axios from "axios";
+
+import {
+  SET_LOGGED_IN_USERINFO_ACTION,
+  LOGOUT_ACTION,
+} from "@/store/actions-type";
 
 type AuthModuleState = {
   authenticated: Boolean;
@@ -10,7 +14,7 @@ type AuthModuleState = {
 };
 
 // todo define root state type
-const authModule: Module<AuthModuleState, any> = {
+export const authModule: Module<AuthModuleState, any> = {
   state: {
     authenticated: false,
     userName: "",
@@ -18,24 +22,48 @@ const authModule: Module<AuthModuleState, any> = {
   },
   mutations: {
     setUserInfo(state, payload: { userName: string; email: string }) {
-      if (!!payload?.userName && typeof payload.userName === "string") {
+      if (
+        payload?.userName !== undefined &&
+        typeof payload.userName === "string"
+      ) {
         state.userName = payload.userName;
       }
-      if (!!payload?.email && typeof payload.email === "string") {
+      if (payload?.email !== undefined && typeof payload.email === "string") {
         state.email = payload.email;
       }
     },
-    setAuthenticated(state, payload: { authenticated: string }) {
+    setAuthenticated(state, payload: { authenticated: boolean }) {
       if (
-        !!payload?.authenticated &&
+        payload?.authenticated !== undefined &&
         typeof payload.authenticated === "boolean"
       ) {
         state.authenticated = payload.authenticated;
+        console.log(state);
       }
     },
   },
   actions: {
-    setLoggedInUserInfo({ commit }) {
+    [LOGOUT_ACTION]({ commit }) {
+      return new Promise((resolve, reject) => {
+        axios
+          .post("/v1/logout")
+          .then(() => {
+            commit("setAuthenticated", {
+              authenticated: false,
+            });
+            commit("setUserInfo", {
+              email: "",
+              userName: "",
+            });
+            resolve("Success!");
+          })
+          .catch((err) => {
+            console.debug(err);
+            reject("Something went wrong");
+          });
+      });
+    },
+    [SET_LOGGED_IN_USERINFO_ACTION]({ commit }) {
       return new Promise((resolve, reject) => {
         axios
           .get("/v1/userinfo")
@@ -59,27 +87,29 @@ const authModule: Module<AuthModuleState, any> = {
             }
           })
           .catch((err: any) => {
-            if (axios.isAxiosError(err) && err.status === 401) {
-              reject("Unauthorized");
+            console.debug(err);
+            if (axios.isAxiosError(err) && err.response?.status === 401) {
+              commit("setAuthenticated", {
+                authenticated: false,
+              });
+              resolve("Unauthorized");
               return;
             }
-            reject("Something went wrong!");
+            reject("Something went wrong");
           });
       });
     },
   },
   // type of this?
   getters: {
-    authenticated (state) {
-      return state.authenticated
+    authenticated(state) {
+      return state.authenticated;
     },
-    userName (state) {
-      return state.userName
+    userName(state) {
+      return state.userName;
     },
-    email (state) {
-      return state.email
-    }
+    email(state) {
+      return state.email;
+    },
   },
 };
-
-export default authModule;
