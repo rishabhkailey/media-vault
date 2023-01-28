@@ -10,7 +10,24 @@
             "request": "launch",
             "mode": "debug",
             "program": "${workspaceFolder}/cmd/media-service/main.go",
-            "cwd": "${workspaceFolder}"
+            "cwd": "${workspaceFolder}",
+            // todo is this right place? dockerfile, dev container config
+            "env": {
+                "PKG_CONFIG_PATH": "/usr/local/ffmpeg/lib/pkgconfig/",
+                "LD_LIBRARY_PATH": "/usr/local/ffmpeg/lib/",
+            }
+        },
+        {
+            "name": "[Debug] Launch Example Encrypted Storage",
+            "type": "go",
+            "request": "launch",
+            "mode": "debug",
+            "program": "${workspaceFolder}/examples/encrypted-storage/main.go",
+            "cwd": "${workspaceFolder}/examples/encrypted-storage",
+            "env": {
+                "PKG_CONFIG_PATH": "/usr/local/ffmpeg/lib/pkgconfig/",
+                "LD_LIBRARY_PATH": "/usr/local/ffmpeg/lib/",
+            }
         }    
     ]
 }

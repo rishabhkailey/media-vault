@@ -7,7 +7,15 @@
 * try https://developer.mozilla.org/en-US/docs/Web/API/Service_Worker_API for updating incoming stream
 * dash + aes https://github.com/Dash-Industry-Forum/dash.js/issues/1993
 * check Minio.GetObject they do seems to have logic on caching and range we may don't need to do that
-* thumbnails
+* video thumbnail https://jsfiddle.net/rodrigo_silveira/tq1u07tz/1/
+    * try webassembly or ffmpeg wasm
+    * https://github.com/gpac/mp4box.js/ (https://jsbin.com/mugoguxiha/edit?html,output)
+    * webcodecs 
+* video metadata (length).
+    * try mp4box.js
+* https://sanjeev-pandey.medium.com/understanding-the-mpeg-4-moov-atom-pseudo-streaming-in-mp4-93935e1b9e9a
+    * https://stackoverflow.com/questions/23787712/qt-faststart-windows-how-to-run-it
+* offscreencanvas https://developer.mozilla.org/en-US/docs/Web/API/OffscreenCanvas
 
 
 ## Problems
@@ -27,6 +35,7 @@
 * do we need to close reader bodies of minio object? 
 * do we need to cache minio objects?
 * getting `time="2023-01-24T02:19:24Z" level=error msg="write tcp 127.0.0.1:8090->127.0.0.1:57824: write: broken pipe"`
+* https://github.com/seaweedfs/seaweedfs
 
 ## Pilain
 * every user will have 2 buckets 

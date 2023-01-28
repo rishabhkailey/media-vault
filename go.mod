@@ -3,6 +3,8 @@ module github.com/rishabhkailey/media-service
 go 1.19
 
 require (
+	github.com/3d0c/gmf v0.0.0-20220906170454-be727bc5b56c
+	github.com/awnumar/memguard v0.22.3
 	github.com/coreos/go-oidc/v3 v3.5.0
 	github.com/gin-contrib/sessions v0.0.5
 	github.com/gin-contrib/static v0.0.1
@@ -17,12 +19,15 @@ require (
 	github.com/spf13/cobra v1.6.1
 	github.com/spf13/viper v1.14.0
 	github.com/stretchr/testify v1.8.1
-	golang.org/x/crypto v0.3.0
+	golang.org/x/crypto v0.5.0
+	golang.org/x/oauth2 v0.3.0
+	golang.org/x/sync v0.1.0
 	gorm.io/driver/postgres v1.4.5
 	gorm.io/gorm v1.24.2
 )
 
 require (
+	github.com/awnumar/memcall v0.1.2 // indirect
 	github.com/cespare/xxhash/v2 v2.1.2 // indirect
 	github.com/davecgh/go-spew v1.1.1 // indirect
 	github.com/dgryski/go-rendezvous v0.0.0-20200823014737-9f7001d12a5f // indirect
@@ -75,10 +80,9 @@ require (
 	github.com/spf13/pflag v1.0.5 // indirect
 	github.com/subosito/gotenv v1.4.1 // indirect
 	github.com/ugorji/go/codec v1.2.7 // indirect
-	golang.org/x/net v0.4.0 // indirect
-	golang.org/x/oauth2 v0.3.0 // indirect
-	golang.org/x/sys v0.3.0 // indirect
-	golang.org/x/text v0.5.0 // indirect
+	golang.org/x/net v0.5.0 // indirect
+	golang.org/x/sys v0.4.0 // indirect
+	golang.org/x/text v0.6.0 // indirect
 	google.golang.org/appengine v1.6.7 // indirect
 	google.golang.org/protobuf v1.28.1 // indirect
 	gopkg.in/ini.v1 v1.67.0 // indirect

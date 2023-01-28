@@ -238,17 +238,18 @@ func readAndTranscode(r io.Reader, w io.Writer) error {
 	fmt.Println("ictx.Duration:", stream.Duration())
 	fmt.Printf("bitrate: %d/sec\n", stream.CodecCtx().BitRate())
 	jpegCodec, err := gmf.FindEncoder(gmf.AV_CODEC_ID_PNG)
-	// jpegCodec, err := gmf.FindEncoder(gmf.AV_CODEC_ID_JPEG2000)
+	// jpegCodec, err := gmf.FindEncoder(gmf.AV_CODEC_ID_MJPEG)
 	if err != nil {
 		return err
 	}
 	jpegCodecCtx := gmf.NewCodecCtx(jpegCodec)
 	defer jpegCodecCtx.Free()
-	jpegCodecCtx.SetPixFmt(gmf.AV_PIX_FMT_RGB24).
+	// ffmpeg -h encoder=mjpeg -v quiet # get supported pixel formats for a codec
+	// ffmpeg -h encoder=png -v quiet # get supported pixel formats for a codec
+	jpegCodecCtx.SetPixFmt(gmf.AV_PIX_FMT_RGBA).
 		SetWidth(stream.CodecCtx().Width()).
 		SetHeight(stream.CodecCtx().Height()).
 		SetTimeBase(gmf.AVR{Num: 1, Den: 1})
-
 	if jpegCodecCtx.Codec().IsExperimental() {
 		jpegCodecCtx.SetStrictCompliance(gmf.FF_COMPLIANCE_EXPERIMENTAL)
 	}

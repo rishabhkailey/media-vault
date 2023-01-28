@@ -38,6 +38,7 @@ func NewRouter(v1ApiServer *v1Api.Server, config config.Config) (*gin.Engine, er
 		v1.POST("/testEncryptedUpload", v1ApiServer.TestEncryptedUpload)
 		v1.GET("/testGetEncryptedVideo", v1ApiServer.TestGetEncryptedVideo)
 		v1.GET("/testGetEncryptedImage", v1ApiServer.TestGetEncryptedImage)
+		v1.POST("/testVideoUploadWithThumbnail", v1ApiServer.TestVideoUploadWithThumbnail)
 	}
 
 	// authorized endpoints
@@ -47,10 +48,10 @@ func NewRouter(v1ApiServer *v1Api.Server, config config.Config) (*gin.Engine, er
 	// add current /login will be renamed to afterLogin or postlogin
 	authorized.Use(v1ApiServer.AuthMiddleware)
 	{
-		v1 := authorized.Group("/v1")
+		v1Authorized := authorized.Group("/v1")
 		{
-			v1.GET("/userinfo", v1ApiServer.UserInfo)
-			v1.GET("/testProtectedGetEncryptedImage", v1ApiServer.TestGetEncryptedImage)
+			v1Authorized.GET("/userinfo", v1ApiServer.UserInfo)
+			v1Authorized.GET("/testProtectedGetEncryptedImage", v1ApiServer.TestGetEncryptedImage)
 		}
 	}
 
