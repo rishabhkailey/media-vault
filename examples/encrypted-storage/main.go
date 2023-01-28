@@ -8,8 +8,6 @@ import (
 	"io"
 	"log"
 	"os"
-	"path"
-	"strings"
 
 	"github.com/3d0c/gmf"
 	"github.com/awnumar/memguard"
@@ -17,7 +15,8 @@ import (
 
 func main() {
 	// encryptDecrypt()
-	decryptTranscode()
+	// readTranscode()
+	fmt.Fprint(os.Stderr, encryptDecryptTranscode())
 }
 
 func encryptDecrypt() {
@@ -119,7 +118,7 @@ func decryptAndSave(r io.Reader, w io.Writer, key []byte) error {
 	return nil
 }
 
-func decryptTranscode() {
+func readTranscode() {
 	// add a mp4 file in input/test.mp4
 	inputFilePath := "input/test2.mp4"
 	inputFile, err := os.Open(inputFilePath)
@@ -133,30 +132,82 @@ func decryptTranscode() {
 		return
 	}
 
-	if err = readAndTranscode(*inputFile, outputFile); err != nil {
+	// fileInfo, err := inputFile.Stat()
+	// if err != nil {
+	// 	fmt.Println(err)
+	// 	return
+	// }
+	if err = readAndTranscode(inputFile, outputFile); err != nil {
 		fmt.Fprintf(os.Stderr, "%v", err)
 		return
 	}
 }
 
-func readAndTranscode(r os.File, w io.Writer) error {
-	ctx := gmf.NewCtx()
-	defer ctx.Free()
-
-	if len(strings.Split(path.Ext(r.Name()), ".")) < 2 {
-		return fmt.Errorf("invalid file name")
+// read file -> encrypt and save -> decrypt +  transcode and save
+func encryptDecryptTranscode() error {
+	inputFilePath := "input/test2.mp4"
+	inputFile, err := os.Open(inputFilePath)
+	if err != nil {
+		fmt.Fprintf(os.Stderr, "error opening file %v: %v", inputFilePath, err)
+		return err
 	}
 
-	fileInfo, err := r.Stat()
+	memguard.CatchInterrupt()
+	defer memguard.Purge()
+	secureKey := memguard.NewEnclaveRandom(16)
+	keyBuf, err := secureKey.Open()
+	if err != nil {
+		return fmt.Errorf("securekey.Open failed %v", err)
+	}
+	defer keyBuf.Destroy()
+	outputEncryptedFilePath := "output/encrypted.mp4"
+	encryptedFile, err := os.Create(outputEncryptedFilePath)
+	if err != nil {
+		return fmt.Errorf("%v file creation failed %v", outputEncryptedFilePath, err)
+	}
+	// encryptedFile.Close()
+	defer encryptedFile.Close()
+	if err = encryptAndSave(inputFile, encryptedFile, keyBuf.Bytes()); err != nil {
+		return fmt.Errorf("file encryption failed %v", err)
+	}
+	decryptedTranscodedFilePath := "output/test.png"
+	decryptedTranscodedFile, err := os.Create(decryptedTranscodedFilePath)
+	if err != nil {
+		return fmt.Errorf("%v file creation failed %v", decryptedTranscodedFilePath, err)
+	}
+	defer decryptedTranscodedFile.Close()
+	// encryptedFile, err = os.Open(outputEncryptedFilePath)
+	// if err != nil {
+	// 	return fmt.Errorf("failed to open %v file: %v", outputEncryptedFilePath, err)
+	// }
+	// defer encryptedFile.Close()
+	if _, err := encryptedFile.Seek(0, io.SeekStart); err != nil {
+		return fmt.Errorf("reset seek failed: %v", err)
+	}
+	block, err := aes.NewCipher(keyBuf.Bytes())
 	if err != nil {
 		return err
 	}
 
-	sectionReader := io.NewSectionReader(&r, 0, fileInfo.Size())
+	// If the key is unique for each ciphertext, then it's ok to use a zero
+	// IV.
+	var iv [aes.BlockSize]byte
+	stream := cipher.NewOFB(block, iv[:])
+
+	encryptedFileReader := &cipher.StreamReader{S: stream, R: encryptedFile}
+	if err = readAndTranscode(encryptedFileReader, decryptedTranscodedFile); err != nil {
+		return err
+	}
+	return nil
+}
+
+func readAndTranscode(r io.Reader, w io.Writer) error {
+	ctx := gmf.NewCtx()
+	defer ctx.Free()
 
 	avioCtx, err := gmf.NewAVIOContext(ctx, &gmf.AVIOHandlers{ReadPacket: func() ([]byte, int) {
 		b := make([]byte, gmf.IO_BUFFER_SIZE)
-		n, err := sectionReader.Read(b)
+		n, err := r.Read(b)
 		if err != nil {
 			// how to handle error/tell parent about error?
 			fmt.Println("section.Read():", err)
@@ -167,7 +218,8 @@ func readAndTranscode(r os.File, w io.Writer) error {
 		return err
 	}
 	ctx.SetPb(avioCtx)
-	ctx.SetProbeSize(fileInfo.Size())
+	// 50 mb
+	ctx.SetProbeSize(50000000)
 	ctx.SetOptions([]*gmf.Option{
 		{
 			Key: "analyzeduration",
