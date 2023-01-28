@@ -146,10 +146,6 @@ func readAndTranscode(r os.File, w io.Writer) error {
 	if len(strings.Split(path.Ext(r.Name()), ".")) < 2 {
 		return fmt.Errorf("invalid file name")
 	}
-	format := strings.Split(path.Ext(r.Name()), ".")[1]
-	if err := ctx.SetInputFormat(format); err != nil {
-		return err
-	}
 
 	fileInfo, err := r.Stat()
 	if err != nil {
@@ -189,8 +185,8 @@ func readAndTranscode(r os.File, w io.Writer) error {
 
 	fmt.Println("ictx.Duration:", stream.Duration())
 	fmt.Printf("bitrate: %d/sec\n", stream.CodecCtx().BitRate())
-	// jpegCodec, err := gmf.FindEncoder(gmf.AV_CODEC_ID_PNG)
-	jpegCodec, err := gmf.FindEncoder(gmf.AV_CODEC_ID_JPEG2000)
+	jpegCodec, err := gmf.FindEncoder(gmf.AV_CODEC_ID_PNG)
+	// jpegCodec, err := gmf.FindEncoder(gmf.AV_CODEC_ID_JPEG2000)
 	if err != nil {
 		return err
 	}
