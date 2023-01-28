@@ -3,11 +3,13 @@ package v1
 import (
 	"bytes"
 	"context"
+	"errors"
 	"fmt"
 	"io"
 	"net/http"
 	"os"
 	"strconv"
+	"strings"
 
 	"github.com/gin-gonic/gin"
 	"github.com/minio/minio-go/v7"
@@ -15,6 +17,8 @@ import (
 	"github.com/sirupsen/logrus"
 	"golang.org/x/sync/errgroup"
 )
+
+var ErrIncorrectFileSize = errors.New("incorrect file size")
 
 func (server *Server) TestVideoUploadWithThumbnail(c *gin.Context) {
 
@@ -45,6 +49,13 @@ func (server *Server) TestVideoUploadWithThumbnail(c *gin.Context) {
 		c.AbortWithStatus(http.StatusBadRequest)
 		return
 	}
+	thumbnailName := fmt.Sprintf(".thumb-%s.%s", fileName, ".png")
+	{
+		name := strings.Split(fileName, ".")
+		if len(name) > 1 {
+			thumbnailName = fmt.Sprintf(".thumb-%s.%s", name[0], ".png")
+		}
+	}
 	size, err := strconv.ParseInt(c.Request.PostFormValue("size"), 10, 64)
 	if err != nil {
 		logrus.WithField(
@@ -68,11 +79,7 @@ func (server *Server) TestVideoUploadWithThumbnail(c *gin.Context) {
 	thumbnailGeneratorDone := make(chan bool)
 
 	go server.uploadFileToMinio(c.Request.Context(), bucketname, fileName, minioReader, int64(size), minioUploadDone, minioUploadErrs)
-	// go func() {
-	// 	logrus.Info(io.CopyN(io.Discard, ffmpegReader, size))
-	// 	logrus.Info(size)
-	// }()
-	go server.generateThumbnail(c.Request.Context(), ffmpegReader, size, thumbnailGeneratorDone, thumbnailGeneratorErrs)
+	go server.generateAndUploadThumbnail(c.Request.Context(), bucketname, thumbnailName, ffmpegReader, size, thumbnailGeneratorDone, thumbnailGeneratorErrs)
 
 	g, _ := errgroup.WithContext(c.Request.Context())
 	g.Go(func() error {
@@ -80,13 +87,24 @@ func (server *Server) TestVideoUploadWithThumbnail(c *gin.Context) {
 		defer ffmpegWriter.Close()
 		defer minioWriter.Close()
 		n, err := io.CopyN(commonWriter, file, size)
+		if errors.Is(err, io.EOF) && n != size {
+			logrus.Errorf("partially copied %v bytes", n)
+			return ErrIncorrectFileSize
+		}
 		if err != nil {
+			logrus.Infof("partially copied %v bytes", n)
 			return err
 		}
-		logrus.Infof("io.copy %v bytes", n)
+		logrus.Infof("successfuly copied %v bytes", n)
 		return nil
 	})
-	if err := g.Wait(); err != nil {
+	err = g.Wait()
+	if errors.Is(err, ErrIncorrectFileSize) {
+		logrus.Errorf("Invalid request: %v", err)
+		c.Status(http.StatusBadRequest)
+		return
+	}
+	if err != nil {
 		logrus.Errorf("io.copy failed: %v", err)
 		c.Status(http.StatusInternalServerError)
 		return
@@ -139,10 +157,12 @@ func (server *Server) uploadFileToMinio(ctx context.Context, bucketname string, 
 }
 
 // just rename to upload thumbnail + similar params as uploadFileToMinio
-func (server *Server) generateThumbnail(ctx context.Context, file io.Reader, fileSize int64, done chan<- bool, errs chan<- error) {
+func (server *Server) generateAndUploadThumbnail(ctx context.Context, bucketname string, fileName string, file io.Reader, fileSize int64, done chan<- bool, errs chan<- error) {
 	logrus.Info("generateThumbnail called")
 	// as we are using is multi writer it will block writer to minio writer the other.
-	// defer io.Copy(io.Discard, file)
+	// in case of failure we will need to do this else request will be stuck
+	// todo better solutino for this
+	defer io.Copy(io.Discard, file)
 	defer func() {
 		if r := recover(); r != nil {
 			if err, ok := r.(error); ok {
@@ -159,6 +179,16 @@ func (server *Server) generateThumbnail(ctx context.Context, file io.Reader, fil
 		return
 	}
 	tempSaveThumbnail(thumbnailBytes)
+
+	bytes.NewReader(thumbnailBytes)
+	uploadedInfo, err := server.Minio.PutObject(ctx, bucketname, fileName, bytes.NewReader(thumbnailBytes), int64(len(thumbnailBytes)), minio.PutObjectOptions{})
+	if err != nil {
+		errs <- err
+		return
+	}
+	logrus.WithField(
+		"fileInfo", uploadedInfo,
+	).Info("file uploaded")
 
 	// todo check why putting done channel above this log doesn't work
 	logrus.Infof("discarded ")
