@@ -6,6 +6,7 @@ import (
 	"log"
 
 	"github.com/3d0c/gmf"
+	"github.com/sirupsen/logrus"
 )
 
 func customReader(r io.Reader) ([]byte, int) {
@@ -18,7 +19,8 @@ func customReader(r io.Reader) ([]byte, int) {
 	return b, n
 }
 
-func GenerateThumbnail(r io.Reader) (b []byte, err error) {
+// todo if we don't set dimenstions jpegcodecctx then the request get stuck
+func GenerateThumbnail(r io.Reader, maxDimension int) (b []byte, err error) {
 	ctx := gmf.NewCtx()
 	defer ctx.Free()
 
@@ -53,11 +55,27 @@ func GenerateThumbnail(r io.Reader) (b []byte, err error) {
 	}
 	jpegCodecCtx := gmf.NewCodecCtx(jpegCodec)
 	defer jpegCodecCtx.Free()
+
+	// todo move this login to a function + add unit tests
+	jpegWidth := stream.CodecCtx().Width()
+	jpegHeigth := stream.CodecCtx().Height()
+	logrus.Info(jpegWidth, jpegHeigth)
+	if jpegWidth > jpegHeigth && jpegWidth > maxDimension {
+		aspectRatio := float64(jpegWidth) / float64(jpegHeigth)
+		jpegWidth = 300
+		jpegHeigth = int(float64(jpegWidth) / aspectRatio)
+	}
+	if jpegHeigth > jpegWidth && jpegWidth > maxDimension {
+		aspectRatio := float64(jpegWidth) / float64(jpegHeigth)
+		jpegHeigth = 300
+		jpegWidth = int(float64(jpegHeigth) * aspectRatio)
+	}
+	logrus.Info(jpegWidth, jpegHeigth)
 	// ffmpeg -h encoder=mjpeg -v quiet # get supported pixel formats for a codec
 	// ffmpeg -h encoder=png -v quiet # get supported pixel formats for a codec
 	jpegCodecCtx.SetPixFmt(gmf.AV_PIX_FMT_RGBA).
-		SetWidth(stream.CodecCtx().Width()).
-		SetHeight(stream.CodecCtx().Height()).
+		SetWidth(jpegWidth).
+		SetHeight(jpegHeigth).
 		SetTimeBase(gmf.AVR{Num: 1, Den: 1})
 	if jpegCodecCtx.Codec().IsExperimental() {
 		jpegCodecCtx.SetStrictCompliance(gmf.FF_COMPLIANCE_EXPERIMENTAL)

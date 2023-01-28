@@ -53,7 +53,7 @@ func (server *Server) TestVideoUploadWithThumbnail(c *gin.Context) {
 	{
 		name := strings.Split(fileName, ".")
 		if len(name) > 1 {
-			thumbnailName = fmt.Sprintf(".thumb-%s.%s", name[0], ".png")
+			thumbnailName = fmt.Sprintf(".thumb-%s.%s", name[0], "png")
 		}
 	}
 	size, err := strconv.ParseInt(c.Request.PostFormValue("size"), 10, 64)
@@ -173,7 +173,7 @@ func (server *Server) generateAndUploadThumbnail(ctx context.Context, bucketname
 			return
 		}
 	}()
-	thumbnailBytes, err := utils.GenerateThumbnail(file)
+	thumbnailBytes, err := utils.GenerateThumbnail(file, 300)
 	if err != nil {
 		errs <- err
 		return
