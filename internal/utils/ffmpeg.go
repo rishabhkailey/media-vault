@@ -15,12 +15,24 @@ func customReader(r io.Reader) ([]byte, int) {
 	if err != nil {
 		// how to handle error/tell parent about error?
 		fmt.Println("section.Read():", err)
+		panic(err)
 	}
 	return b, n
 }
 
 // todo if we don't set dimenstions jpegcodecctx then the request get stuck
 func GenerateThumbnail(r io.Reader, maxDimension int) (b []byte, err error) {
+	defer func() error {
+		if r := recover(); r != nil {
+			if err, ok := r.(error); ok {
+				logrus.Errorf("[GenerateThumbnail]: panic occured: %v", err)
+				return err
+			}
+			logrus.Errorf("[GenerateThumbnail]: panic occured")
+			return fmt.Errorf("[GenerateThumbnail]: panic occured")
+		}
+		return nil
+	}()
 	ctx := gmf.NewCtx()
 	defer ctx.Free()
 

@@ -39,6 +39,8 @@ func NewRouter(v1ApiServer *v1Api.Server, config config.Config) (*gin.Engine, er
 		v1.GET("/testGetEncryptedVideo", v1ApiServer.TestGetEncryptedVideo)
 		v1.GET("/testGetEncryptedImage", v1ApiServer.TestGetEncryptedImage)
 		v1.POST("/testVideoUploadWithThumbnail", v1ApiServer.TestVideoUploadWithThumbnail)
+		v1.POST("/testEncryptedFileSave", v1ApiServer.TestEncryptedFileSave)
+		v1.POST("/testStreamVideoUploadWithThumbnail", v1ApiServer.TestStreamVideoUploadWithThumbnail)
 	}
 
 	// authorized endpoints

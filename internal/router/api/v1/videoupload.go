@@ -6,6 +6,7 @@ import (
 	"errors"
 	"fmt"
 	"io"
+	"mime/multipart"
 	"net/http"
 	"os"
 	"strconv"
@@ -49,7 +50,7 @@ func (server *Server) TestVideoUploadWithThumbnail(c *gin.Context) {
 		c.AbortWithStatus(http.StatusBadRequest)
 		return
 	}
-	thumbnailName := fmt.Sprintf(".thumb-%s.%s", fileName, ".png")
+	thumbnailName := fmt.Sprintf(".thumb-%s.%s", fileName, "png")
 	{
 		name := strings.Split(fileName, ".")
 		if len(name) > 1 {
@@ -208,107 +209,134 @@ func tempSaveThumbnail(b []byte) {
 	}
 }
 
-// func asyncIoCopy(w io.Writer, r io.Reader) error {
-// 	n, err := io.Copy(w, r)
-// 	if err != nil {
-// 		return err
-// 	}
-// 	logrus.Infof("io.copy %v bytes", n)
-// 	return nil
-// }
+// this will not work
+// nextPart closes the current part so this will not work
+func (server *Server) TestStreamVideoUploadWithThumbnail(c *gin.Context) {
 
-// func (server *Server) TestParallelVideoUploadWithThumbnail(c *gin.Context) {
+	bucketname := "test"
+	err := utils.CreateBucketIfMissing(c.Request.Context(), *server.Minio, bucketname)
+	if err != nil {
+		logrus.WithField(
+			"error", err,
+		).Error("bucket creation failed")
+		c.AbortWithStatus(http.StatusInternalServerError)
+		return
+	}
+	// objectName := "my-objectname"
+	reqReader, err := c.Request.MultipartReader()
+	if err != nil {
+		logrus.Errorf("failed to get request reader: %v", err)
+		c.AbortWithStatus(http.StatusInternalServerError)
+		return
+	}
+	var fileName string
+	var size int64
+	var file *multipart.Part
+	for {
+		// this closes the current part so this will not work
+		part, err := reqReader.NextPart()
+		if err == io.EOF {
+			break
+		}
+		// defer part.Close()
+		switch n := part.FormName(); n {
+		case "name":
+			{
+				b, err := io.ReadAll(part)
+				if err != nil && !errors.Is(err, io.EOF) {
+					c.AbortWithStatus(http.StatusInternalServerError)
+					return
+				}
+				fileName = string(b)
+			}
+		case "size":
+			{
+				b, err := io.ReadAll(part)
+				if err != nil && !errors.Is(err, io.EOF) {
+					// todo bad request?
+					c.AbortWithStatus(http.StatusInternalServerError)
+					return
+				}
+				size, err = strconv.ParseInt(string(b), 10, 64)
+				if err != nil {
+					c.AbortWithStatus(http.StatusBadRequest)
+					return
+				}
+			}
+		case "file":
+			{
+				file = part
+			}
+		}
+	}
+	if file == nil || size == 0 || len(fileName) == 0 {
+		c.AbortWithStatus(http.StatusBadRequest)
+		return
+	}
+	logrus.WithFields(logrus.Fields{
+		"file": file,
+	}).Info("file request")
 
-// 	bucketname := "test"
-// 	err := utils.CreateBucketIfMissing(c.Request.Context(), *server.Minio, bucketname)
-// 	if err != nil {
-// 		logrus.WithField(
-// 			"error", err,
-// 		).Error("bucket creation failed")
-// 		c.AbortWithStatus(http.StatusInternalServerError)
-// 		return
-// 	}
-// 	// objectName := "my-objectname"
+	thumbnailName := fmt.Sprintf(".thumb-%s.%s", fileName, "png")
+	{
+		name := strings.Split(fileName, ".")
+		if len(name) > 1 {
+			thumbnailName = fmt.Sprintf(".thumb-%s.%s", name[0], "png")
+		}
+	}
 
-// 	file, _, err := c.Request.FormFile("file")
-// 	if err != nil {
-// 		logrus.WithField(
-// 			"error", err,
-// 		).Error("reading file failed")
-// 		c.AbortWithStatus(http.StatusBadRequest)
-// 		return
-// 	}
-// 	fileName := c.Request.PostFormValue("name")
-// 	if len(fileName) == 0 {
-// 		logrus.WithField(
-// 			"error", err,
-// 		).Error("reading file name failed")
-// 		c.AbortWithStatus(http.StatusBadRequest)
-// 		return
-// 	}
-// 	size, err := strconv.ParseInt(c.Request.PostFormValue("size"), 10, 64)
-// 	if err != nil {
-// 		logrus.WithField(
-// 			"error", err,
-// 		).Error("reading file size failed")
-// 		c.AbortWithStatus(http.StatusBadRequest)
-// 		return
-// 	}
-// 	logrus.WithFields(logrus.Fields{
-// 		"file": file,
-// 	}).Info("file request")
+	// ffmpegReader, ffmpegWriter := io.Pipe()
+	// minioReader := io.TeeReader(file, ffmpegWriter)
 
-// 	ffmpegReader, ffmpegWriter := io.Pipe()
-// 	minioReader, minioWriter := io.Pipe()
-// 	commonWriter := io.MultiWriter(ffmpegWriter, minioWriter)
+	// todo check error groups instead of using channel if that makes sense. as we don't have any data in done channel
+	minioUploadErrs := make(chan error)
+	thumbnailGeneratorErrs := make(chan error)
+	minioUploadDone := make(chan bool)
+	thumbnailGeneratorDone := make(chan bool)
 
-// 	// todo check error groups instead of using channel if that makes sense. as we don't have any data in done channel
-// 	minioUploadErrs := make(chan error)
-// 	thumbnailGeneratorErrs := make(chan error)
-// 	minioUploadDone := make(chan bool)
-// 	thumbnailGeneratorDone := make(chan bool)
+	go tempFileSave(file, "ffmpeg.tmp")
+	// go tempFileSave(minioReader, "minio.tmp")
+	_ = thumbnailName
+	// go server.uploadFileToMinio(c.Request.Context(), bucketname, fileName, minioReader, int64(size), minioUploadDone, minioUploadErrs)
+	// go server.generateAndUploadThumbnail(c.Request.Context(), bucketname, thumbnailName, ffmpegReader, size, thumbnailGeneratorDone, thumbnailGeneratorErrs)
 
-// 	go server.uploadFileToMinio(c.Request.Context(), bucketname, fileName, minioReader, int64(size), minioUploadDone, minioUploadErrs)
-// 	// go func() {
-// 	// 	logrus.Info(io.CopyN(io.Discard, ffmpegReader, size))
-// 	// 	logrus.Info(size)
-// 	// }()
-// 	go server.generateThumbnail(c.Request.Context(), ffmpegReader, thumbnailGeneratorDone, thumbnailGeneratorErrs)
+	if err != nil {
+		logrus.Errorf("io.copy failed: %v", err)
+		c.Status(http.StatusInternalServerError)
+		return
+	}
+	// wait for minioUpload
+	select {
+	case <-minioUploadDone:
+		logrus.Info("file uploaded to minio")
+	case err := <-minioUploadErrs:
+		logrus.Errorf("file upload failed: %v", err)
+		c.Status(http.StatusInternalServerError)
+		return
+	}
 
-// 	g, _ := errgroup.WithContext(c.Request.Context())
-// 	g.Go(func() error {
-// 		// todo if no progress in io copy then cancel the request
-// 		n, err := io.CopyN(commonWriter, file, size)
-// 		if err != nil {
-// 			return err
-// 		}
-// 		logrus.Infof("io.copy %v bytes", n)
-// 		return nil
-// 	})
-// 	if err := g.Wait(); err != nil {
-// 		logrus.Errorf("io.copy failed: %v", err)
-// 		c.Status(http.StatusInternalServerError)
-// 		return
-// 	}
-// 	// wait for minioUpload
-// 	select {
-// 	case <-minioUploadDone:
-// 		logrus.Info("file uploaded to minio")
-// 	case err := <-minioUploadErrs:
-// 		logrus.Errorf("file upload failed: %v", err)
-// 		c.Status(http.StatusInternalServerError)
-// 		return
-// 	}
+	// wait for thumbnail
+	select {
+	case <-thumbnailGeneratorDone:
+		logrus.Info("thumbnail generated")
+	case err := <-thumbnailGeneratorErrs:
+		logrus.Errorf("file upload failed: %v", err)
+		c.Status(http.StatusInternalServerError)
+		return
+	}
+	c.Status(http.StatusOK)
+	return
+}
 
-// 	// wait for thumbnail
-// 	select {
-// 	case <-thumbnailGeneratorDone:
-// 		logrus.Info("thumbnail generated")
-// 	case err := <-thumbnailGeneratorErrs:
-// 		logrus.Errorf("file upload failed: %v", err)
-// 		c.Status(http.StatusInternalServerError)
-// 		return
-// 	}
-// 	c.Status(http.StatusOK)
-// 	return
-// }
+func tempFileSave(r io.Reader, file string) error {
+	f, err := os.Create(file)
+	if err != nil {
+		return err
+	}
+	n, err := io.Copy(f, r)
+	if err != nil {
+		return err
+	}
+	logrus.Infof("copied %v bytes in %v", n, file)
+	return nil
+}
