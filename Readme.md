@@ -39,3 +39,15 @@ scopes
 * user
 * admin
 * anonymous
+
+
+moov atom
+```bash
+# check position of moov
+ffmpeg -v trace -i test-files/verticle.mp4 2>&1 | grep -e type:\'mdat\' -e type:\'moov\'
+
+# change moov atom position
+# https://stackoverflow.com/questions/8061798/post-processing-in-ffmpeg-to-move-moov-atom-in-mp4-files-qt-faststart
+```
+
+https://trac.ffmpeg.org/wiki

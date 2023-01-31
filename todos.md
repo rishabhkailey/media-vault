@@ -17,6 +17,8 @@
     * https://stackoverflow.com/questions/23787712/qt-faststart-windows-how-to-run-it
 * offscreencanvas https://developer.mozilla.org/en-US/docs/Web/API/OffscreenCanvas
 * test memory usage with big files
+* post proccessing encoding to v9 and fast mov (it should be optional) (vp9 ffmpeg commands https://developers.google.com/media/vp9/get-started and https://stackoverflow.com/questions/6954845/how-to-create-a-webm-video-file) **lets go ahead with vp9 codec and webm container**
+* jpeg for thumbnail
 
 ## Problems
 * avi format not supported so we might need to transcode videos and files
@@ -37,6 +39,7 @@
 * getting `time="2023-01-24T02:19:24Z" level=error msg="write tcp 127.0.0.1:8090->127.0.0.1:57824: write: broken pipe"`
 * https://github.com/seaweedfs/seaweedfs
 * https://blog.min.io/minio-optimizes-small-objects/
+* https://en.wikipedia.org/wiki/VP9
 
 ## Pilain
 * every user will have 2 buckets 
