@@ -41,6 +41,7 @@ export const generateThumbnail: (
         destinationResolution.width,
         destinationResolution.height
       );
+      // todo directry use canvas.toBlob
       fetch(canvas.toDataURL("image/jpeg"))
         .then((res) => {
           res

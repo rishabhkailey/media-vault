@@ -19,8 +19,11 @@ const SubmitHandler: (e: SubmitEventPromise) => any = (e: SubmitEventPromise) =>
   formData.append("file", file);
   // /v1/testEncryptedUpload
   // /v1/testNormalUpload
+  // /v1/testVideoUploadWithThumbnail
+  // /v1/testStreamVideoUploadWithThumbnail
+  // /v1/testEncryptedFileSave
   axios
-    .post("/v1/testEncryptedUpload", formData, {
+    .post("/v1/testNormalUpload", formData, {
       headers: {
         "Content-Type": "multipart/form-data",
       },

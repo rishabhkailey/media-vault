@@ -15,5 +15,8 @@ export default defineConfig({
     proxy: {
       "/v1": "http://localhost:8090/", //todo - dev setup?
     },
+    headers: {
+      "Service-Worker-Allowed": "/",
+    }
   },
 });

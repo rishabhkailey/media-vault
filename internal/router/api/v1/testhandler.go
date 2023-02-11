@@ -78,7 +78,15 @@ func (server *Server) TestGetVideoWithRange(c *gin.Context) {
 			logrus.Error(err)
 		}
 	}
-	object, err := server.Minio.GetObject(c.Request.Context(), "test", "test.mp4", minio.GetObjectOptions{})
+	fileName := c.Request.FormValue("file")
+	if len(fileName) == 0 {
+		logrus.WithField(
+			"file", fileName,
+		).Error("not found")
+		c.AbortWithStatus(http.StatusNotFound)
+		return
+	}
+	object, err := server.Minio.GetObject(c.Request.Context(), "test", fileName, minio.GetObjectOptions{})
 	if err != nil {
 		logrus.Error(err)
 		c.AbortWithStatus(http.StatusInternalServerError)
