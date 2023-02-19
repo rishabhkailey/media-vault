@@ -150,7 +150,6 @@ func createStream(codecName string, outputCtx *gmf.FmtCtx, inputStream *gmf.Stre
 	codec, err := gmf.FindEncoder(codecName)
 	if err != nil {
 		return nil, fmt.Errorf("unable to find codec for %v: %w", codecName, err)
-
 	}
 	// create and set codecCtx options
 	codecCtx := gmf.NewCodecCtx(codec)
@@ -186,8 +185,6 @@ func createStream(codecName string, outputCtx *gmf.FmtCtx, inputStream *gmf.Stre
 		}
 		log.Print(options)
 		codecCtx.SetSampleFmt(sampleFormat)
-		// codecCtx.SetSampleFmt(gmf.AV_SAMPLE_FMT_FLTP)
-		// codecCtx.SelectSampleRate()
 	}
 	if codecCtx.Type() == gmf.AVMEDIA_TYPE_VIDEO {
 		options = []gmf.Option{
@@ -201,7 +198,12 @@ func createStream(codecName string, outputCtx *gmf.FmtCtx, inputStream *gmf.Stre
 		codecCtx.SetProfile(inputStream.CodecCtx().GetProfile())
 	}
 	codecCtx.SetOptions(options)
-	if err := codecCtx.Open(nil); err != nil {
+	if err := codecCtx.Open(gmf.NewDict([]gmf.Pair{
+		{
+			Key: "movflags",
+			Val: "faststart",
+		},
+	})); err != nil {
 		return nil, fmt.Errorf("unable to open codecCtx: %w", err)
 	}
 	// create new stream in ouputCtx and set parameters from codecCtx
@@ -227,3 +229,5 @@ func createStream(codecName string, outputCtx *gmf.FmtCtx, inputStream *gmf.Stre
 // 2 frames missing even after drain/flush
 // ffmpeg -i output/try.mp4 -vcodec copy -acodec copy -f null /dev/null 2>&1 | grep 'frame='
 // ffmpeg -i input/test.mp4 -vcodec copy -acodec copy -f null /dev/null 2>&1 | grep 'frame='
+
+// https://stackoverflow.com/questions/28760706/how-to-set-the-moov-atom-position-when-encoding-video-using-ffmpeg-in-c

@@ -51,3 +51,7 @@ ffmpeg -v trace -i test-files/verticle.mp4 2>&1 | grep -e type:\'mdat\' -e type:
 ```
 
 https://trac.ffmpeg.org/wiki
+
+# Let's start with non e2e encrypted, unencrypted storage and without transcoding
+* will add feature for encrypted storage and transcoding later
+* will add feature for e2e encryption later

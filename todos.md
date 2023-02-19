@@ -19,6 +19,11 @@
 * test memory usage with big files
 * post proccessing encoding to v9 and fast mov (it should be optional) (vp9 ffmpeg commands https://developers.google.com/media/vp9/get-started and https://stackoverflow.com/questions/6954845/how-to-create-a-webm-video-file) **lets go ahead with vp9 codec and webm container**
 * jpeg for thumbnail
+* https://github.com/FFmpeg/FFmpeg/blob/master/doc/examples/transcoding.c and https://github.com/FFmpeg/FFmpeg/tree/master/doc/examples
+* try https://developer.mozilla.org/en-US/docs/Web/Guide/Audio_and_video_manipulation and  https://developer.mozilla.org/en-US/docs/Web/API/Canvas_API/Manipulating_video_using_canvas for thumbnail for video's on client side
+* https://www.youtube.com/watch?v=SdePc87Ffik&ab_channel=Pusher (e2e encryption)
+* https://github.com/mozilla/send
+* we cannot have 2 service workers in 1 scope so let's write our own code for stream download
 
 ## Problems
 * avi format not supported so we might need to transcode videos and files
@@ -40,6 +45,7 @@
 * https://github.com/seaweedfs/seaweedfs
 * https://blog.min.io/minio-optimizes-small-objects/
 * https://en.wikipedia.org/wiki/VP9
+* https://www.npmjs.com/package/resumablejs
 
 ## Pilain
 * every user will have 2 buckets 

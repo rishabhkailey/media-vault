@@ -1,6 +1,7 @@
 package v1
 
 import (
+	"context"
 	"fmt"
 	"io"
 	"net/http"
@@ -50,6 +51,53 @@ func (server *Server) TestGetVideo(c *gin.Context) {
 	})
 }
 
+var minioObjectCache map[string]*minio.Object
+
+func getMinioObjectFromCache(ctx context.Context, minioClient *minio.Client, bucket string, objectName string) (object *minio.Object, err error) {
+	if minioObjectCache == nil {
+		minioObjectCache = make(map[string]*minio.Object)
+	}
+	cacheKey := fmt.Sprintf("%s-%s", bucket, objectName)
+	object, ok := minioObjectCache[cacheKey]
+	if !ok || object == nil {
+		logrus.Warnf("cache miss bucket=%s object=%s", bucket, object)
+		object, err = minioClient.GetObject(context.Background(), bucket, objectName, minio.GetObjectOptions{})
+		if err != nil {
+			return nil, err
+		}
+		minioObjectCache[cacheKey] = object
+	}
+	return object, nil
+}
+
+func (server *Server) TestDownload(c *gin.Context) {
+	fileName := c.Request.FormValue("file")
+	if len(fileName) == 0 {
+		logrus.WithField(
+			"file", fileName,
+		).Error("not found")
+		c.AbortWithStatus(http.StatusNotFound)
+		return
+	}
+	// object, err := server.Minio.GetObject(c.Request.Context(), "test", fileName, minio.GetObjectOptions{})
+	object, err := getMinioObjectFromCache(c.Request.Context(), server.Minio, "test", fileName)
+	if err != nil {
+		logrus.Error(err)
+		c.AbortWithStatus(http.StatusInternalServerError)
+		return
+	}
+	objectInfo, err := object.Stat()
+	if err != nil {
+		logrus.Error(err)
+		c.AbortWithStatus(http.StatusInternalServerError)
+		return
+	}
+	c.Header("Content-Length", strconv.FormatInt(objectInfo.Size, 10))
+	c.Header("Connection", "keep-alive")
+	logrus.Info(io.Copy(c.Writer, object))
+	return
+}
+
 // todo cache headers cache-control, x-cache ...
 // todo io.CopyBuffer
 
@@ -86,7 +134,8 @@ func (server *Server) TestGetVideoWithRange(c *gin.Context) {
 		c.AbortWithStatus(http.StatusNotFound)
 		return
 	}
-	object, err := server.Minio.GetObject(c.Request.Context(), "test", fileName, minio.GetObjectOptions{})
+	// object, err := server.Minio.GetObject(c.Request.Context(), "test", fileName, minio.GetObjectOptions{})
+	object, err := getMinioObjectFromCache(c.Request.Context(), server.Minio, "test", fileName)
 	if err != nil {
 		logrus.Error(err)
 		c.AbortWithStatus(http.StatusInternalServerError)
@@ -129,11 +178,16 @@ func (server *Server) TestGetRangeVideo(c *gin.Context, r Range, object *minio.O
 	if err != nil {
 		logrus.Error(err)
 	}
+	if objInfo.Size == 0 {
+		// todo gracefully handle to this for empty files
+		c.Status(http.StatusInternalServerError)
+		return
+	}
 	if r.end == -1 {
 		r.end = r.start + defaultRangeSize
-		if r.end > objInfo.Size-1 {
-			r.end = objInfo.Size - 1
-		}
+	}
+	if r.end > objInfo.Size-1 {
+		r.end = objInfo.Size - 1
 	}
 	contentLength := r.end - r.start + 1
 	c.Header("Content-Length", fmt.Sprintf("%d", contentLength))
@@ -141,7 +195,6 @@ func (server *Server) TestGetRangeVideo(c *gin.Context, r Range, object *minio.O
 	c.Header("Connection", "keep-alive")
 	c.Header("Content-Range", fmt.Sprintf("bytes %d-%d/%d", r.start, r.end, objInfo.Size))
 	c.Header("Accept-Ranges", "bytes")
-	c.Status(http.StatusPartialContent)
 	// c.SSEvent()
 	// todo use of stream?
 	logrus.WithField("range", r).Info("request received")
@@ -150,10 +203,14 @@ func (server *Server) TestGetRangeVideo(c *gin.Context, r Range, object *minio.O
 		c.AbortWithStatus(http.StatusInternalServerError)
 		return
 	}
+	c.Status(http.StatusPartialContent)
 	n, err := io.CopyN(c.Writer, object, contentLength)
 	logrus.WithField("bytes", n).Info("sent")
 	if err != nil {
+		// todo this will not helm i guess, status code set earlier will be sent when we start copying the data
+		c.Status(http.StatusInternalServerError)
 		logrus.Error(err)
+		return
 	}
 	return
 }
@@ -231,13 +288,13 @@ func parseRange(r string) (*Range, error) {
 		return nil, fmt.Errorf("invalid range: %v", r)
 	}
 	// range start
-	start, err := strconv.ParseInt(startStr, 10, 32)
+	start, err := strconv.ParseInt(startStr, 10, 64)
 	if err != nil {
 		return nil, fmt.Errorf("invalid range: %w", err)
 	}
 
 	// range end
-	end, err := strconv.ParseInt(rangeStartEndArr[1], 10, 32)
+	end, err := strconv.ParseInt(rangeStartEndArr[1], 10, 64)
 	if err != nil {
 		if len(endStr) != 0 {
 			return nil, fmt.Errorf("invalid range: %w", err)

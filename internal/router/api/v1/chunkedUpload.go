@@ -16,6 +16,7 @@ import (
 )
 
 // seek reader?
+// todo add mutex
 type uploadRequest struct {
 	Reader     io.ReadCloser
 	Writer     io.WriteCloser
@@ -100,10 +101,11 @@ func (server *Server) startUploadInBackground(requestID string, fileName string,
 		return
 	}
 	uploadRequest.size = size
-	// tood need to add some kind of timeout during upload if no data is transfered for sometime
+	// todo need to add some kind of timeout during upload if no data is transfered for sometime
 	// i think tcp by default has some timeout
 	uploadedInfo, err := server.Minio.PutObject(ctx, bucketName, fileName, uploadRequest.Reader, size, minio.PutObjectOptions{})
 	if err != nil {
+		// todo time="2023-02-19T09:22:39Z" level=error msg="[server.startUploadInBackground] upload failed: A timeout occurred while trying to lock a resource, please reduce your request rate"
 		logrus.Errorf("[server.startUploadInBackground] upload failed: %v", err)
 		uploadRequest.completed = true
 		uploadRequest.err = err

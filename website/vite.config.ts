@@ -14,6 +14,7 @@ export default defineConfig({
   server: {
     proxy: {
       "/v1": "http://localhost:8090/", //todo - dev setup?
+      "/10GB.bin": "https://speed.hetzner.de/",
     },
     headers: {
       "Service-Worker-Allowed": "/",

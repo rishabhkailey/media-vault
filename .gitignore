@@ -1,0 +1,12 @@
+**/*.mp4
+**/*.tmp
+**/*.txt
+**/*.flv
+**/*.avi
+**/*.mkv
+**/*.webm
+**/*.png
+__debug_bin
+**/*.dat
+tempEncryptedStorage/
+.devcontainer/certs/

@@ -1,4 +1,4 @@
-// package main
+package main
 
 // import (
 // 	"flag"
@@ -62,7 +62,8 @@
 // 	if cc.Type() == gmf.AVMEDIA_TYPE_VIDEO {
 // 		options = append(
 // 			[]gmf.Option{
-// 				{Key: "time_base", Val: gmf.AVR{Num: 1, Den: 25}},
+// 				// {Key: "time_base", Val: gmf.AVR{Num: 1, Den: 25}},
+// 				{Key: "time_base", Val: ist.CodecCtx().TimeBase().AVR()},
 // 				{Key: "pixel_format", Val: gmf.AV_PIX_FMT_YUV420P},
 // 				// Save original
 // 				{Key: "video_size", Val: ist.CodecCtx().GetVideoSize()},
@@ -195,7 +196,6 @@
 // 				if pkt != nil {
 // 					pkt.Free()
 // 				}
-
 // 				continue
 // 			}
 
@@ -226,6 +226,9 @@
 // 				pts++
 // 			}
 
+// 			// flush or drain >0 it will add nil in the frames
+// 			// with frame as in avcodec_send_frame  It can be NULL, in which case it is considered a flush packet. This signals the end of the stream. If the encoder still has packets buffered, it will return them after this call.
+// 			// Once flushing mode has been entered, additional flush packets are ignored, and sending frames will return AVERROR_EOF.
 // 			packets, err := ost.CodecCtx().Encode(frames, flush)
 
 // 			for _, op := range packets {

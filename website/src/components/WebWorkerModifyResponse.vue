@@ -61,6 +61,7 @@ onMounted(() => {
     navigator.serviceWorker
       .register(decryptWorker, {
         scope: "./",
+        type: "module",
       })
       .then((registration) => {
         if (registration.installing) {

@@ -1,4 +1,4 @@
-// package main
+package main
 
 // import (
 // 	"io"
@@ -229,46 +229,3 @@
 // 	// }
 
 // }
-
-// // vp8 (libvpx)
-// // ffmpeg -i input/test.mp4 -c:v libvpx  output/transcoded.webm
-// // size - 1507861
-// // frame=  901 fps= 16 q=0.0 Lsize=    1473kB time=00:00:30.52 bitrate= 395.2kbits/s speed=0.542x
-// // video:1452kB audio:1kB subtitle:0kB other streams:0kB global headers:4kB muxing overhead: 1.350410%
-
-// // vp9 (libvpx-vp9)
-// // ffmpeg -i input/test.mp4 -c:v libvpx-vp9  output/transcoded.webm
-// // size - 1572115
-// // frame=  901 fps=6.8 q=0.0 Lsize=    1535kB time=00:00:30.52 bitrate= 412.1kbits/s speed=0.231x
-// // video:1514kB audio:1kB subtitle:0kB other streams:0kB global headers:4kB muxing overhead: 1.295286%
-
-// // h264 (libx264)
-// // ffmpeg -i input/test.mp4 -c:v libx264  output/transcoded.mp4
-// // size -  3161840
-// // frame=  901 fps= 59 q=-1.0 Lsize=    3088kB time=00:00:30.52 bitrate= 828.6kbits/s speed=2.01x
-// // video:3045kB audio:8kB subtitle:0kB other streams:0kB global headers:0kB muxing overhead: 1.107797%
-
-// // h264 with audio (libx264 + aac)
-// // ffmpeg -i input/test.mp4 -c:v libx264 -c:a aac output/transcoded.mp4
-// // size - 3161840
-// // frame=  901 fps= 60 q=-1.0 Lsize=    3088kB time=00:00:30.52 bitrate= 828.6kbits/s speed=2.04x
-// // video:3045kB audio:8kB subtitle:0kB other streams:0kB global headers:0kB muxing overhead: 1.107797%
-
-// // h265 (libx265)
-// // ffmpeg -i input/test.mp4 -c:v libx265  output/transcoded.mp4
-// // size - 984355
-// // frame=  901 fps= 27 q=36.0 Lsize=     961kB time=00:00:30.52 bitrate= 258.0kbits/s speed=0.926x
-// // video:916kB audio:8kB subtitle:0kB other streams:0kB global headers:2kB muxing overhead: 4.009801%
-
-// // h265 with audio (libx265 + aac)
-// // ffmpeg -i input/test.mp4 -c:v libx265 -c:a aac output/transcoded.mp4
-// // size - 984355
-// // frame=  901 fps= 27 q=36.0 Lsize=     961kB time=00:00:30.52 bitrate= 258.0kbits/s speed=0.926x
-// // video:916kB audio:8kB subtitle:0kB other streams:0kB global headers:2kB muxing overhead: 4.009801%
-
-// // mpeg4 with audio (mpeg4 + aax)
-// // ffmpeg -i input/test.mp4 -c:v mpeg4 -c:a aac -map 0:v:0 -map 0:a:0 output/transcoded.mp4
-// // size - 3591699 (maybe due to the input video itself is mpeg4, so no transcoding going on here)
-// // speed=8.31x
-// // frame=  901 fps=245 q=24.8 Lsize=    3508kB time=00:00:30.52 bitrate= 941.2kbits/s speed=8.31x
-// // video:3472kB audio:8kB subtitle:0kB other streams:0kB global headers:0kB muxing overhead: 0.779677%

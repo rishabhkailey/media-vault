@@ -7,7 +7,11 @@ import TestScreenViewVue from "@/views/TestScreenView.vue";
 import TestImageUploadScreen from "@/views/TestImageUploadScreen.vue";
 import TestVideoUploadScreen from "@/views/TestVideoUploadScreen.vue";
 import WebWorkerModifyResponseView from "@/views/WebWorkerModifyResponseView.vue";
-import ChunkedUploadFormView from "@/views/ChunkedUploadFormView.vue"
+import ChunkedUploadFormView from "@/views/ChunkedUploadFormView.vue";
+import EncryptedChunkedUploadFormView from "@/views/EncryptedChunkedUploadFormView.vue";
+import TestEncryptedFileDownload from "@/views/TestEncryptedFileDownload.vue";
+import EncryptedChunkedUploadUsingTsFormViewVue from "@/views/EncryptedChunkedUploadUsingTsFormView.vue";
+import TestEncryptedFileDownloadUsingTs from "@/views/TestEncryptedFileDownloadUsingTs.vue";
 // todo pages without redirect from vue should be lazy loaded on external/server redirect
 const router = createRouter({
   history: createWebHistory(import.meta.env.BASE_URL),
@@ -56,6 +60,26 @@ const router = createRouter({
       path: "/chunkUpload",
       name: "chunkUpload",
       component: ChunkedUploadFormView,
+    },
+    {
+      path: "/encryptedChunkUpload",
+      name: "encryptedChunkUpload",
+      component: EncryptedChunkedUploadFormView,
+    },
+    {
+      path: "/encryptedChunkUploadUsingTs",
+      name: "encryptedChunkUploadUsingTs",
+      component: EncryptedChunkedUploadUsingTsFormViewVue,
+    },
+    {
+      path: "/encryptedDownload",
+      name: "encryptedDownload",
+      component: TestEncryptedFileDownload,
+    },
+    {
+      path: "/encryptedDownloadUsingTs",
+      name: "encryptedDownloadUsingTs",
+      component: TestEncryptedFileDownloadUsingTs,
     },
   ],
 });
