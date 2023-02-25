@@ -1,6 +1,9 @@
+import { encrypt } from "crypto-js/aes";
+import { Chacha20 } from "ts-chacha20";
 // stream saver worker code + our custom code for decryption
 
 /* global self ReadableStream Response */
+
 self.addEventListener("install", () => {
   self.skipWaiting();
 });
@@ -76,7 +79,125 @@ function createStream(port) {
   });
 }
 
-self.onfetch = (event) => {
+interface IRequestRange {
+  unit: string;
+  start: number;
+  end: number;
+}
+
+interface Event {
+  request: Request;
+  respondWith: (response: Response) => any;
+}
+
+function parseRangeHeader(range: string): IRequestRange {
+  const parts = range.split("=");
+  if (parts.length != 2) {
+    throw new Error("Invalid range header " + range);
+  }
+  const unit = parts[0];
+  const rangePart = parts[1];
+  let end: number = -1;
+  if (
+    rangePart.split("-").length === 2 &&
+    rangePart.split("-")[1].length !== 0
+  ) {
+    end = Number(rangePart.split("-")[1]);
+  }
+  const start = Number(rangePart.split("-")[0]);
+  return {
+    unit,
+    start,
+    end,
+  };
+}
+
+const newDecryptTransformer: () => TransformStream<
+  Uint8Array,
+  Uint8Array
+> = () =>
+  new TransformStream<Uint8Array, Uint8Array>({
+    start() {},
+    transform(chunk, controller) {
+      if (!chunk) {
+        console.log("undefined chunk");
+      }
+      console.log("encrypted ", new TextDecoder().decode(chunk));
+      const decryptedChunk = decryptChunk(chunk);
+      console.log("encrypted ", new TextDecoder().decode(decryptedChunk));
+      controller.enqueue(decryptedChunk);
+    },
+    flush() {},
+  });
+
+let _global_decryptor: Chacha20;
+
+const decryptChunk: (input: Uint8Array) => Uint8Array = (input) => {
+  try {
+    const decrypted = _global_decryptor.decrypt(input);
+    if (!decrypted?.length || decrypted.length !== input.length) {
+      console.log(decrypted);
+    }
+    return decrypted;
+  } catch (err) {
+    console.log(err);
+  }
+  return new Uint8Array(0);
+};
+
+const internalFetch: (req: Request) => Response = async (req) => {
+  const rangeHeader = req.headers.get("Range");
+  let range: IRequestRange | undefined;
+  if (rangeHeader !== null && rangeHeader.length !== 0) {
+    range = parseRangeHeader(rangeHeader);
+  } else {
+    // todo
+  }
+  const password = "01234567890123456789012345678901";
+  const nonce = "012345678901";
+  const useless = new TextEncoder().encode(
+    "00000000000000000000000000000000000000000000000000000000000000000"
+  );
+  let i = 0;
+  if (range?.start !== undefined) {
+    i = range.start;
+  }
+  const counter = Math.floor(i / 64);
+  const byteCounter = i % 64;
+
+  const textEncoder = new TextEncoder();
+  _global_decryptor = new Chacha20(
+    textEncoder.encode(password),
+    textEncoder.encode(nonce),
+    counter
+  );
+  // set the internal byte counter
+  if (byteCounter !== 0) {
+    _global_decryptor.decrypt(useless.slice(0, byteCounter));
+  }
+  console.log(fetch);
+  // await new Promise((r) => {
+  //   setTimeout(r, 1000);
+  // });
+  const res = await fetch(req);
+  // return;
+  const encryptedStream = res.body;
+  if (encryptedStream === null) {
+    return new Response("res");
+  }
+  const decryptedStream = encryptedStream.pipeThrough(newDecryptTransformer());
+  console.log(rangeHeader, range);
+  console.log(req);
+  // const blob = await new Response(decryptedStream).blob();
+  // console.log(await blob.text());
+  return new Response(decryptedStream, {
+    headers: res.headers,
+    status: res.status,
+    statusText: res.statusText,
+  });
+};
+
+self.onfetch = (event: Event) => {
   const url = event.request.url;
 
   // this only works for Firefox
@@ -84,6 +205,42 @@ self.onfetch = (event) => {
     return event.respondWith(new Response("pong"));
   }
 
+  if (
+    event?.request?.method === "GET" &&
+    typeof event?.request?.url === "string" &&
+    new URL(event.request.url).pathname.startsWith("/v1/testGetVideoWithRange")
+  ) {
+    
+    return event.respondWith(internalFetch(event.request));
+
+    // fetch(event.request)
+    //   .then((res) => {
+    //     const encryptedStream = res.body;
+    //     if (encryptedStream === null) {
+    //       return event.respondWith(res);
+    //     }
+    //     const decryptedStream = encryptedStream.pipeThrough(
+    //       newDecryptTransformer()
+    //     );
+    //     return event.respondWith(
+    //       new Response(decryptedStream, {
+    //         headers: res.headers,
+    //         status: res.status,
+    //         statusText: res.statusText,
+    //       })
+    //     );
+    //   })
+    //   .catch((err) => {
+    //     console.log(err);
+    //     return event.respondWith(
+    //       new Response("decryption failed", {
+    //         status: 500,
+    //       })
+    //     );
+    //   });
+    // console.log(rangeHeader, range);
+    // console.log(event?.request);
+  }
   const hijacke = map.get(url);
 
   if (!hijacke) return null;

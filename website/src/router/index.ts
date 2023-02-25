@@ -12,6 +12,7 @@ import EncryptedChunkedUploadFormView from "@/views/EncryptedChunkedUploadFormVi
 import TestEncryptedFileDownload from "@/views/TestEncryptedFileDownload.vue";
 import EncryptedChunkedUploadUsingTsFormViewVue from "@/views/EncryptedChunkedUploadUsingTsFormView.vue";
 import TestEncryptedFileDownloadUsingTs from "@/views/TestEncryptedFileDownloadUsingTs.vue";
+import EncryptedVideoPlayView from "@/views/EncryptedVideoPlayView.vue"; 
 // todo pages without redirect from vue should be lazy loaded on external/server redirect
 const router = createRouter({
   history: createWebHistory(import.meta.env.BASE_URL),
@@ -81,6 +82,11 @@ const router = createRouter({
       name: "encryptedDownloadUsingTs",
       component: TestEncryptedFileDownloadUsingTs,
     },
+    {
+      path: "/encryptedVideoPlay",
+      name: "encryptedVideoPlay",
+      component: EncryptedVideoPlayView,
+    }
   ],
 });
 

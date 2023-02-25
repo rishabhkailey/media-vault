@@ -94,7 +94,7 @@ console.log(textDecoder.decode(multiDecryptedMessage));
   const encryptedMessage = encryptor.encrypt(textEncoder.encode(message));
   let chunkSize = 10;
   let useless = textEncoder.encode(
-    "0000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000"
+    "00000000000000000000000000000000000000000000000000000000000000000"
   );
   for (let i = 0; i < encryptedMessage.length; i += chunkSize) {
     let start = i;

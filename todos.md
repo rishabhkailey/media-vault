@@ -24,7 +24,7 @@
 * https://www.youtube.com/watch?v=SdePc87Ffik&ab_channel=Pusher (e2e encryption)
 * https://github.com/mozilla/send
 * we cannot have 2 service workers in 1 scope so let's write our own code for stream download
-
+* continue download even after closing the tab https://developer.mozilla.org/en-US/docs/Web/API/Background_Fetch_API
 ## Problems
 * avi format not supported so we might need to transcode videos and files
 * videos in firefox not working
