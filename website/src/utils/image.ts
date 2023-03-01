@@ -84,7 +84,7 @@ export type thumbnailConstraints = {
 // 9/16 < maxHeightWidth
 // horizontal long image < maxHeightWidth
 // verticle long image < maxHeightWidth
-const proccessThumbnailConstraints = (
+export const proccessThumbnailConstraints = (
   constraints: thumbnailConstraints,
   imageResolution: WidthHeight
 ) => {

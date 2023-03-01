@@ -124,7 +124,7 @@ const newDecryptTransformer: () => TransformStream<
       }
       console.log("encrypted ", new TextDecoder().decode(chunk));
       const decryptedChunk = decryptChunk(chunk);
-      console.log("encrypted ", new TextDecoder().decode(decryptedChunk));
+      console.log("decrypted ", new TextDecoder().decode(decryptedChunk));
       controller.enqueue(decryptedChunk);
     },
     flush() {},
@@ -210,7 +210,6 @@ self.onfetch = (event: Event) => {
     typeof event?.request?.url === "string" &&
     new URL(event.request.url).pathname.startsWith("/v1/testGetVideoWithRange")
   ) {
-    
     return event.respondWith(internalFetch(event.request));
 
     // fetch(event.request)
