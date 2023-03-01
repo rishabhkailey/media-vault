@@ -4,33 +4,29 @@ import streamSaverMITM from "@/worker/mitm.html?url";
 import decryptWorker from "@/worker/decrypt?url";
 const video = ref<HTMLVideoElement | undefined>(undefined);
 
-onMounted(() => {
+const url = ref<string>("");
+const loading = ref<boolean>(true);
+
+onMounted(async () => {
   // streamSaver.WritableStream = WritableStream;
   // streamSaver.TransformStream = TransformStream;
 
   if ("serviceWorker" in navigator) {
-    navigator.serviceWorker
-      .register(decryptWorker, {
-        scope: "./",
-        type: "module",
-      })
-      .then((registration) => {
-        if (registration.installing) {
-          console.log("Service worker installing");
-        } else if (registration.waiting) {
-          console.log("Service worker installed");
-        } else if (registration.active) {
-          console.log("Service worker active");
-        }
-      })
-      .catch((error) => {
-        console.error(`Registration failed with ${error}`);
-      });
+    // todo try catch
+    await navigator.serviceWorker.register(decryptWorker, {
+      scope: "./",
+      type: "module",
+    });
+    await navigator.serviceWorker.ready;
+    console.log("Service worker active");
+    url.value =
+      "http://localhost:5173/v1/testGetVideoWithRange?file=SampleVideo_1280x720_30mb.mp4";
+    loading.value = false;
     fetch(
       "http://localhost:5173/v1/testGetVideoWithRange?file=SampleVideo_1280x720_30mb.mp4",
       {
         headers: {
-          Range: `bytes=0-100`,
+          Range: `bytes=10-100`,
         },
       }
     )
@@ -54,8 +50,10 @@ onMounted(() => {
 </script>
 
 <template>
+  <div v-if="loading">loading...</div>
   <video-player
-    :src="`/v1/testGetVideoWithRange?file=SampleVideo_1280x720_30mb.mp4`"
+    v-else
+    :src="url"
     :controls="true"
     :autoplay="true"
     :loop="true"
