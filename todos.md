@@ -55,3 +55,9 @@
 * able to upload normal files for backup
 * file names in minio random/uuid. we will store the actual name in the DB
 * we will need to have something similar to range requests and every request should have total count so we can have placeholders in application so user can just keep on scrolling without loading. we will have lazy load for images/videos.
+
+
+## Auth
+* https://www.ory.sh/docs/ecosystem/projects 
+    * roles - used for user access - openid scopes e.g. annnonymous, user, admin
+    * scopes - used by applications to access user data - oauth scopes e.g. media.read, media.read_write
