@@ -25,6 +25,7 @@
 * https://github.com/mozilla/send
 * we cannot have 2 service workers in 1 scope so let's write our own code for stream download
 * continue download even after closing the tab https://developer.mozilla.org/en-US/docs/Web/API/Background_Fetch_API
+* image location from metadata (use for search)
 ## Problems
 * avi format not supported so we might need to transcode videos and files
 * videos in firefox not working
@@ -61,3 +62,12 @@
 * https://www.ory.sh/docs/ecosystem/projects 
     * roles - used for user access - openid scopes e.g. annnonymous, user, admin
     * scopes - used by applications to access user data - oauth scopes e.g. media.read, media.read_write
+
+## Searching
+* labels
+    * file name (/\-_ .+) separated
+    * month name
+    * year
+    * manual tags
+    * location
+    * album name

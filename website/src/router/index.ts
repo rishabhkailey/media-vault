@@ -1,5 +1,6 @@
 import { createRouter, createWebHistory } from "vue-router";
 import NotFound from "@/views/NotFoundView.vue";
+import HomeView from "@/views/HomeView.vue";
 import ErrorScreenView from "@/views/ErrorScreenView.vue";
 import TestVideoScreen from "@/views/TestVideoScreen.vue";
 import FileUploadView from "@/views/FileUploadView.vue";
@@ -20,8 +21,13 @@ const router = createRouter({
   routes: [
     {
       path: "/:pathMatch(.*)*",
-      name: "home",
+      name: "NotFound",
       component: NotFound,
+    },
+    {
+      path: "/",
+      name: "Home",
+      component: HomeView,
     },
     {
       path: "/error",

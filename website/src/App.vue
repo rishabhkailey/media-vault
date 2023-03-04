@@ -5,16 +5,9 @@ import { RouterView } from "vue-router";
 <template>
   <v-app>
     <v-main>
-      <v-container fluid>
+      <v-container class="pa-0 ma-0" fluid>
         <RouterView />
       </v-container>
     </v-main>
   </v-app>
 </template>
-
-<style scoped>
-#app {
-  display: flex;
-  font-family: "Google Sans";
-}
-</style>
