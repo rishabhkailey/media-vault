@@ -2,6 +2,8 @@
 import AppBar from "../components/AppBar.vue";
 import NavigationBar from "../components/NavigationBar.vue";
 import HomePage from "../components/HomePage.vue";
+// todo if not authenticated redirect to some different page
+// maybe /about
 </script>
 
 <template>

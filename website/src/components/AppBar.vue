@@ -1,9 +1,13 @@
 <script setup lang="ts">
+import SelectFileButton from "@/components/SelectFileButton.vue";
+import UploadFilesDialog from "@/components/UploadFilesDialog.vue";
 import { computed, ref } from "vue";
 import { useStore } from "vuex";
+import {
+  SET_LOGGED_IN_USERINFO_ACTION,
+  LOGOUT_ACTION,
+} from "@/store/actions-type";
 
-import { SET_LOGGED_IN_USERINFO_ACTION, LOGOUT_ACTION } from "@/store/actions-type";
-import LoadingAnimation from "./LoadingAnimation.vue";
 const search = ref("");
 const searchInputRules: Array<any> = [];
 
@@ -13,6 +17,9 @@ const error = ref(false);
 const authenticated = computed(() => store.getters.authenticated);
 const userName = computed(() => store.getters.userName);
 const email = computed(() => store.getters.email);
+
+const selectedFiles = ref<Array<File>>([]);
+const uploadFilesDialogModel = ref(false);
 
 const logOut = () => {
   loading.value = true;
@@ -51,7 +58,11 @@ const logIn = () => {
 
   // router.go()
 };
-
+const uploadFiles = (files: Array<File>) => {
+  selectedFiles.value = files;
+  uploadFilesDialogModel.value = true;
+  console.log(files);
+};
 loading.value = true;
 store
   .dispatch(SET_LOGGED_IN_USERINFO_ACTION)
@@ -90,10 +101,13 @@ store
       <!-- end -->
       <v-col>
         <v-row class="d-flex flex-row justify-end align-center mr-2">
-          <v-btn class="bg-primary mx-2">
-            <v-icon icon="mdi-upload" />
-            Upload
-          </v-btn>
+          <div>
+            <SelectFileButton
+              label="upload"
+              prepend-icon="mdi-upload"
+              @select="uploadFiles"
+            />
+          </div>
           <div v-if="authenticated">
             <v-btn
               :loading="loading"
@@ -130,4 +144,10 @@ store
       </v-col>
     </v-row>
   </v-app-bar>
+  <UploadFilesDialog
+    :height="400"
+    :width="300"
+    v-model="uploadFilesDialogModel"
+    :files="selectedFiles"
+  />
 </template>

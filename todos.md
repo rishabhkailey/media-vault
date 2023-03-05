@@ -66,6 +66,7 @@
 ## Searching
 * labels
     * file name (/\-_ .+) separated
+    * file type (image, video, document, other)
     * month name
     * year
     * manual tags
