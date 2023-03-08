@@ -7,7 +7,7 @@ import { Chacha20 } from "ts-chacha20";
 import axios from "axios";
 import { transform } from "@vue/compiler-core";
 
-const fileName = ref<string>("file_example_AVI_1920_2_3MG.avi");
+const fileName = ref<string>("1GB.dat");
 onMounted(async () => {
   streamSaver.mitm = streamSaverMITM;
   // streamSaver.WritableStream = WritableStream;
@@ -68,11 +68,12 @@ function parseRangeHeader(range: string): IRange {
     size,
   };
 }
+// todo now we don't need to decrypt the video here as we are using service worker to decrypt video
 const download = async () => {
   // let file = "text.txt";
   // let file = "100MB.dat";
-  let file = "1GB.dat";
-  const url = `http://localhost:5173/v1/testGetVideoWithRange?file=${file}`;
+  let file = fileName.value;
+  const url = `http://localhost:5173/v1/testDownloadFileWithRange?file=${file}`;
   whileRangeDownloadWithDecrypt(url, file)
     .then((done) => {
       console.log("done " + done);
@@ -220,6 +221,7 @@ const decryptChunk: (input: Uint8Array) => Uint8Array = (input) => {
   </v-col>
   <!-- <video-player src="https://vjs.zencdn.net/v/oceans.mp4" /> -->
 </template>
-//
+<!--
 https://stackoverflow.com/questions/65984220/node-js-high-memory-usage-when-using-createreadstream-and-createwritestream
-// https://github.com/jimmywarting/StreamSaver.js/issues/133
+https://github.com/jimmywarting/StreamSaver.js/issues/133
+-->

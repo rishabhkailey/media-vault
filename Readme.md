@@ -55,3 +55,35 @@ https://trac.ffmpeg.org/wiki
 # Let's start with non e2e encrypted, unencrypted storage and without transcoding
 * will add feature for encrypted storage and transcoding later
 * will add feature for e2e encryption later
+
+
+Go Profiling
+```bash
+# cpu
+wget -O cpu.pprof http://localhost:8090/debug/pprof/profile?seconds=120
+sudo apt install -y graphviz
+go tool pprof -http 0.0.0.0:8989 cpu.pprof
+```
+
+system CPU debugging (helpful if other service like minio, postgres or redis is using high cpu)
+[detailed steps](https://github.com/brendangregg/FlameGraph)
+```bash
+# on host machine not inside the container
+# if perf command is not installed
+# ubuntu
+sudo apt install linux-tools-common linux-tools-generic linux-tools-`uname -r`
+# debian
+sudo apt install linux-perf
+
+# will generate perf.data file
+perf record -F 99 -a -g -- sleep 120
+# read perf.data file
+perf script > out.perf
+# if flamegraph is not installed
+git clone https://github.com/brendangregg/FlameGraph.git
+export PATH=$PATH:$PWD/FlameGraph
+cd ..
+
+stackcollapse-perf.pl out.perf > out.folded
+flamegraph.pl out.folded > kernel.svg
+```

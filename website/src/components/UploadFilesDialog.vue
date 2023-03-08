@@ -1,5 +1,13 @@
 <script setup lang="ts">
-import { ref, defineProps, withDefaults, defineEmits } from "vue";
+import {
+  ref,
+  withDefaults,
+  defineEmits,
+  onMounted,
+  computed,
+  reactive,
+} from "vue";
+import { chunkUpload } from "@/utils/encryptFileUpload";
 
 const props = withDefaults(
   defineProps<{
@@ -16,11 +24,52 @@ const props = withDefaults(
   }
 );
 
-// const attachedTo = document.createElement("div");
-// attachedTo.style.position = "absolute";
-// attachedTo.style.bottom = "0";
-// attachedTo.style.right = "0";
+interface FileUploadStatus {
+  progress: number;
+  done: boolean;
+  failed: boolean;
+  errMessage: string;
+}
+const filesUploadStatus = computed<Array<FileUploadStatus>>(() => {
+  return reactive<Array<FileUploadStatus>>(
+    new Array(props.files.length).fill({
+      progress: 0,
+      done: false,
+      failed: false,
+      errMessage: "",
+    })
+  );
+});
 
+// todo move this to somewhere else on any update it reuploads the files
+onMounted(() => {
+  if (
+    props.files.length > 0 &&
+    props.files.length === filesUploadStatus.value.length
+  ) {
+    console.log("uploading...");
+    uploadFiles(props.files);
+  }
+});
+async function uploadFiles(files: Array<File>) {
+  files.forEach(async (file, index) => {
+    try {
+      await chunkUpload(file, (progress: number) => {
+        filesUploadStatus.value[index].progress = progress;
+      });
+      filesUploadStatus.value[index].done = true;
+      filesUploadStatus.value[index].failed = false;
+    } catch (err) {
+      filesUploadStatus.value[index].done = true;
+      filesUploadStatus.value[index].failed = true;
+      if (err instanceof Error) {
+        filesUploadStatus.value[index].errMessage = err.toString();
+      }
+
+      console.log(`upload failed for file ${file.name}: ${err}`);
+    }
+  });
+}
 const attachedTo = ref<HTMLDivElement | undefined>(undefined);
 const collapsed = ref<boolean>(false);
 
@@ -78,32 +127,66 @@ const emit = defineEmits<{
         <v-container class="ma-0 pa-0">
           <v-list lines="two">
             <v-list-item
-              v-for="file in files"
+              v-for="(file, index) in props.files"
               :key="file.name"
               :title="file.name"
               :subtitle="file.size"
             >
               <template v-slot:prepend>
+                <!-- todo create a separate component with simple logic -->
                 <v-avatar>
                   <v-progress-circular
                     :size="70"
                     :width="7"
-                    color="primary"
-                    indeterminate
+                    :color="filesUploadStatus[index].failed ? 'red' : 'primary'"
+                    :model-value="
+                      filesUploadStatus[index].failed
+                        ? '100'
+                        : filesUploadStatus[index].progress
+                    "
                   >
-                    <!-- todo remove this and add logic for progress -->
-                    <template v-slot:default>
-                      <v-icon color="grey">mdi-folder</v-icon>
-                    </template>
+                    {{
+                      filesUploadStatus[index].failed
+                        ? "!"
+                        : filesUploadStatus[index].progress
+                    }}
                   </v-progress-circular>
                 </v-avatar>
               </template>
               <template v-slot:append>
                 <v-btn
+                  v-if="!filesUploadStatus[index].done"
                   color="grey-lighten-1"
                   icon="mdi-close"
                   variant="text"
-                ></v-btn>
+                />
+                <v-btn
+                  v-if="
+                    filesUploadStatus[index].done &&
+                    !filesUploadStatus[index].failed
+                  "
+                  color="grey-lighten-1"
+                  icon="mdi-check"
+                  variant="text"
+                />
+                <!-- rotate-right -->
+                <v-tooltip
+                  location="top"
+                  text="retry"
+                  v-if="
+                    filesUploadStatus[index].done &&
+                    filesUploadStatus[index].failed
+                  "
+                >
+                  <template v-slot:activator="{ props }">
+                    <v-btn
+                      color="grey-lighten-1"
+                      icon="mdi-rotate-right"
+                      variant="text"
+                      v-bind="props"
+                    />
+                  </template>
+                </v-tooltip>
               </template>
             </v-list-item>
           </v-list>
@@ -112,7 +195,13 @@ const emit = defineEmits<{
       <v-bottom-navigation
         :style="`max-height: ${(props.height * 1.5) / 10}px`"
       >
-        <v-btn>
+        <v-btn
+          @click.stop="
+            () => {
+              emit('update:modelValue', false);
+            }
+          "
+        >
           <v-icon>mdi-close</v-icon>
           cancel
         </v-btn>

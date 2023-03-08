@@ -195,6 +195,7 @@ func (server *Server) UploadChunk(c *gin.Context) {
 		c.AbortWithStatus(http.StatusBadRequest)
 		return
 	}
+	// todo buffer, it causes high cpu if we are sending a lot of small requests
 	n, err := io.CopyN(uploadRequest.Writer, chunkData, chunkSize)
 	if err != nil {
 		logrus.Errorf("[Server.uploadChunk] io.CopyN failed: %v", err)

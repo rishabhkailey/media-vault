@@ -26,6 +26,8 @@
 * we cannot have 2 service workers in 1 scope so let's write our own code for stream download
 * continue download even after closing the tab https://developer.mozilla.org/en-US/docs/Web/API/Background_Fetch_API
 * image location from metadata (use for search)
+* password storage client side (https://developer.mozilla.org/en-US/docs/Learn/JavaScript/Client-side_web_APIs/Client-side_storage)
+
 ## Problems
 * avi format not supported so we might need to transcode videos and files
 * videos in firefox not working
@@ -47,6 +49,7 @@
 * https://blog.min.io/minio-optimizes-small-objects/
 * https://en.wikipedia.org/wiki/VP9
 * https://www.npmjs.com/package/resumablejs
+* js performance test https://jsben.ch/
 
 ## Pilain
 * every user will have 2 buckets 
@@ -72,3 +75,24 @@
     * manual tags
     * location
     * album name
+
+
+## Issues
+* todo mutex for map
+```log
+"concurrent map writes"
+Stack:
+	2  0x0000000001235719 in github.com/rishabhkailey/media-service/internal/router/api/v1.newUploadRequest
+	    at /workspaces/media-service/internal/router/api/v1/chunkedUpload.go:42
+	3  0x0000000001235f2d in github.com/rishabhkailey/media-service/internal/router/api/v1.(*Server).startUploadInBackground
+	    at /workspaces/media-service/internal/router/api/v1/chunkedUpload.go:87
+	4  0x0000000001235df1 in github.com/rishabhkailey/media-service/internal/router/api/v1.(*Server).InitChunkUpload.func1
+	    at /workspaces/media-service/internal/router/api/v1/chunkedUpload.go:78
+```
+* happened when upload and download at same time?
+```log
+    [GIN] 2023/03/08 - 10:40:47 | 200 |     363.397µs |       127.0.0.1 | POST     "/v1/finishChunkUpload"
+    time="2023-03-08T10:40:52Z" level=info msg="request received" range="{0 1169637}"
+    time="2023-03-08T10:40:52Z" level=info msg=sent bytes=0
+    time="2023-03-08T10:40:52Z" level=error msg="At least one of the pre-conditions you specified did not hold"
+```

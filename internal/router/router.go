@@ -2,6 +2,7 @@ package router
 
 import (
 	"fmt"
+	"net/http/pprof"
 	"path"
 
 	"github.com/gin-contrib/sessions"
@@ -33,6 +34,7 @@ func NewRouter(v1ApiServer *v1Api.Server, config config.Config) (*gin.Engine, er
 		v1.GET("/authorize", v1ApiServer.AuthHandler)
 		v1.GET("/testGetVideo", v1ApiServer.TestGetVideo)
 		v1.GET("/testGetVideoWithRange", v1ApiServer.TestGetVideoWithRange)
+		v1.GET("/testDownloadFileWithRange", v1ApiServer.TestGetVideoWithRange)
 		v1.GET("/testDownload", v1ApiServer.TestDownload)
 		v1.GET("/testGetEncryptedVideoWithRange", v1ApiServer.TestGetVideoWithRange)
 		v1.GET("/testGetVideoWithRange/test.mp4", v1ApiServer.TestGetVideoWithRange)
@@ -47,7 +49,6 @@ func NewRouter(v1ApiServer *v1Api.Server, config config.Config) (*gin.Engine, er
 		v1.POST("/uploadChunk", v1ApiServer.UploadChunk)
 		v1.POST("/finishChunkUpload", v1ApiServer.FinishChunkUpload)
 	}
-
 	// authorized endpoints
 	authorized := router.Group("/")
 	// is it good to have redirects at backend?
@@ -62,6 +63,18 @@ func NewRouter(v1ApiServer *v1Api.Server, config config.Config) (*gin.Engine, er
 		}
 	}
 
+	debug := router.Group("/debug")
+	{
+		debug.GET("/pprof/:profile", func(c *gin.Context) {
+			profile := c.Param("profile")
+			if profile == "profile" {
+				pprof.Profile(c.Writer, c.Request)
+				return
+			}
+			handler := pprof.Handler(profile)
+			handler.ServeHTTP(c.Writer, c.Request)
+		})
+	}
 	return router, nil
 }
 

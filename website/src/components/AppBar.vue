@@ -147,6 +147,7 @@ store
   <UploadFilesDialog
     :height="400"
     :width="300"
+    v-if="uploadFilesDialogModel"
     v-model="uploadFilesDialogModel"
     :files="selectedFiles"
   />
