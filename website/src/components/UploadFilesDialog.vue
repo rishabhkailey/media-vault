@@ -1,12 +1,5 @@
 <script setup lang="ts">
-import {
-  ref,
-  withDefaults,
-  defineEmits,
-  onMounted,
-  computed,
-  reactive,
-} from "vue";
+import { ref, withDefaults, onMounted, computed, reactive } from "vue";
 import { chunkUpload } from "@/utils/encryptFileUpload";
 
 const props = withDefaults(
@@ -31,14 +24,17 @@ interface FileUploadStatus {
   errMessage: string;
 }
 const filesUploadStatus = computed<Array<FileUploadStatus>>(() => {
-  return reactive<Array<FileUploadStatus>>(
-    new Array(props.files.length).fill({
+  let arr = new Array<FileUploadStatus>(props.files.length);
+  // arr.fill sets reference of same object to all elements and updating 1 update all
+  for (let i = 0; i < arr.length; i++) {
+    arr[i] = {
       progress: 0,
       done: false,
       failed: false,
       errMessage: "",
-    })
-  );
+    };
+  }
+  return reactive<Array<FileUploadStatus>>(arr);
 });
 
 // todo move this to somewhere else on any update it reuploads the files
@@ -51,12 +47,17 @@ onMounted(() => {
     uploadFiles(props.files);
   }
 });
+
 async function uploadFiles(files: Array<File>) {
-  files.forEach(async (file, index) => {
+  // forEach requres async function using which we can not upload synchronously
+  for (let index = 0; index < files.length; index++) {
     try {
-      await chunkUpload(file, (progress: number) => {
+      let file = files[index];
+      // not waiting for upload to finish
+      let uploadInfo = await chunkUpload(file, (progress: number) => {
         filesUploadStatus.value[index].progress = progress;
       });
+      console.log(uploadInfo);
       filesUploadStatus.value[index].done = true;
       filesUploadStatus.value[index].failed = false;
     } catch (err) {
@@ -65,10 +66,8 @@ async function uploadFiles(files: Array<File>) {
       if (err instanceof Error) {
         filesUploadStatus.value[index].errMessage = err.toString();
       }
-
-      console.log(`upload failed for file ${file.name}: ${err}`);
     }
-  });
+  }
 }
 const attachedTo = ref<HTMLDivElement | undefined>(undefined);
 const collapsed = ref<boolean>(false);
@@ -145,10 +144,11 @@ const emit = defineEmits<{
                         : filesUploadStatus[index].progress
                     "
                   >
+                    <!-- todo text size -->
                     {{
                       filesUploadStatus[index].failed
                         ? "!"
-                        : filesUploadStatus[index].progress
+                        : Math.round(filesUploadStatus[index].progress) + "%"
                     }}
                   </v-progress-circular>
                 </v-avatar>
@@ -217,6 +217,7 @@ const emit = defineEmits<{
         </v-btn>
       </v-bottom-navigation>
     </v-card>
+    <!-- todo tootip for info like click to expand or uploading in progress -->
     <v-container
       class="ma-0 pa-0 d-flex justify-end align-end flex-grow-1"
       v-else
