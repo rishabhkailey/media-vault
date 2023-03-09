@@ -1,6 +1,7 @@
 <script setup lang="ts">
 import { ref, withDefaults, onMounted, computed, reactive } from "vue";
 import { chunkUpload } from "@/utils/encryptFileUpload";
+import FileUploadForm from "./FileUploadForm.vue";
 
 const props = withDefaults(
   defineProps<{
@@ -22,6 +23,7 @@ interface FileUploadStatus {
   done: boolean;
   failed: boolean;
   errMessage: string;
+  controller: AbortController;
 }
 const filesUploadStatus = computed<Array<FileUploadStatus>>(() => {
   let arr = new Array<FileUploadStatus>(props.files.length);
@@ -32,6 +34,7 @@ const filesUploadStatus = computed<Array<FileUploadStatus>>(() => {
       done: false,
       failed: false,
       errMessage: "",
+      controller: new AbortController(),
     };
   }
   return reactive<Array<FileUploadStatus>>(arr);
@@ -52,11 +55,18 @@ async function uploadFiles(files: Array<File>) {
   // forEach requres async function using which we can not upload synchronously
   for (let index = 0; index < files.length; index++) {
     try {
+      if (filesUploadStatus.value[index].controller.signal.aborted) {
+        throw new Error("canceled");
+      }
       let file = files[index];
       // not waiting for upload to finish
-      let uploadInfo = await chunkUpload(file, (progress: number) => {
-        filesUploadStatus.value[index].progress = progress;
-      });
+      let uploadInfo = await chunkUpload(
+        file,
+        filesUploadStatus.value[index].controller,
+        (progress: number) => {
+          filesUploadStatus.value[index].progress = progress;
+        }
+      );
       console.log(uploadInfo);
       filesUploadStatus.value[index].done = true;
       filesUploadStatus.value[index].failed = false;
@@ -159,6 +169,11 @@ const emit = defineEmits<{
                   color="grey-lighten-1"
                   icon="mdi-close"
                   variant="text"
+                  @click.stop="
+                    () => {
+                      filesUploadStatus[index].controller.abort();
+                    }
+                  "
                 />
                 <v-btn
                   v-if="
@@ -198,6 +213,9 @@ const emit = defineEmits<{
         <v-btn
           @click.stop="
             () => {
+              filesUploadStatus.forEach((status) => {
+                status.controller.abort();
+              });
               emit('update:modelValue', false);
             }
           "

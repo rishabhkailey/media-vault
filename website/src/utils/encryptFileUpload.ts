@@ -1,4 +1,4 @@
-import axios from "axios";
+import axios, { type AxiosResponse } from "axios";
 import { Chacha20 } from "ts-chacha20";
 
 type ProgressCallback = (percentage: number) => void;
@@ -11,15 +11,16 @@ interface ChunkUploadInfo {
 
 export function chunkUpload(
   file: File,
+  controller: AbortController,
   callback: ProgressCallback
 ): Promise<ChunkUploadInfo> {
   return new Promise((resolve, reject) => {
-    initChunkUpload(file)
+    initChunkUpload(file, controller)
       .then((chunkRequestInfo) => {
-        uploadFileChunks(file, chunkRequestInfo, callback)
+        uploadFileChunks(file, chunkRequestInfo, controller, callback)
           .then((uploadedBytes) => {
             console.log("uploaded " + uploadedBytes + " bytes of " + file.name);
-            finishChunkUpload(chunkRequestInfo)
+            finishChunkUpload(chunkRequestInfo, controller)
               .then((success) => {
                 if (success) {
                   // todo
@@ -53,7 +54,10 @@ export function chunkUpload(
 interface ChunkRequestInfo {
   requestID: string;
 }
-function initChunkUpload(file: File): Promise<ChunkRequestInfo> {
+function initChunkUpload(
+  file: File,
+  controller: AbortController
+): Promise<ChunkRequestInfo> {
   return new Promise((resolve, reject) => {
     axios
       .post(
@@ -67,6 +71,7 @@ function initChunkUpload(file: File): Promise<ChunkRequestInfo> {
           headers: {
             "Content-Type": "application/json",
           },
+          signal: controller.signal,
         }
       )
       .then((response) => {
@@ -99,6 +104,7 @@ const defaultChunkSize = 25 * 1024 * 1024;
 function uploadFileChunks(
   file: File,
   chunkRequestInfo: ChunkRequestInfo,
+  controller: AbortController,
   callback: ProgressCallback
 ): Promise<number> {
   const stream = file.stream();
@@ -129,12 +135,18 @@ function uploadFileChunks(
         if (done) {
           // upload remaining
           if (bufferIndex != 0) {
-            await encryptAndUploadChunk(
-              requestID,
-              bytesUploaded,
-              buffer.slice(0, bufferIndex),
-              encryptor
-            );
+            try {
+              await encryptAndUploadChunk(
+                requestID,
+                bytesUploaded,
+                buffer.slice(0, bufferIndex),
+                encryptor,
+                controller
+              );
+            } catch (err) {
+              reject(err);
+              return;
+            }
             console.log("upload buffer", bytesUploaded);
             bytesUploaded += bufferIndex;
           }
@@ -148,18 +160,25 @@ function uploadFileChunks(
           throw new Error("empty chunk received");
         }
 
+        console.log(`read chunk of length ${value.length}`);
         readBytes += value.length;
         while (bufferIndex + value.length >= chunkSize) {
           buffer.set(value.slice(0, chunkSize - bufferIndex), bufferIndex);
           value = value.slice(chunkSize - bufferIndex);
           bufferIndex = chunkSize;
           // upload buffer
-          await encryptAndUploadChunk(
-            requestID,
-            bytesUploaded,
-            buffer,
-            encryptor
-          );
+          try {
+            await encryptAndUploadChunk(
+              requestID,
+              bytesUploaded,
+              buffer,
+              encryptor,
+              controller
+            );
+          } catch (err) {
+            reject(err);
+            return;
+          }
           console.log("upload buffer", bytesUploaded);
           // if buffer upload successful
           bufferIndex = 0;
@@ -169,7 +188,6 @@ function uploadFileChunks(
           if (callback !== undefined) {
             callback((bytesUploaded * 100) / file.size);
           }
-          console.log(`chunk of length ${value.length}`);
         }
         // new chunk is not satisfying the buffer size so we will save it in the buffer and read more
         if (value.length > 0) {
@@ -193,7 +211,8 @@ async function encryptAndUploadChunk(
   requestID: string,
   index: number,
   value: Uint8Array,
-  encryptor: Chacha20
+  encryptor: Chacha20,
+  controller: AbortController
 ) {
   let chunkBlob: Blob;
   try {
@@ -205,30 +224,38 @@ async function encryptAndUploadChunk(
   } catch (err) {
     throw new Error("Encryptiong failed " + err);
   }
-  const response = await axios.post(
-    "/v1/uploadChunk",
-    {
-      requestID: requestID,
-      index: index,
-      chunkSize: value.length,
-      chunkData: chunkBlob,
-    },
-    {
-      headers: {
-        "Content-Type": "multipart/form-data",
+  let response: AxiosResponse<any>;
+  try {
+    response = await axios.post(
+      "/v1/uploadChunk",
+      {
+        requestID: requestID,
+        index: index,
+        chunkSize: value.length,
+        chunkData: chunkBlob,
       },
-    }
-  );
+      {
+        headers: {
+          "Content-Type": "multipart/form-data",
+        },
+        signal: controller.signal,
+      }
+    );
+  } catch (err) {
+    console.log("Upload chunk failed with error " + err);
+    throw new Error("Upload chunk failed with error " + err);
+  }
   console.log(response);
   if (response.status !== 200) {
     throw new Error(
-      "upload chuck request failed with status" + response.status
+      "upload chunk request failed with status" + response.status
     );
   }
 }
 
 function finishChunkUpload(
-  chunkRequestInfo: ChunkRequestInfo
+  chunkRequestInfo: ChunkRequestInfo,
+  controller: AbortController
 ): Promise<boolean> {
   return new Promise((resolve, reject) => {
     // finish upload
@@ -243,6 +270,7 @@ function finishChunkUpload(
           headers: {
             "Content-Type": "application/json",
           },
+          signal: controller.signal,
         }
       )
       .then((res) => {

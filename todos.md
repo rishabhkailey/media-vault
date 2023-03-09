@@ -27,6 +27,7 @@
 * continue download even after closing the tab https://developer.mozilla.org/en-US/docs/Web/API/Background_Fetch_API
 * image location from metadata (use for search)
 * password storage client side (https://developer.mozilla.org/en-US/docs/Learn/JavaScript/Client-side_web_APIs/Client-side_storage)
+* status column in media table
 
 ## Problems
 * avi format not supported so we might need to transcode videos and files
