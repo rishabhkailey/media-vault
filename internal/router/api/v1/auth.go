@@ -251,6 +251,7 @@ func (server Server) AuthHandler(c *gin.Context) {
 		Email string `json:"email"`
 	}
 
+	// todo redirect to error page instead of returning 500 status
 	if err := idToken.Claims(&idTokenClaims); err != nil {
 		logrus.Errorf("[server.loginHandler]: claims unmarshell failed %v", err)
 		c.Status(http.StatusInternalServerError)
