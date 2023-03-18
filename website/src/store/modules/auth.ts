@@ -5,7 +5,10 @@ import axios from "axios";
 import {
   SET_LOGGED_IN_USERINFO_ACTION,
   LOGOUT_ACTION,
+  SET_USERINFO_ACTION,
+  RESET_USERINFO_ACTION,
 } from "@/store/actions-type";
+import type { User } from "oidc-client-ts";
 
 type AuthModuleState = {
   authenticated: Boolean;
@@ -63,6 +66,24 @@ export const authModule: Module<AuthModuleState, any> = {
           });
       });
     },
+    [SET_USERINFO_ACTION]({ commit }, payload: User) {
+      console.log(payload);
+      // todo contants for mutations/commit? mutations are not used outside the store logic
+      return new Promise((resolve, reject) => {
+        if (payload.profile?.email === undefined) {
+          reject("invalid User object");
+          return;
+        }
+        commit("setAuthenticated", {
+          authenticated: true,
+        });
+        commit("setUserInfo", {
+          email: payload.profile.email,
+          userName: payload.profile.email,
+        });
+        resolve(true);
+      });
+    },
     [SET_LOGGED_IN_USERINFO_ACTION]({ commit }) {
       return new Promise((resolve, reject) => {
         axios
@@ -92,11 +113,24 @@ export const authModule: Module<AuthModuleState, any> = {
               commit("setAuthenticated", {
                 authenticated: false,
               });
+              // resolve or reject?
               resolve("Unauthorized");
               return;
             }
             reject("Something went wrong");
           });
+      });
+    },
+    [RESET_USERINFO_ACTION]({ commit }) {
+      return new Promise((resolve) => {
+        commit("setUserInfo", {
+          userName: "",
+          email: "",
+        });
+        commit("setAuthenticated", {
+          authenticated: false,
+        });
+        resolve(true);
       });
     },
   },

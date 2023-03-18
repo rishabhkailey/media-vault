@@ -1,8 +1,18 @@
 <script setup lang="ts">
-import { UserManager, WebStorageStateStore, OidcClient } from "oidc-client-ts";
-import { onMounted } from "vue";
-import { useRoute } from "vue-router";
-import { v4 } from "uuid";
+import { UserManager, OidcClient, User } from "oidc-client-ts";
+import { onMounted, inject } from "vue";
+import { useRouter, type LocationQueryRaw } from "vue-router";
+import { userManagerKey } from "@/symbols/injectionSymbols";
+import { useStore } from "vuex";
+import { SET_USERINFO_ACTION } from "@/store/actions-type";
+import {
+  handlePostLoginUsingUserManager,
+  signinUsingUserManager,
+} from "@/utils/auth";
+
+const store = useStore();
+// todo make this a component with slot for ui and callback methods as props, onSuccess, onError, getUserinfo: bool, onGetUserInfoSuccess, onGetUserInfoError
+// button type signIn or singOut?
 
 const oidcClient = new OidcClient({
   client_id: "spa-test",
@@ -12,101 +22,93 @@ const oidcClient = new OidcClient({
     "http://localhost:8080/v1/spa-test/.well-known/openid-configuration",
 });
 
-const signinUsingOidcClient = () => {
-  let nonce = v4();
-  let state = v4();
-  localStorage.setItem("nonce", nonce);
+const userManager: UserManager | undefined = inject(userManagerKey);
 
-  oidcClient
-    .createSigninRequest({
-      nonce: nonce,
-      state: state,
-    })
-    .then((request) => {
-      console.log(request);
-      localStorage.setItem("state", request.state.id);
-      location.href = request.url;
-    })
-    .catch((err) => {
-      console.log(err);
-    });
-};
+// not oidc state but state to persist some data after redirect, data will be stored in browser local storage
+interface InternalState {
+  internalRedirectPath: string;
+  internalRedirectQuery: string;
+  nonce: string;
+}
 
-const handlePostLoginUsingOidcClient = () => {
-  const route = useRoute();
-  if (
-    typeof route.query.code !== "string" &&
-    typeof route.query.state !== "string"
-  ) {
-    console.log("code or state query param missing");
+const login = () => {
+  if (userManager === undefined) {
+    console.error("userManager not defined");
     return;
   }
-  if (localStorage.getItem("loginInProgress") !== "true") {
-    // todo ?
-    console.log("hmmmm");
-  }
-  if (localStorage.getItem("state") !== route.query.state) {
-    console.log(localStorage.getItem("state"), route.query.state);
-    console.log("state mismatch");
+  signinUsingUserManager(userManager);
+};
+
+// todo remove code and state from the url
+const handlePostLogin = async () => {
+  if (userManager === undefined) {
+    console.error("userManager not defined");
     return;
   }
-  console.log(location.href);
-  oidcClient
-    .processSigninResponse(location.href)
-    .then((response) => {
-      console.log(response);
+  let router = useRouter();
+  handlePostLoginUsingUserManager(userManager)
+    .then((user: User) => {
+      console.log(user);
+      store
+        .dispatch(SET_USERINFO_ACTION, user)
+        .then((message) => {
+          console.log(message);
+          let internalState = user.state as InternalState;
+          if (
+            internalState.internalRedirectPath.length !== 0 ||
+            internalState.internalRedirectQuery.length !== 0
+          ) {
+            // location.href = user.state?.internalRedirectUri;
+            let query: LocationQueryRaw = {};
+            let searchParams = new URLSearchParams(
+              internalState.internalRedirectQuery
+            );
+            searchParams.forEach((value, key) => {
+              query[key] = value;
+            });
+            router.replace({
+              path: internalState.internalRedirectPath,
+              query: query,
+            });
+          }
+        })
+        .catch((message) => {
+          console.log(message);
+          // todo redirect to error page
+        });
     })
     .catch((err) => {
       console.log(err);
+      // todo redirect to error page
     });
 };
 
-var userManager = new UserManager({
-  userStore: new WebStorageStateStore(),
-  authority: "http://localhost:8080",
-  metadataUrl:
-    "http://localhost:8080/v1/spa-test/.well-known/openid-configuration",
-  client_id: "spa-test",
-  redirect_uri: window.location.origin + "/pkce",
-  response_type: "code",
-  scope: "openid profile",
-  post_logout_redirect_uri: window.location.origin,
-  // silent_redirect_uri: window.location.origin + "/static/silent-renew.html",
-  accessTokenExpiringNotificationTimeInSeconds: 10,
-  automaticSilentRenew: true,
-  filterProtocolClaims: true,
-  loadUserInfo: true,
-});
-
-const signinUsingUserManager = () => {
+const logout = () => {
+  if (userManager === undefined) {
+    console.error("userManager not defined");
+    return;
+  }
   userManager
-    .signinRedirect()
-    .then((response) => {
-      console.log(response);
+    ?.revokeTokens(["access_token", "refresh_token"])
+    .then(() => {
+      console.log("token revoked");
     })
     .catch((err) => {
       console.log(err);
     });
-};
 
-const handlePostLoginUsingUserManager = () => {
-  userManager
-    .signinRedirectCallback()
-    .then((response) => {
-      console.log(response);
-    })
-    .catch((err) => {
-      console.log(err);
-    });
+  // requires end session endpoint
+  // userManager?.signoutPopup();
 };
 onMounted(() => {
   // handlePostLoginUsingOidcClient();
-  handlePostLoginUsingUserManager();
+  handlePostLogin();
 });
 </script>
 
 <template>
   <div>
-    <v-btn @click.stop="signinUsingUserManager"> login </v-btn>
+    <v-btn @click.stop="login"> login </v-btn>
+    <v-btn @click.stop="logout"> logout </v-btn>
   </div>
 </template>

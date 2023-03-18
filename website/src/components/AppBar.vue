@@ -1,18 +1,19 @@
 <script setup lang="ts">
 import SelectFileButton from "@/components/SelectFileButton.vue";
 import UploadFilesDialog from "@/components/UploadFilesDialog.vue";
-import { computed, ref } from "vue";
+import { computed, inject, ref } from "vue";
 import { useStore } from "vuex";
-import {
-  SET_LOGGED_IN_USERINFO_ACTION,
-  LOGOUT_ACTION,
-} from "@/store/actions-type";
+import { RESET_USERINFO_ACTION } from "@/store/actions-type";
+import { userManagerKey } from "@/symbols/injectionSymbols";
+import type { UserManager } from "oidc-client-ts";
+import { signinUsingUserManager } from "@/utils/auth";
 
 const search = ref("");
 const searchInputRules: Array<any> = [];
 
 const store = useStore();
 const loading = ref(false);
+// todo error and error message pop up
 const error = ref(false);
 const authenticated = computed(() => store.getters.authenticated);
 const userName = computed(() => store.getters.userName);
@@ -20,61 +21,39 @@ const email = computed(() => store.getters.email);
 
 const selectedFiles = ref<Array<File>>([]);
 const uploadFilesDialogModel = ref(false);
+const userManager: UserManager | undefined = inject(userManagerKey);
 
 const logOut = () => {
   loading.value = true;
-  store
-    .dispatch(LOGOUT_ACTION)
-    .then((message) => {
-      console.log(message, store.state);
-      loading.value = false;
+  if (userManager === undefined) {
+    console.error("userManager not defined");
+    return;
+  }
+  userManager
+    ?.revokeTokens(["access_token", "refresh_token"])
+    .then(() => {
+      store.dispatch(RESET_USERINFO_ACTION).catch(() => {
+        error.value = true;
+      });
+      console.log("token revoked");
     })
-    .catch((message) => {
-      console.log(message);
-      loading.value = false;
-      error.value = true;
+    .catch((err) => {
+      console.log(err);
     });
 };
 const logIn = () => {
-  // vue router will handle it and request will not go to backend
-  // router.push({
-  //   path: "/v1/login",
-  //   query: {
-  //     returnUri: currentUri,
-  //   },
-  //   force: true,
-  // });
-  let currentUri = window.location.href;
-  // base/server URL from env/config?
-  let baseURL = window.location.origin;
-  try {
-    window.location.href = new URL(
-      `?returnUri=${currentUri}`,
-      new URL("/v1/login", baseURL)
-    ).toString();
-  } catch (_) {
+  if (userManager === undefined) {
+    console.error("userManager not defined");
     error.value = true;
+    return;
   }
-
-  // router.go()
+  signinUsingUserManager(userManager);
 };
 const uploadFiles = (files: Array<File>) => {
   selectedFiles.value = files;
   uploadFilesDialogModel.value = true;
   console.log(files);
 };
-loading.value = true;
-store
-  .dispatch(SET_LOGGED_IN_USERINFO_ACTION)
-  .then((message) => {
-    console.log(message);
-    loading.value = false;
-  })
-  .catch((message) => {
-    console.log(message);
-    loading.value = false;
-    error.value = true;
-  });
 </script>
 
 <template>
