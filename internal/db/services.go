@@ -6,16 +6,35 @@ import (
 )
 
 type Services struct {
-	Users dbservices.UserModel
+	Media             dbservices.MediaModel
+	MediaMetadata     dbservices.MediaMetadataModel
+	UserMediaBindings dbservices.UserMediaBindingModel
+	UploadRequests    dbservices.UploadRequestModel
 }
 
 func NewServices(db *gorm.DB) (*Services, error) {
-	userModel, err := dbservices.NewUserModel(db)
+	// order matters, order of table creation
+	uploadRequestModel, err := dbservices.NewUploadRequestModel(db)
+	if err != nil {
+		return nil, err
+	}
+	mediaModel, err := dbservices.NewMediaModel(db)
+	if err != nil {
+		return nil, err
+	}
+	mediaMetadataModel, err := dbservices.NewMediaMetadataModel(db)
+	if err != nil {
+		return nil, err
+	}
+	userMediaBindingModel, err := dbservices.NewUserMediaBinding(db)
 	if err != nil {
 		return nil, err
 	}
 
 	return &Services{
-		Users: *userModel,
+		Media:             *mediaModel,
+		UserMediaBindings: *userMediaBindingModel,
+		MediaMetadata:     *mediaMetadataModel,
+		UploadRequests:    *uploadRequestModel,
 	}, nil
 }
