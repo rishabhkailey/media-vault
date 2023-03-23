@@ -5,6 +5,7 @@ import (
 
 	"github.com/go-session/session/v3"
 	"github.com/minio/minio-go/v7"
+	"github.com/rishabhkailey/media-service/internal/auth"
 	"github.com/rishabhkailey/media-service/internal/config"
 	"github.com/rishabhkailey/media-service/internal/db"
 	"gorm.io/gorm"
@@ -15,7 +16,7 @@ type Server struct {
 	TokenStore *db.RedisStore
 	Db         *gorm.DB
 	Minio      *minio.Client
-	OidcClient OidcClient
+	OidcClient auth.OidcClient
 	db.Services
 }
 
@@ -50,7 +51,7 @@ func NewServer(config *config.Config) (*Server, error) {
 	if err != nil {
 		return nil, err
 	}
-	oidcClient, err := NewOidcClient(config.AuthService.URL, config.AuthService.ClientID, config.AuthService.ClientSecret, redirectURI)
+	oidcClient, err := auth.NewOidcClient(config.AuthService.URL, config.AuthService.ClientID, config.AuthService.ClientSecret, redirectURI)
 	if err != nil {
 		return nil, err
 	}

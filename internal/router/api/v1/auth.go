@@ -1,7 +1,6 @@
 package v1
 
 import (
-	"context"
 	"crypto/rand"
 	"crypto/sha256"
 	"encoding/base64"
@@ -18,43 +17,6 @@ import (
 	"github.com/sirupsen/logrus"
 	"golang.org/x/oauth2"
 )
-
-type OidcClient struct {
-	provider     oidc.Provider
-	verfier      oidc.IDTokenVerifier
-	oauth2Config oauth2.Config
-}
-
-func NewOidcClient(url, clientID, clientSecret, redirectURI string) (*OidcClient, error) {
-	var err error
-
-	oidcProvider, err := oidc.NewProvider(context.Background(), url)
-	if err != nil {
-		logrus.WithFields(logrus.Fields{
-			"url":   url,
-			"error": err,
-		}).Error("failed to get oidc provider config")
-		return nil, nil
-	}
-
-	oidcVerifier := oidcProvider.Verifier(&oidc.Config{
-		ClientID: clientID,
-	})
-
-	oauth2Config := oauth2.Config{
-		ClientID:     clientID,
-		ClientSecret: clientSecret,
-		Scopes:       []string{oidc.ScopeOpenID, "user", "email"},
-		RedirectURL:  redirectURI,
-		Endpoint:     oidcProvider.Endpoint(),
-	}
-
-	return &OidcClient{
-		provider:     *oidcProvider,
-		verfier:      *oidcVerifier,
-		oauth2Config: oauth2Config,
-	}, nil
-}
 
 // todo: oauth2.TokenSource interface implementation
 // func (oidcClient *OidcClient) Token() (*oauth2.Token, error) {
@@ -139,7 +101,7 @@ func (server Server) LoginHandler(c *gin.Context) {
 
 	// code challenge vs nonce
 	// https://danielfett.de/2020/05/16/pkce-vs-nonce-equivalent-or-not/
-	authURI := server.OidcClient.oauth2Config.AuthCodeURL(state,
+	authURI := server.OidcClient.Oauth2Config.AuthCodeURL(state,
 		oauth2.SetAuthURLParam("code_challenge", genCodeChallengeS256(codeChallenge)),
 		oauth2.SetAuthURLParam("code_challenge_method", "S256"),
 		oidc.Nonce(nonce),
@@ -214,7 +176,7 @@ func (server Server) AuthHandler(c *gin.Context) {
 	}
 
 	// convert code to token
-	token, err := server.OidcClient.oauth2Config.Exchange(c.Request.Context(), code, oauth2.SetAuthURLParam("code_verifier", codeChallenge))
+	token, err := server.OidcClient.Oauth2Config.Exchange(c.Request.Context(), code, oauth2.SetAuthURLParam("code_verifier", codeChallenge))
 	// id_token, ok := token.Extra("id_token").(string)
 	if err != nil {
 		c.Status(http.StatusInternalServerError)
@@ -225,7 +187,7 @@ func (server Server) AuthHandler(c *gin.Context) {
 		c.Status(http.StatusInternalServerError)
 		return
 	}
-	idToken, err := server.OidcClient.verfier.Verify(c.Request.Context(), rawIDToken)
+	idToken, err := server.OidcClient.Verfier.Verify(c.Request.Context(), rawIDToken)
 	if err != nil {
 		c.Status(http.StatusInternalServerError)
 		return
@@ -318,7 +280,7 @@ func (server Server) UserInfo(c *gin.Context) {
 		return
 	}
 
-	userInfo, err := server.OidcClient.provider.UserInfo(c.Request.Context(), oauth2.StaticTokenSource(&accessToken))
+	userInfo, err := server.OidcClient.Provider.UserInfo(c.Request.Context(), oauth2.StaticTokenSource(&accessToken))
 	if err != nil {
 		// todo error response
 		c.AbortWithStatus(http.StatusInternalServerError)

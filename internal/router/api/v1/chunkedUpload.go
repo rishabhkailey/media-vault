@@ -2,6 +2,7 @@ package v1
 
 import (
 	"context"
+	"errors"
 	"fmt"
 	"io"
 	"net/http"
@@ -9,8 +10,10 @@ import (
 	"time"
 
 	"github.com/gin-gonic/gin"
+	"github.com/go-session/session/v3"
 	"github.com/google/uuid"
 	"github.com/minio/minio-go/v7"
+	"github.com/rishabhkailey/media-service/internal/auth"
 	"github.com/rishabhkailey/media-service/internal/utils"
 	"github.com/sirupsen/logrus"
 )
@@ -26,7 +29,9 @@ type uploadRequest struct {
 	size       int64
 	ctx        context.Context
 	cancelFunc context.CancelFunc
-	checksum   string
+	// checksum   string
+	// mediaID    uint
+	// userID     uint
 }
 
 // todo session affinity required till all the browsers support http/2 protocol (which support stream upload)
@@ -34,12 +39,12 @@ type uploadRequest struct {
 // requestID -> uploadRequest
 var uploadRequests map[string]*uploadRequest = make(map[string]*uploadRequest)
 
-func newUploadRequest(ctx context.Context, cancelFunc context.CancelFunc, requestID string) error {
+func newUploadRequest(ctx context.Context, cancelFunc context.CancelFunc, requestID, userID string) error {
 	if _, ok := uploadRequests[requestID]; ok {
 		return fmt.Errorf("request with ID %v already exist", requestID)
 	}
 	reader, writer := io.Pipe()
-	uploadRequests[requestID] = &uploadRequest{
+	uploadRequests[fmt.Sprintf("%s:%s", requestID, userID)] = &uploadRequest{
 		Reader:     reader,
 		Writer:     writer,
 		err:        nil,
@@ -51,23 +56,48 @@ func newUploadRequest(ctx context.Context, cancelFunc context.CancelFunc, reques
 	return nil
 }
 
-func deleteUploadRequestAfter(t time.Duration, requestID string) error {
-	if _, ok := uploadRequests[requestID]; !ok {
+func getUploadRequest(requestID, userID string) (*uploadRequest, error) {
+	uploadRequest, ok := uploadRequests[fmt.Sprintf("%s:%s", requestID, userID)]
+	if !ok {
+		return nil, fmt.Errorf("request with ID %v doesn't Exist", requestID)
+	}
+	return uploadRequest, nil
+}
+
+func deleteUploadRequestAfter(t time.Duration, requestID, userID string) error {
+	key := fmt.Sprintf("%s:%s", requestID, userID)
+	if _, ok := uploadRequests[key]; !ok {
 		return fmt.Errorf("request with ID %v doesn't Exist", requestID)
 	}
 	// wait for the time and then delete the key from map
 	<-time.NewTicker(t).C
-	delete(uploadRequests, requestID)
+	delete(uploadRequests, key)
 	return nil
 }
 
 type initRequestBody struct {
-	FileName string `json:"fileName"`
-	Size     int64  `json:"size"`
-	FileType string `json:"fileType"`
+	FileName  string `json:"fileName"`
+	Size      int64  `json:"size"`
+	MediaType string `json:"mediaType"`
+	Date      string `json:"date"`
 }
 
 func (server *Server) InitChunkUpload(c *gin.Context) {
+	token, ok := auth.GetBearerToken(c.Request)
+	if !ok {
+		c.AbortWithStatus(http.StatusUnauthorized)
+		return
+	}
+	tokenInfo, err := server.OidcClient.IntrospectToken(token)
+	if errors.Is(err, auth.ErrUnauthorized) || !tokenInfo.ValidateScope(auth.SCOPE_USER) {
+		c.AbortWithStatus(http.StatusUnauthorized)
+		return
+	}
+	if len(tokenInfo.Subject) == 0 {
+		logrus.Errorf("token info doesn't contain user info")
+		c.AbortWithStatus(http.StatusInternalServerError)
+		return
+	}
 	var requestBody initRequestBody
 	if err := c.ShouldBindJSON(&requestBody); err != nil {
 		logrus.Infof("[InitUpload] invalid request: %v", err)
@@ -75,25 +105,39 @@ func (server *Server) InitChunkUpload(c *gin.Context) {
 		return
 	}
 	requestID := uuid.New().String()
-	go server.startUploadInBackground(requestID, requestBody.FileName, requestBody.Size)
+
+	// for 1 upload request we will only validate token on init request and store info in the session
+	// if session contains requestID:user = UserID then user is authenticated
+	store, err := session.Start(c.Request.Context(), c.Writer, c.Request)
+	if err != nil {
+		logrus.WithFields(logrus.Fields{"error": err, "function": "server.InitUpload"}).Errorf("session start failed")
+		// todo error response
+		c.Status(http.StatusInternalServerError)
+		return
+	}
+	// todo - requestID to check if the request belongs to user or not
+	// further userID will be used in the upload requests slice
+	store.Set(fmt.Sprintf("%s:user", requestID), tokenInfo.Subject)
+	store.Save()
+	go server.startUploadInBackground(requestID, tokenInfo.Subject, requestBody.FileName, requestBody.Size)
 	c.JSON(http.StatusOK, gin.H{
 		"requestID": requestID,
 	})
 }
 
-func (server *Server) startUploadInBackground(requestID string, fileName string, size int64) {
+func (server *Server) startUploadInBackground(requestID, userID, fileName string, size int64) {
 	// todo upgrade go and change this to WithCancelCause
 	ctx, cancelFunc := context.WithCancel(context.Background())
-	err := newUploadRequest(ctx, cancelFunc, requestID)
+	err := newUploadRequest(ctx, cancelFunc, requestID, userID)
 	if err != nil {
 		logrus.Errorf("[server.startUploadInBackground] request creation failed: %v", err)
 		return
 	}
 	bucketName := "test"
-	uploadRequest, ok := uploadRequests[requestID]
-	if !ok {
-		logrus.Errorf("[server.startUploadInBackground] request %v not found", requestID)
-		return
+	uploadRequest, err := getUploadRequest(requestID, userID)
+	// how to inform user about these errors?
+	if err != nil {
+		logrus.Errorf("[server.startUploadInBackground] failed to get upload request ID: %w", err)
 	}
 	err = utils.CreateBucketIfMissing(ctx, *server.Minio, bucketName)
 	if err != nil {
@@ -113,7 +157,7 @@ func (server *Server) startUploadInBackground(requestID string, fileName string,
 		// delete the request after 10 minutes to free memory
 		// finishUpload request will not work after 10 minutes, so client only has 10 minutes to send finishUpload request
 		// todo call delete right away and store rest of the details in DB instead
-		deleteUploadRequestAfter(1*time.Hour, requestID)
+		deleteUploadRequestAfter(1*time.Hour, requestID, userID)
 		return
 	}
 	logrus.Infof("[server.startUploadInBackground] upload completed: %v", uploadedInfo)
@@ -122,7 +166,7 @@ func (server *Server) startUploadInBackground(requestID string, fileName string,
 	uploadRequest.cancelFunc()
 	// delete the request after 10 minutes to free memory
 	// finishUpload request will not work after 10 minutes, so client has 10 minutes
-	deleteUploadRequestAfter(10*time.Minute, requestID)
+	deleteUploadRequestAfter(10*time.Minute, requestID, userID)
 }
 
 // type uploadChunkRequestBody struct {
@@ -133,7 +177,7 @@ func (server *Server) startUploadInBackground(requestID string, fileName string,
 // 	Index     int64     `json:"index"`
 // }
 
-// multipar request
+// todo check for multipart request
 func (server *Server) UploadChunk(c *gin.Context) {
 	requestID := c.Request.PostFormValue("requestID")
 	if len(requestID) == 0 {
@@ -141,7 +185,22 @@ func (server *Server) UploadChunk(c *gin.Context) {
 		c.AbortWithStatus(http.StatusBadRequest)
 		return
 	}
-	var err error
+	store, err := session.Start(c.Request.Context(), c.Writer, c.Request)
+	if err != nil {
+		logrus.WithFields(logrus.Fields{"error": err, "function": "server.InitUpload"}).Errorf("session start failed")
+		// todo error response
+		c.Status(http.StatusInternalServerError)
+		return
+	}
+	var userID string
+	if value, ok := store.Get(fmt.Sprintf("%s:user", requestID)); ok {
+		userID, _ = value.(string)
+	}
+	if len(userID) == 0 {
+		logrus.Errorf("[UploadChunk]: requestID not found in session")
+		c.AbortWithStatus(http.StatusUnauthorized)
+		return
+	}
 	var index int64
 	{
 		value := c.Request.PostFormValue("index")
@@ -179,9 +238,10 @@ func (server *Server) UploadChunk(c *gin.Context) {
 		c.AbortWithStatus(http.StatusBadRequest)
 		return
 	}
-	uploadRequest, ok := uploadRequests[requestID]
-	if !ok {
-		logrus.Errorf("[Server.uploadChunk] bad request: no uploadRequest found with the requestID %v", requestID)
+	uploadRequest, err := getUploadRequest(requestID, userID)
+	if err != nil {
+		logrus.Errorf("[server.uploadChunk] failed to get upload request ID: %w", err)
+		// todo bad request?
 		c.AbortWithStatus(http.StatusBadRequest)
 		return
 	}
@@ -232,9 +292,26 @@ func (server *Server) FinishChunkUpload(c *gin.Context) {
 		c.AbortWithStatus(http.StatusBadRequest)
 		return
 	}
-	uploadRequest, ok := uploadRequests[requestBody.RequestID]
-	if !ok {
+	store, err := session.Start(c.Request.Context(), c.Writer, c.Request)
+	if err != nil {
+		logrus.WithFields(logrus.Fields{"error": err, "function": "server.InitUpload"}).Errorf("session start failed")
+		// todo error response
+		c.Status(http.StatusInternalServerError)
+		return
+	}
+	var userID string
+	if value, ok := store.Get(fmt.Sprintf("%s:user", requestBody.RequestID)); ok {
+		userID, _ = value.(string)
+	}
+	if len(userID) == 0 {
+		logrus.Errorf("[UploadChunk]: requestID not found in session")
+		c.AbortWithStatus(http.StatusUnauthorized)
+		return
+	}
+	uploadRequest, err := getUploadRequest(requestBody.RequestID, userID)
+	if err != nil {
 		logrus.Errorf("[server.FinishUpload] bad request: request %v does not exist", requestBody.RequestID)
+		// todo bad request?
 		c.AbortWithStatus(http.StatusBadRequest)
 		return
 	}

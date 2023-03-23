@@ -1,147 +1,153 @@
 package auth
 
-// import (
-// 	"context"
-// 	"encoding/json"
-// 	"log"
-// 	"net/http"
+import (
+	"context"
+	"encoding/base64"
+	"encoding/json"
+	"errors"
+	"fmt"
+	"io/ioutil"
+	"net/http"
+	"net/url"
+	"strings"
 
-// 	"github.com/coreos/go-oidc/v3/oidc"
-// 	"github.com/gin-gonic/gin"
-// 	"github.com/sirupsen/logrus"
-// 	"golang.org/x/oauth2"
-// )
+	"github.com/coreos/go-oidc/v3/oidc"
+	"github.com/rishabhkailey/media-service/internal/utils"
+	"github.com/sirupsen/logrus"
+	"golang.org/x/oauth2"
+)
 
-// type OidcClient struct {
-// 	provider oidc.Provider
-// 	verfier  oidc.IDTokenVerifier
-// 	// config   oauth2.Config // oauth config contains redirect uri and each request will have different reqiest so we can not use common config for all requests
-// }
+type OidcClient struct {
+	Provider         oidc.Provider
+	Verfier          oidc.IDTokenVerifier
+	Oauth2Config     oauth2.Config
+	ProviderMetadata ProviderMetadata
+}
 
-// func NewClient(url, clientID, clientSecret string) (*OidcClient, error) {
-// 	var err error
+type ProviderMetadata struct {
+	Issuer                string   `json:"issuer"`
+	AuthURL               string   `json:"authorization_endpoint"`
+	TokenURL              string   `json:"token_endpoint"`
+	JWKSURL               string   `json:"jwks_uri"`
+	UserInfoURL           string   `json:"userinfo_endpoint"`
+	IntrospectionEndpoint string   `json:"introspection_endpoint"`
+	Algorithms            []string `json:"id_token_signing_alg_values_supported"`
+}
 
-// 	oidcProvider, err := oidc.NewProvider(context.Background(), url)
-// 	if err != nil {
-// 		logrus.WithFields(logrus.Fields{
-// 			"url":   url,
-// 			"error": err,
-// 		}).Error("failed to get oidc provider config")
-// 		return nil, nil
-// 	}
+func NewOidcClient(issuerUrl, clientID, clientSecret, redirectURI string) (*OidcClient, error) {
+	var err error
 
-// 	oidcVerifier := oidcProvider.Verifier(&oidc.Config{
-// 		ClientID: clientID,
-// 	})
+	oidcProvider, err := oidc.NewProvider(context.Background(), issuerUrl)
+	if err != nil {
+		logrus.WithFields(logrus.Fields{
+			"url":   issuerUrl,
+			"error": err,
+		}).Error("failed to get oidc provider config")
+		return nil, fmt.Errorf("failed to get oidc provider config")
+	}
+	wellknownUrl, err := url.JoinPath(issuerUrl, "/.well-known/openid-configuration")
+	if err != nil {
+		return nil, fmt.Errorf("url joinPath failed")
+	}
+	resp, err := http.Get(wellknownUrl)
+	if err != nil {
+		return nil, fmt.Errorf("http request to %s failed", wellknownUrl)
+	}
+	defer resp.Body.Close()
+	body, err := ioutil.ReadAll(resp.Body)
+	if err != nil {
+		return nil, fmt.Errorf("unable to read response body: %w", err)
+	}
+	// todo validate all urls
+	var providerMetadata ProviderMetadata
+	if err := json.Unmarshal(body, &providerMetadata); err != nil {
+		return nil, fmt.Errorf("could not unmarshal json response: %w", err)
+	}
+	if resp.StatusCode != http.StatusOK {
+		return nil, fmt.Errorf("%s: %s", resp.Status, body)
+	}
 
-// 	return &OidcClient{
-// 		provider: *oidcProvider,
-// 		verfier:  *oidcVerifier,
-// 	}, nil
-// }
+	oidcVerifier := oidcProvider.Verifier(&oidc.Config{
+		ClientID: clientID,
+	})
 
-// func (client OidcClient) Authorize(c *gin.Context) {
-// 	state, err := randString(16)
-// 	if err != nil {
-// 		http.Error(w, "Internal error", http.StatusInternalServerError)
-// 		return
-// 	}
+	oauth2Config := oauth2.Config{
+		ClientID:     clientID,
+		ClientSecret: clientSecret,
+		Scopes:       []string{oidc.ScopeOpenID, "user", "email"},
+		RedirectURL:  redirectURI,
+		Endpoint:     oidcProvider.Endpoint(),
+	}
 
-// 	nonce, err := randString(16)
-// 	if err != nil {
-// 		http.Error(w, "Internal error", http.StatusInternalServerError)
-// 		return
-// 	}
+	return &OidcClient{
+		Provider:         *oidcProvider,
+		Verfier:          *oidcVerifier,
+		Oauth2Config:     oauth2Config,
+		ProviderMetadata: providerMetadata,
+	}, nil
+}
 
-// 	codeChallenge, err := randString(16)
-// 	if err != nil {
-// 		http.Error(w, "Internal error", http.StatusInternalServerError)
-// 		return
-// 	}
+type TokenInfo struct {
+	Active     bool   `json:"active"`
+	ClientID   string `json:"client_id"`
+	Subject    string `json:"sub"`
+	Scope      string `json:"scope"`
+	IssuedTime int64  `json:"iat"`
+	ExpireTime int64  `json:"exp"`
+	RealName   string `json:"realName"`
+}
 
-// 	setCallbackCookie(w, r, "state", state)
-// 	log.Printf("state = %v", state)
-// 	setCallbackCookie(w, r, "nonce", nonce)
-// 	setCallbackCookie(w, r, "code_challenge", codeChallenge)
+var ErrUnauthorized = errors.New("unauthorized")
 
-// 	// code challenge vs nonce
-// 	// https://danielfett.de/2020/05/16/pkce-vs-nonce-equivalent-or-not/
-// 	u := oauth2Config.AuthCodeURL(state,
-// 		oauth2.SetAuthURLParam("code_challenge", genCodeChallengeS256(codeChallenge)),
-// 		oauth2.SetAuthURLParam("code_challenge_method", "S256"),
-// 		oidc.Nonce(nonce),
-// 	)
-// 	http.Redirect(w, r, u, http.StatusFound)
-// }
+func (client *OidcClient) IntrospectToken(token string) (*TokenInfo, error) {
+	// todo set basic auth header? not sure if it is required
+	data := url.Values{
+		"token": []string{token},
+	}
+	req, err := http.NewRequest(http.MethodPost, client.ProviderMetadata.IntrospectionEndpoint, strings.NewReader(data.Encode()))
+	if err != nil {
+		return nil, fmt.Errorf("failed to create interospectToken request: %v", err)
+	}
+	req.Header.Set("Content-Type", "application/x-www-form-urlencoded")
+	encodedClientIdSecret := base64.StdEncoding.EncodeToString([]byte(
+		fmt.Sprintf("%s:%s", client.Oauth2Config.ClientID, client.Oauth2Config.ClientSecret),
+	))
+	req.Header.Set("Authorization", fmt.Sprintf("Basic %s", encodedClientIdSecret))
+	resp, err := http.DefaultClient.Do(req)
+	if err != nil {
+		return nil, fmt.Errorf("introspect token request failed: %w", err)
+	}
+	if resp.StatusCode == http.StatusUnauthorized {
+		return nil, ErrUnauthorized
+	}
+	body, err := ioutil.ReadAll(resp.Body)
+	if err != nil {
+		return nil, fmt.Errorf("unable to read response body: %v", err)
+	}
+	var responseBody TokenInfo
+	if err = json.Unmarshal(body, &responseBody); err != nil {
+		return nil, fmt.Errorf("could not unmarshal json response: %w", err)
+	}
+	return &responseBody, nil
+}
 
-// func (client OidcClient) Authorize2(c *gin.Context, redirectURI string, requiredScopes []string) {
-// 	r.ParseForm()
-// 	state, err := r.Cookie("state")
-// 	if err != nil {
-// 		http.Error(w, "state not found", http.StatusBadRequest)
-// 		return
-// 	}
+func GetBearerToken(r *http.Request) (string, bool) {
+	auth := r.Header.Get("Authorization")
+	prefix := "Bearer "
+	token := ""
 
-// 	if r.URL.Query().Get("state") != state.Value {
-// 		http.Error(w, "state did not match", http.StatusBadRequest)
-// 		return
-// 	}
+	if auth != "" && strings.HasPrefix(auth, prefix) {
+		token = auth[len(prefix):]
+	}
+	return token, token != ""
+}
 
-// 	// we get token from the code
-// 	code := r.Form.Get("code")
-// 	if code == "" {
-// 		http.Error(w, "Code not found", http.StatusBadRequest)
-// 		return
-// 	}
-
-// 	codeChallenge, err := r.Cookie("code_challenge")
-// 	if err != nil {
-// 		http.Error(w, "code_challenge not found", http.StatusBadRequest)
-// 		return
-// 	}
-
-// 	// convert code to token
-// 	token, err := oauth2Config.Exchange(context.Background(), code, oauth2.SetAuthURLParam("code_verifier", codeChallenge.Value))
-// 	// id_token, ok := token.Extra("id_token").(string)
-// 	if err != nil {
-// 		http.Error(w, err.Error(), http.StatusInternalServerError)
-// 		return
-// 	}
-// 	globalToken = token
-// 	rawIDToken, ok := token.Extra("id_token").(string)
-// 	if !ok {
-// 		http.Error(w, "No id_token field in oauth2 token.", http.StatusInternalServerError)
-// 		return
-// 	}
-// 	idToken, err := oidcVerifier.Verify(r.Context(), rawIDToken)
-// 	if err != nil {
-// 		http.Error(w, "Failed to verify ID Token: "+err.Error(), http.StatusInternalServerError)
-// 		return
-// 	}
-
-// 	nonce, err := r.Cookie("nonce")
-// 	if err != nil {
-// 		http.Error(w, "nonce not found", http.StatusBadRequest)
-// 		return
-// 	}
-// 	if idToken.Nonce != nonce.Value {
-// 		http.Error(w, "nonce did not match", http.StatusBadRequest)
-// 		return
-// 	}
-// 	resp := struct {
-// 		OAuth2Token   *oauth2.Token
-// 		IDTokenClaims *json.RawMessage // ID Token payload is just JSON.
-// 	}{token, new(json.RawMessage)}
-
-// 	if err := idToken.Claims(&resp.IDTokenClaims); err != nil {
-// 		http.Error(w, err.Error(), http.StatusInternalServerError)
-// 		return
-// 	}
-// 	data, err := json.MarshalIndent(resp, "", "    ")
-// 	if err != nil {
-// 		http.Error(w, err.Error(), http.StatusInternalServerError)
-// 		return
-// 	}
-// 	w.Write(data)
-
-// }
+func (ti *TokenInfo) ValidateScope(scopes ...string) bool {
+	if len(scopes) == 0 {
+		return true
+	}
+	if len(ti.Scope) == 0 {
+		return false
+	}
+	return utils.ContainsSlice(strings.Split(ti.Scope, " "), scopes)
+}

@@ -1,8 +1,12 @@
 <script setup lang="ts">
 import { ref, withDefaults, onMounted, computed, reactive } from "vue";
 import { chunkUpload } from "@/utils/encryptFileUpload";
-import FileUploadForm from "./FileUploadForm.vue";
-
+import { useStore } from "vuex";
+const store = useStore();
+// todo store getter typing
+// todo check
+const accessToken = store.getters.accessToken;
+console.log(accessToken);
 const props = withDefaults(
   defineProps<{
     modelValue: boolean;
@@ -62,6 +66,7 @@ async function uploadFiles(files: Array<File>) {
       // not waiting for upload to finish
       let uploadInfo = await chunkUpload(
         file,
+        accessToken,
         filesUploadStatus.value[index].controller,
         (progress: number) => {
           filesUploadStatus.value[index].progress = progress;

@@ -42,7 +42,7 @@ const userManager = new UserManager({
   client_id: "spa-test",
   redirect_uri: window.location.origin + "/pkce",
   response_type: "code",
-  scope: "openid profile email",
+  scope: "openid profile email user",
   post_logout_redirect_uri: window.location.origin,
   // silent_redirect_uri: window.location.origin + "/static/silent-renew.html",
   accessTokenExpiringNotificationTimeInSeconds: 10,

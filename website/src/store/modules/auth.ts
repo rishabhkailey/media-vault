@@ -14,6 +14,8 @@ type AuthModuleState = {
   authenticated: Boolean;
   userName: string;
   email: string;
+  accessToken: string;
+  idToken: string;
 };
 
 // todo define root state type
@@ -22,6 +24,8 @@ export const authModule: Module<AuthModuleState, any> = {
     authenticated: false,
     userName: "",
     email: "",
+    accessToken: "",
+    idToken: "",
   },
   mutations: {
     setUserInfo(state, payload: { userName: string; email: string }) {
@@ -43,6 +47,10 @@ export const authModule: Module<AuthModuleState, any> = {
         state.authenticated = payload.authenticated;
         console.log(state);
       }
+    },
+    setTokens(state, payload: { idToken: string; accessToken: string }) {
+      state.accessToken = payload.accessToken;
+      state.idToken = payload.idToken;
     },
   },
   actions: {
@@ -80,6 +88,10 @@ export const authModule: Module<AuthModuleState, any> = {
         commit("setUserInfo", {
           email: payload.profile.email,
           userName: payload.profile.email,
+        });
+        commit("setTokens", {
+          idToken: payload.id_token,
+          accessToken: payload.access_token,
         });
         resolve(true);
       });
@@ -144,6 +156,9 @@ export const authModule: Module<AuthModuleState, any> = {
     },
     email(state) {
       return state.email;
+    },
+    accessToken(state) {
+      return state.accessToken;
     },
   },
 };

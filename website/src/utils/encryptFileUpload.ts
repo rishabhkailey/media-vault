@@ -11,11 +11,12 @@ interface ChunkUploadInfo {
 
 export function chunkUpload(
   file: File,
+  bearerToken: string,
   controller: AbortController,
   callback: ProgressCallback
 ): Promise<ChunkUploadInfo> {
   return new Promise((resolve, reject) => {
-    initChunkUpload(file, controller)
+    initChunkUpload(file, bearerToken, controller)
       .then((chunkRequestInfo) => {
         uploadFileChunks(file, chunkRequestInfo, controller, callback)
           .then((uploadedBytes) => {
@@ -56,6 +57,7 @@ interface ChunkRequestInfo {
 }
 function initChunkUpload(
   file: File,
+  bearerToken: string,
   controller: AbortController
 ): Promise<ChunkRequestInfo> {
   return new Promise((resolve, reject) => {
@@ -70,6 +72,7 @@ function initChunkUpload(
         {
           headers: {
             "Content-Type": "application/json",
+            Authorization: `Bearer ${bearerToken}`,
           },
           signal: controller.signal,
         }
