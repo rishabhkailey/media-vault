@@ -51,6 +51,7 @@
 * https://en.wikipedia.org/wiki/VP9
 * https://www.npmjs.com/package/resumablejs
 * js performance test https://jsben.ch/
+* for file meteada - https://www.npmjs.com/package/mediainfo.js (for now continuing with file extensions)
 
 ## Pilain
 * every user will have 2 buckets 

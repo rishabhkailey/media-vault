@@ -12,7 +12,8 @@ import (
 // https://developer.mozilla.org/en-US/docs/Web/Media/Formats/Containers
 type MediaType string
 
-const VIDEO_MP4 MediaType = "video/webm"
+// todo more or custom media type from client or dynamic from file extension
+const VIDEO_MP4 MediaType = "video/mp4"
 const VIDEO_WEBM MediaType = "video/webm"
 const IMAGE_PNG MediaType = "image/png"
 const IMAGE_JPEG MediaType = "image/jpeg"
@@ -23,7 +24,7 @@ var ValidMediaTypes = []MediaType{VIDEO_MP4, VIDEO_WEBM, IMAGE_JPEG, IMAGE_PNG, 
 type Metadata struct {
 	Name string
 	Date time.Time
-	Type uint64
+	Type string
 	Size uint64
 }
 

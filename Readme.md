@@ -87,3 +87,40 @@ cd ..
 stackcollapse-perf.pl out.perf > out.folded
 flamegraph.pl out.folded > kernel.svg
 ```
+
+
+
+## DB
+
+<!-- todo sas token for URLs or use cookie/session -->
+<!-- todo do we need url in table? we can also generate url from id/name -->
+<!-- todo use id or name for the file name? -->
+Media
+| id | name  | upload status | Thumbnail | Media type | media date
+| -- | -- |  -- | -- | -- | -- | 
+| `int64` | `text` | `failed`/`success`/`inProgress` | `boolean` | `video/mp4, video/webm` ...  | `timestamp` |
+
+
+<!-- https://developer.mozilla.org/en-US/docs/Web/Media/Formats/Image_types -->
+<!-- for now lets just go ahead with video mp4/webm and image png/jpeg -->
+Media Types
+| extension | type |
+| -- | -- |
+| `.apng` | `image/apng` |
+
+<!-- different metadata table? -->
+
+UserMediaBinding
+| User ID | Media ID | 
+| -- | -- |
+| `int64` | `int64` |
+
+
+
+Media - id, random-uuid file name
+
+media metadata - media id (pkey), actual file name, file date, type
+
+thumbnail - media id (pkey), random uuid file name
+
+upload requests - id uuid?, media id, status, user id

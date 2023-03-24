@@ -4,6 +4,7 @@ import (
 	"context"
 	"fmt"
 
+	"github.com/google/uuid"
 	"gorm.io/gorm"
 )
 
@@ -28,9 +29,9 @@ func NewMediaModel(db *gorm.DB) (*MediaModel, error) {
 	}, nil
 }
 
-func (model *MediaModel) Create(ctx context.Context, fileName string, uploadRequest UploadRequest) (*Media, error) {
+func (model *MediaModel) Create(ctx context.Context, uploadRequest UploadRequest) (*Media, error) {
 	media := Media{
-		FileName:      fileName,
+		FileName:      uuid.New().String(),
 		UploadRequest: uploadRequest,
 	}
 	err := model.Db.WithContext(ctx).Create(&media).Error

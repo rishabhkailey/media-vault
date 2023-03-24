@@ -42,14 +42,6 @@ func (model *UploadRequestModel) FindByID(ctx context.Context, id string) (Uploa
 	return UploadRequest, err
 }
 
-func (model *UploadRequestModel) FindByEmail(ctx context.Context, email string) (UploadRequest UploadRequest, err error) {
-	err = model.Db.First(&UploadRequest, "email = ?", email).Error
-	if err != nil {
-		return UploadRequest, fmt.Errorf("error getting UploadRequest details from DB: %w", err)
-	}
-	return UploadRequest, err
-}
-
 func (model *UploadRequestModel) Create(ctx context.Context, userID string) (*UploadRequest, error) {
 	UploadRequest := &UploadRequest{
 		ID:     uuid.New().String(),

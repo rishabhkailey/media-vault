@@ -11,9 +11,9 @@ import (
 
 	"github.com/gin-gonic/gin"
 	"github.com/go-session/session/v3"
-	"github.com/google/uuid"
 	"github.com/minio/minio-go/v7"
 	"github.com/rishabhkailey/media-service/internal/auth"
+	dbservices "github.com/rishabhkailey/media-service/internal/db/services"
 	"github.com/rishabhkailey/media-service/internal/utils"
 	"github.com/sirupsen/logrus"
 )
@@ -69,7 +69,6 @@ func deleteUploadRequestAfter(t time.Duration, requestID, userID string) error {
 	if _, ok := uploadRequests[key]; !ok {
 		return fmt.Errorf("request with ID %v doesn't Exist", requestID)
 	}
-	// wait for the time and then delete the key from map
 	<-time.NewTicker(t).C
 	delete(uploadRequests, key)
 	return nil
@@ -78,8 +77,8 @@ func deleteUploadRequestAfter(t time.Duration, requestID, userID string) error {
 type initRequestBody struct {
 	FileName  string `json:"fileName"`
 	Size      int64  `json:"size"`
-	MediaType string `json:"mediaType"`
-	Date      string `json:"date"`
+	MediaType string `json:"mediaType,omitempty"`
+	Date      int64  `json:"date,omitempty"`
 }
 
 func (server *Server) InitChunkUpload(c *gin.Context) {
@@ -104,8 +103,40 @@ func (server *Server) InitChunkUpload(c *gin.Context) {
 		c.Status(http.StatusBadRequest)
 		return
 	}
-	requestID := uuid.New().String()
-
+	if len(requestBody.FileName) == 0 || requestBody.Size == 0 {
+		logrus.Infof("[InitUpload] invalid request: %v", err)
+		c.Status(http.StatusBadRequest)
+		return
+	}
+	if len(requestBody.MediaType) == 0 {
+		requestBody.MediaType = string(dbservices.UNKNOWN)
+	}
+	if requestBody.Date == 0 {
+		requestBody.Date = time.Now().Unix()
+	}
+	uploadRequest, err := server.UploadRequests.Create(c.Request.Context(), tokenInfo.Subject)
+	if err != nil {
+		logrus.Errorf("[InitUpload] uploadRequest creation failed: %w", err)
+		c.AbortWithStatus(http.StatusInternalServerError)
+		return
+	}
+	media, err := server.Media.Create(c.Request.Context(), *uploadRequest)
+	if err != nil {
+		logrus.Errorf("[InitUpload] media creation failed: %w", err)
+		c.AbortWithStatus(http.StatusInternalServerError)
+		return
+	}
+	_, err = server.MediaMetadata.Create(c.Request.Context(), *media, dbservices.Metadata{
+		Name: requestBody.FileName,
+		Date: time.Unix(requestBody.Date, 0),
+		Size: uint64(requestBody.Size),
+		Type: requestBody.MediaType,
+	})
+	if err != nil {
+		logrus.Errorf("[InitUpload] media metadata creation failed: %w", err)
+		c.AbortWithStatus(http.StatusInternalServerError)
+		return
+	}
 	// for 1 upload request we will only validate token on init request and store info in the session
 	// if session contains requestID:user = UserID then user is authenticated
 	store, err := session.Start(c.Request.Context(), c.Writer, c.Request)
@@ -117,15 +148,15 @@ func (server *Server) InitChunkUpload(c *gin.Context) {
 	}
 	// todo - requestID to check if the request belongs to user or not
 	// further userID will be used in the upload requests slice
-	store.Set(fmt.Sprintf("%s:user", requestID), tokenInfo.Subject)
+	store.Set(fmt.Sprintf("%s:user", uploadRequest.ID), tokenInfo.Subject)
 	store.Save()
-	go server.startUploadInBackground(requestID, tokenInfo.Subject, requestBody.FileName, requestBody.Size)
+	go server.startUploadInBackground(uploadRequest.ID, tokenInfo.Subject, media.FileName, requestBody.Size)
 	c.JSON(http.StatusOK, gin.H{
-		"requestID": requestID,
+		"requestID": uploadRequest.ID,
 	})
 }
 
-func (server *Server) startUploadInBackground(requestID, userID, fileName string, size int64) {
+func (server *Server) startUploadInBackground(requestID, userID, fileNameOnServer string, size int64) {
 	// todo upgrade go and change this to WithCancelCause
 	ctx, cancelFunc := context.WithCancel(context.Background())
 	err := newUploadRequest(ctx, cancelFunc, requestID, userID)
@@ -147,23 +178,28 @@ func (server *Server) startUploadInBackground(requestID, userID, fileName string
 	uploadRequest.size = size
 	// todo need to add some kind of timeout during upload if no data is transfered for sometime
 	// i think tcp by default has some timeout
-	uploadedInfo, err := server.Minio.PutObject(ctx, bucketName, fileName, uploadRequest.Reader, size, minio.PutObjectOptions{})
+	uploadedInfo, err := server.Minio.PutObject(ctx, bucketName, fileNameOnServer, uploadRequest.Reader, size, minio.PutObjectOptions{})
 	if err != nil {
 		// todo time="2023-02-19T09:22:39Z" level=error msg="[server.startUploadInBackground] upload failed: A timeout occurred while trying to lock a resource, please reduce your request rate"
 		logrus.Errorf("[server.startUploadInBackground] upload failed: %v", err)
 		uploadRequest.completed = true
 		uploadRequest.err = err
 		uploadRequest.cancelFunc()
-		// delete the request after 10 minutes to free memory
-		// finishUpload request will not work after 10 minutes, so client only has 10 minutes to send finishUpload request
-		// todo call delete right away and store rest of the details in DB instead
-		deleteUploadRequestAfter(1*time.Hour, requestID, userID)
+		deleteUploadRequestAfter(0*time.Second, requestID, userID)
+		err := server.UploadRequests.UpdateStatus(context.Background(), requestID, dbservices.FAILED_UPLOAD_STATUS)
+		if err != nil {
+			logrus.Errorf("[server.startUploadInBackground] uploadRequest update status failed: %v", err)
+		}
 		return
 	}
 	logrus.Infof("[server.startUploadInBackground] upload completed: %v", uploadedInfo)
 	uploadRequest.completed = true
 	uploadRequest.err = nil
 	uploadRequest.cancelFunc()
+	err = server.UploadRequests.UpdateStatus(context.Background(), requestID, dbservices.COMPLETED_UPLOAD_STATUS)
+	if err != nil {
+		logrus.Errorf("[server.startUploadInBackground] uploadRequest update status failed: %v", err)
+	}
 	// delete the request after 10 minutes to free memory
 	// finishUpload request will not work after 10 minutes, so client has 10 minutes
 	deleteUploadRequestAfter(10*time.Minute, requestID, userID)
@@ -178,6 +214,7 @@ func (server *Server) startUploadInBackground(requestID, userID, fileName string
 // }
 
 // todo check for multipart request
+// todo request size limit
 func (server *Server) UploadChunk(c *gin.Context) {
 	requestID := c.Request.PostFormValue("requestID")
 	if len(requestID) == 0 {
@@ -283,6 +320,7 @@ type finishUploadRequestBody struct {
 	Checksum  string `json:"checksum"`
 }
 
+// this is for client to confirm if the upload has finished or not
 func (server *Server) FinishChunkUpload(c *gin.Context) {
 	var requestBody finishUploadRequestBody
 	c.Request.ParseForm()
@@ -316,9 +354,8 @@ func (server *Server) FinishChunkUpload(c *gin.Context) {
 		return
 	}
 	if !uploadRequest.completed {
-		logrus.Infof("[server.FinishUpload]: upload request %v should have completed but it is still not completed yet. last chuck upload to minio might be still in progress will wait for 1 more minute", requestBody.RequestID)
-
-		waitTime := 1 * time.Minute
+		logrus.Infof("[server.FinishUpload]: upload request %v should have completed but it is still not completed yet. last chuck upload to minio might be still in progress will wait for 5 more minute", requestBody.RequestID)
+		waitTime := 5 * time.Minute
 		select {
 		case <-time.NewTicker(waitTime).C:
 			logrus.Errorf("[server.FinishUpload]: upload did not complete in time")
@@ -334,7 +371,6 @@ func (server *Server) FinishChunkUpload(c *gin.Context) {
 		return
 	}
 	c.Status(http.StatusOK)
-	return
 }
 
 // todo if upload fail delete file in minio

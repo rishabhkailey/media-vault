@@ -1,5 +1,6 @@
 import axios, { type AxiosResponse } from "axios";
 import { Chacha20 } from "ts-chacha20";
+import { fileType } from "./file";
 
 type ProgressCallback = (percentage: number) => void;
 // todo update promise<any> to request info or something
@@ -67,7 +68,8 @@ function initChunkUpload(
         {
           fileName: file.name,
           size: file.size,
-          fileType: "txt",
+          mediaType: fileType(file),
+          date: file.lastModified,
         },
         {
           headers: {

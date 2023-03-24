@@ -1,9 +1,15 @@
-* /initUpload
+* /initChunkUpload
   ```
   request {
-    fileName:
-    size:
-    fileType:
+    body {
+      fileName:
+      size:
+      mediaType:
+      date:
+    }
+    headers {
+      Authorization: 
+    }
   }
   ```
   ```
@@ -16,16 +22,42 @@
   ```go
   map[requestId]io.WriteSeeker
   // on failing reset seek to its original position
-  
+  // get user id (subject) from Authoriztion token (token interospection)
+  // for now we will get it all the time no caching
   ```
 
 * /uploadChunk 
   ```
   request {
-    requestID:
-    index:
-    chunkSize:
-    chunkData:
+    body {
+      requestID:
+      index:
+      chunkSize:
+      chunkData:
+    }
+    headers {
+      Authorization: 
+    }
+  }
+  ```
+  ```
+  response {
+    status:
+  }
+  ```
+
+
+* /uploadMediaThumbnail (optional)
+  
+  ```
+  request {
+    body {
+      requestID:
+      thumbnail:
+    }
+    headers {
+      Authorization: 
+    }
   }
   ```
   ```
@@ -37,8 +69,13 @@
 * /finishUpload 
   ``` 
   request {
-    requestID:
-    checksum:
+    body {
+      requestID:
+      checksum:
+    }
+    headers {
+      Authorization: 
+    }
   }
   ```
   ```
@@ -46,6 +83,7 @@
     status:
   }
   ```
+
 
 test
 ```bash
