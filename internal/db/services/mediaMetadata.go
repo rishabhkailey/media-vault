@@ -21,18 +21,18 @@ const UNKNOWN MediaType = "unknown"
 
 var ValidMediaTypes = []MediaType{VIDEO_MP4, VIDEO_WEBM, IMAGE_JPEG, IMAGE_PNG, UNKNOWN}
 
+// todo thumbnail bool
 type Metadata struct {
-	Name string
-	Date time.Time
-	Type string
-	Size uint64
+	Name      string
+	Date      time.Time
+	Type      string
+	Size      uint64
+	Thumbnail bool `gorm:"default:false"`
 }
 
 type MediaMetadata struct {
 	gorm.Model
 	Metadata
-	MediaID uint `gorm:"index"`
-	Media   Media
 }
 
 type MediaMetadataModel struct {
@@ -49,14 +49,21 @@ func NewMediaMetadataModel(db *gorm.DB) (*MediaMetadataModel, error) {
 	}, nil
 }
 
-func (model *MediaMetadataModel) Create(ctx context.Context, media Media, metadata Metadata) (*MediaMetadata, error) {
+func (model *MediaMetadataModel) Create(ctx context.Context, metadata Metadata) (*MediaMetadata, error) {
 	mediaMetadata := MediaMetadata{
 		Metadata: metadata,
-		Media:    media,
 	}
 	err := model.Db.WithContext(ctx).Create(&mediaMetadata).Error
 	if err != nil {
 		return nil, fmt.Errorf("[Create]: insert failed: %w", err)
 	}
 	return &mediaMetadata, nil
+}
+
+func (model *MediaMetadataModel) UpdateThumbnail(ctx context.Context, metadataID uint, thumbnail bool) error {
+	return model.Db.Model(&MediaMetadata{
+		Model: gorm.Model{
+			ID: metadataID,
+		},
+	}).Update("thumbnail", thumbnail).Error
 }

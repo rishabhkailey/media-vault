@@ -16,6 +16,7 @@ import (
 	dbservices "github.com/rishabhkailey/media-service/internal/db/services"
 	"github.com/rishabhkailey/media-service/internal/utils"
 	"github.com/sirupsen/logrus"
+	"gorm.io/gorm"
 )
 
 // seek reader?
@@ -120,13 +121,7 @@ func (server *Server) InitChunkUpload(c *gin.Context) {
 		c.AbortWithStatus(http.StatusInternalServerError)
 		return
 	}
-	media, err := server.Media.Create(c.Request.Context(), *uploadRequest)
-	if err != nil {
-		logrus.Errorf("[InitUpload] media creation failed: %w", err)
-		c.AbortWithStatus(http.StatusInternalServerError)
-		return
-	}
-	_, err = server.MediaMetadata.Create(c.Request.Context(), *media, dbservices.Metadata{
+	mediaMetadata, err := server.MediaMetadata.Create(c.Request.Context(), dbservices.Metadata{
 		Name: requestBody.FileName,
 		Date: time.Unix(requestBody.Date, 0),
 		Size: uint64(requestBody.Size),
@@ -134,6 +129,18 @@ func (server *Server) InitChunkUpload(c *gin.Context) {
 	})
 	if err != nil {
 		logrus.Errorf("[InitUpload] media metadata creation failed: %w", err)
+		c.AbortWithStatus(http.StatusInternalServerError)
+		return
+	}
+	media, err := server.Media.Create(c.Request.Context(), *uploadRequest, *mediaMetadata)
+	if err != nil {
+		logrus.Errorf("[InitUpload] media creation failed: %w", err)
+		c.AbortWithStatus(http.StatusInternalServerError)
+		return
+	}
+	_, err = server.UserMediaBindings.Create(c.Request.Context(), tokenInfo.Subject, *media)
+	if err != nil {
+		logrus.Errorf("[InitUpload] UserMediaBindings creation failed: %w", err)
 		c.AbortWithStatus(http.StatusInternalServerError)
 		return
 	}
@@ -156,6 +163,8 @@ func (server *Server) InitChunkUpload(c *gin.Context) {
 	})
 }
 
+var bucketName string = "test"
+
 func (server *Server) startUploadInBackground(requestID, userID, fileNameOnServer string, size int64) {
 	// todo upgrade go and change this to WithCancelCause
 	ctx, cancelFunc := context.WithCancel(context.Background())
@@ -164,7 +173,6 @@ func (server *Server) startUploadInBackground(requestID, userID, fileNameOnServe
 		logrus.Errorf("[server.startUploadInBackground] request creation failed: %v", err)
 		return
 	}
-	bucketName := "test"
 	uploadRequest, err := getUploadRequest(requestID, userID)
 	// how to inform user about these errors?
 	if err != nil {
@@ -315,6 +323,73 @@ func (server *Server) UploadChunk(c *gin.Context) {
 	})
 }
 
+func (server *Server) UploadThumbnail(c *gin.Context) {
+	requestID := c.Request.PostFormValue("requestID")
+	if len(requestID) == 0 {
+		logrus.Error("[Server.uploadChunk] bad request: requestID param missing")
+		c.AbortWithStatus(http.StatusBadRequest)
+		return
+	}
+	store, err := session.Start(c.Request.Context(), c.Writer, c.Request)
+	if err != nil {
+		logrus.WithFields(logrus.Fields{"error": err, "function": "server.InitUpload"}).Errorf("session start failed")
+		// todo error response
+		c.Status(http.StatusInternalServerError)
+		return
+	}
+	var userID string
+	if value, ok := store.Get(fmt.Sprintf("%s:user", requestID)); ok {
+		userID, _ = value.(string)
+	}
+	if len(userID) == 0 {
+		logrus.Errorf("[UploadChunk]: requestID not found in session")
+		c.AbortWithStatus(http.StatusUnauthorized)
+		return
+	}
+	var size int64
+	{
+		value := c.Request.PostFormValue("size")
+		if len(value) == 0 {
+			logrus.Error("[Server.uploadChunk] bad request: size param missing")
+			c.AbortWithStatus(http.StatusBadRequest)
+			return
+		}
+		size, err = strconv.ParseInt(value, 10, 64)
+		if err != nil {
+			logrus.Error("[Server.uploadChunk] bad request: invalid size %v", value)
+			c.AbortWithStatus(http.StatusBadRequest)
+			return
+		}
+	}
+
+	thumbnail, _, err := c.Request.FormFile("thumbnail")
+	if err != nil {
+		logrus.Error("[Server.uploadChunk] bad request: chunkData param missing")
+		c.AbortWithStatus(http.StatusBadRequest)
+		return
+	}
+	media, err := server.Media.FindByUploadRequest(c.Request.Context(), requestID)
+	if errors.Is(err, gorm.ErrRecordNotFound) {
+		c.AbortWithStatus(http.StatusNotFound)
+		return
+	}
+	thumbnailFileName := fmt.Sprintf(".thumb-%s", media.FileName)
+	uploadedInfo, err := server.Minio.PutObject(c.Request.Context(), bucketName, thumbnailFileName, thumbnail, size, minio.PutObjectOptions{})
+	if err != nil {
+		logrus.Errorf("[server.UploadThumbnail] failed to upload file to minio: %w", err)
+		c.AbortWithStatus(http.StatusInternalServerError)
+		return
+	}
+	logrus.Infof("[server.UploadThumbnail] upload completed: %v", uploadedInfo)
+	err = server.MediaMetadata.UpdateThumbnail(c.Request.Context(), media.MetadataID, true)
+	if err != nil {
+		logrus.Errorf("[server.UploadThumbnail] failed to update media metadata: %w", err)
+		c.AbortWithStatus(http.StatusInternalServerError)
+		return
+	}
+	c.Status(http.StatusOK)
+}
+
 type finishUploadRequestBody struct {
 	RequestID string `json:"requestID"`
 	Checksum  string `json:"checksum"`
@@ -374,3 +449,4 @@ func (server *Server) FinishChunkUpload(c *gin.Context) {
 }
 
 // todo if upload fail delete file in minio
+// todo thumbnail upload

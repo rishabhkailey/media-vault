@@ -10,9 +10,9 @@ import (
 // todo user subject as userid on the client so even if user change email or user name the user should not loose its data
 type UserMediaBinding struct {
 	gorm.Model
-	UserID  string `gorm:"index:,unique,composite:user_id_status"`
-	MediaID string `gorm:"index:,unique,composite:user_id_status"`
-	Media   Media
+	UserID  string `gorm:"index:,unique,composite:user_id_media_id"`
+	MediaID string `gorm:"index:,unique,composite:user_id_media_id"`
+	Media   Media  `gorm:"foreignKey:MediaID"`
 }
 
 type UserMediaBindingModel struct {
