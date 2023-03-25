@@ -8,6 +8,14 @@ import (
 	"gorm.io/gorm"
 )
 
+const ORDER_BY_UPLOAD_TIME = "created_at"
+const ORDER_BY_MEDIA_CREATION_TIME = "time"
+
+var SUPPORTED_ORDER_BY = []string{ORDER_BY_UPLOAD_TIME, ORDER_BY_MEDIA_CREATION_TIME}
+
+const SORT_ASCENDING = "asc"
+const SORT_DESCENDING = "desc"
+
 // for now media will have 1-to-1 relationship with upload request and metadata
 // todo make uploadrequest pointer so we can set the foreign key to null of media without upload request
 type Media struct {
@@ -33,11 +41,11 @@ func NewMediaModel(db *gorm.DB) (*MediaModel, error) {
 	}, nil
 }
 
-func (model *MediaModel) Create(ctx context.Context, uploadRequest UploadRequest, metadata MediaMetadata) (*Media, error) {
+func (model *MediaModel) Create(ctx context.Context, uploadRequestID string, metadataID uint) (*Media, error) {
 	media := Media{
-		FileName:      uuid.New().String(),
-		UploadRequest: uploadRequest,
-		Metadata:      metadata,
+		FileName:        uuid.New().String(),
+		UploadRequestID: uploadRequestID,
+		MetadataID:      metadataID,
 	}
 	err := model.Db.WithContext(ctx).Create(&media).Error
 	if err != nil {
@@ -50,3 +58,20 @@ func (model *MediaModel) FindByUploadRequest(ctx context.Context, uploadRequestI
 	err = model.Db.First(&media, "upload_request_id = ?", uploadRequestID).Error
 	return
 }
+
+func (model *MediaModel) GetUserMediaList(ctx context.Context, userID string, orderBy string, sort string, offset, limit int) (mediaList []Media, err error) {
+	db := model.Db
+	mediaIdQuery := db.Model(&UserMediaBinding{}).Select("media_id").Where("user_id = ?", userID)
+	if sort == SORT_DESCENDING {
+		orderBy = fmt.Sprintf("%s desc", orderBy)
+	}
+	// todo check preload vs join
+	err = db.Preload("Metadata").Model(&Media{}).Where("id IN (?)", mediaIdQuery).Limit(limit).Order(orderBy).Offset(offset).Find(&mediaList).Error
+	return
+}
+
+// todo redis for user media count update on each upload and delete operation
+// 1 more counter for failed uploads if user wants to see
+
+// todo check gorm scopes https://gorm.io/docs/advanced_query.html#Scopes
+// todo check pagination https://gorm.io/docs/scopes.html#Pagination

@@ -54,6 +54,7 @@ func NewRouter(v1ApiServer *v1Api.Server, config config.Config) (*gin.Engine, er
 			v1UserProtected.POST("/uploadChunk", v1ApiServer.UploadChunk)
 			v1UserProtected.POST("/finishChunkUpload", v1ApiServer.FinishChunkUpload)
 			v1UserProtected.POST("/uploadThumbnail", v1ApiServer.UploadThumbnail)
+			v1UserProtected.GET("/mediaList", v1ApiServer.MediaList)
 		}
 	}
 

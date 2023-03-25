@@ -113,7 +113,7 @@ func (server *Server) InitChunkUpload(c *gin.Context) {
 	}
 	mediaMetadata, err := server.MediaMetadata.Create(c.Request.Context(), dbservices.Metadata{
 		Name: requestBody.FileName,
-		Date: time.Unix(requestBody.Date, 0),
+		Date: time.UnixMilli(requestBody.Date),
 		Size: uint64(requestBody.Size),
 		Type: requestBody.MediaType,
 	})
@@ -122,13 +122,13 @@ func (server *Server) InitChunkUpload(c *gin.Context) {
 		c.AbortWithStatus(http.StatusInternalServerError)
 		return
 	}
-	media, err := server.Media.Create(c.Request.Context(), *uploadRequest, *mediaMetadata)
+	media, err := server.Media.Create(c.Request.Context(), uploadRequest.ID, mediaMetadata.ID)
 	if err != nil {
 		logrus.Errorf("[InitUpload] media creation failed: %w", err)
 		c.AbortWithStatus(http.StatusInternalServerError)
 		return
 	}
-	_, err = server.UserMediaBindings.Create(c.Request.Context(), userID, *media)
+	_, err = server.UserMediaBindings.Create(c.Request.Context(), userID, media.ID)
 	if err != nil {
 		logrus.Errorf("[InitUpload] UserMediaBindings creation failed: %w", err)
 		c.AbortWithStatus(http.StatusInternalServerError)
@@ -365,7 +365,7 @@ func (server *Server) UploadThumbnail(c *gin.Context) {
 		c.AbortWithStatus(http.StatusNotFound)
 		return
 	}
-	thumbnailFileName := fmt.Sprintf(".thumb-%s", media.FileName)
+	thumbnailFileName := genThumbnailName(media.FileName)
 	uploadedInfo, err := server.Minio.PutObject(c.Request.Context(), bucketName, thumbnailFileName, thumbnail, size, minio.PutObjectOptions{})
 	if err != nil {
 		logrus.Errorf("[server.UploadThumbnail] failed to upload file to minio: %w", err)

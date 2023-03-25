@@ -11,7 +11,7 @@ import (
 type UserMediaBinding struct {
 	gorm.Model
 	UserID  string `gorm:"index:,unique,composite:user_id_media_id"`
-	MediaID string `gorm:"index:,unique,composite:user_id_media_id"`
+	MediaID uint   `gorm:"index:,unique,composite:user_id_media_id"`
 	Media   Media  `gorm:"foreignKey:MediaID"`
 }
 
@@ -29,10 +29,10 @@ func NewUserMediaBinding(db *gorm.DB) (*UserMediaBindingModel, error) {
 	}, nil
 }
 
-func (model *UserMediaBindingModel) Create(ctx context.Context, userID string, media Media) (*UserMediaBinding, error) {
+func (model *UserMediaBindingModel) Create(ctx context.Context, userID string, mediaID uint) (*UserMediaBinding, error) {
 	userMediaBinding := &UserMediaBinding{
-		UserID: userID,
-		Media:  media,
+		UserID:  userID,
+		MediaID: mediaID,
 	}
 	err := model.Db.WithContext(ctx).Create(userMediaBinding).Error
 	if err != nil {
