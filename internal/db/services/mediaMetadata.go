@@ -61,9 +61,5 @@ func (model *MediaMetadataModel) Create(ctx context.Context, metadata Metadata) 
 }
 
 func (model *MediaMetadataModel) UpdateThumbnail(ctx context.Context, metadataID uint, thumbnail bool) error {
-	return model.Db.Model(&MediaMetadata{
-		Model: gorm.Model{
-			ID: metadataID,
-		},
-	}).Update("thumbnail", thumbnail).Error
+	return model.Db.Model(&MediaMetadata{}).Where("id = ?", metadataID).Update("thumbnail", thumbnail).Error
 }

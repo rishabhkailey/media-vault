@@ -46,8 +46,7 @@ func (model *MediaModel) Create(ctx context.Context, uploadRequest UploadRequest
 	return &media, nil
 }
 
-func (model *MediaModel) FindByUploadRequest(ctx context.Context, uploadRequestID string) (media *Media, err error) {
-	media.UploadRequestID = uploadRequestID
-	err = model.Db.First(&media).Error
+func (model *MediaModel) FindByUploadRequest(ctx context.Context, uploadRequestID string) (media Media, err error) {
+	err = model.Db.First(&media, "upload_request_id = ?", uploadRequestID).Error
 	return
 }

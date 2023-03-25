@@ -98,3 +98,5 @@ Stack:
     time="2023-03-08T10:40:52Z" level=info msg=sent bytes=0
     time="2023-03-08T10:40:52Z" level=error msg="At least one of the pre-conditions you specified did not hold"
 ```
+* make login persistence
+* make the file upload dialog persistence? like it restart the upload if state is updated

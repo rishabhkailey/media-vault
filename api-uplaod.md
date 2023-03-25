@@ -54,6 +54,7 @@
     body {
       requestID:
       thumbnail:
+      size:
     }
     headers {
       Authorization: 

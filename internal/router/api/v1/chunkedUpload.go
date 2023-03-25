@@ -323,6 +323,7 @@ func (server *Server) UploadChunk(c *gin.Context) {
 	})
 }
 
+// thumbnail is required to be of jpeg type only
 func (server *Server) UploadThumbnail(c *gin.Context) {
 	requestID := c.Request.PostFormValue("requestID")
 	if len(requestID) == 0 {
@@ -330,22 +331,13 @@ func (server *Server) UploadThumbnail(c *gin.Context) {
 		c.AbortWithStatus(http.StatusBadRequest)
 		return
 	}
-	store, err := session.Start(c.Request.Context(), c.Writer, c.Request)
-	if err != nil {
-		logrus.WithFields(logrus.Fields{"error": err, "function": "server.InitUpload"}).Errorf("session start failed")
-		// todo error response
-		c.Status(http.StatusInternalServerError)
-		return
-	}
-	var userID string
-	if value, ok := store.Get(fmt.Sprintf("%s:user", requestID)); ok {
-		userID, _ = value.(string)
-	}
-	if len(userID) == 0 {
-		logrus.Errorf("[UploadChunk]: requestID not found in session")
-		c.AbortWithStatus(http.StatusUnauthorized)
-		return
-	}
+	// mediaType := c.Request.PostFormValue("mediaType")
+	// if len(mediaType) == 0 {
+	// 	logrus.Error("[Server.uploadChunk] bad request: mediaType param missing")
+	// 	c.AbortWithStatus(http.StatusBadRequest)
+	// 	return
+	// }
+	var err error
 	var size int64
 	{
 		value := c.Request.PostFormValue("size")
@@ -361,11 +353,28 @@ func (server *Server) UploadThumbnail(c *gin.Context) {
 			return
 		}
 	}
-
 	thumbnail, _, err := c.Request.FormFile("thumbnail")
 	if err != nil {
 		logrus.Error("[Server.uploadChunk] bad request: chunkData param missing")
 		c.AbortWithStatus(http.StatusBadRequest)
+		return
+	}
+	// just for auth
+	// todo replace this with session and also add endpoint for revoke session which can be called on logout
+	store, err := session.Start(c.Request.Context(), c.Writer, c.Request)
+	if err != nil {
+		logrus.WithFields(logrus.Fields{"error": err, "function": "server.InitUpload"}).Errorf("session start failed")
+		// todo error response
+		c.Status(http.StatusInternalServerError)
+		return
+	}
+	var userID string
+	if value, ok := store.Get(fmt.Sprintf("%s:user", requestID)); ok {
+		userID, _ = value.(string)
+	}
+	if len(userID) == 0 {
+		logrus.Errorf("[UploadChunk]: requestID not found in session")
+		c.AbortWithStatus(http.StatusUnauthorized)
 		return
 	}
 	media, err := server.Media.FindByUploadRequest(c.Request.Context(), requestID)

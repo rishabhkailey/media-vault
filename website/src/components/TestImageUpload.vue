@@ -1,13 +1,15 @@
 <script setup lang="ts">
 import { ref } from "vue";
 import type { SubmitEventPromise } from "vuetify/lib/framework.mjs";
-import { generateThumbnail } from "@/utils/image";
+import { generateThumbnail } from "@/utils/thumbnail";
 import axios from "axios";
 
 const uploadFiles = ref<Array<File>>([]);
-const downloadButton = ref<HTMLAnchorElement|undefined>(undefined);
+const downloadButton = ref<HTMLAnchorElement | undefined>(undefined);
 
-const SubmitHandler: (e: SubmitEventPromise) => any = (e: SubmitEventPromise) => {
+const SubmitHandler: (e: SubmitEventPromise) => any = (
+  e: SubmitEventPromise
+) => {
   if (uploadFiles.value.length === 0) {
     // todo error message
     return;
@@ -27,20 +29,17 @@ const SubmitHandler: (e: SubmitEventPromise) => any = (e: SubmitEventPromise) =>
   formData.append("name", file.name);
   formData.append("size", file.size.toString());
   formData.append("file", file);
-  generateThumbnail(
-    file,
-    { maxHeightWidth: 300 },
-    (file, thumbnail) => {
-      if (downloadButton.value !== undefined){
+  generateThumbnail(file, { maxHeightWidth: 300 })
+    .then((thumbnail) => {
+      if (downloadButton.value !== undefined) {
         downloadButton.value.href = URL.createObjectURL(thumbnail);
         downloadButton.value.download = "thumbnail.jpeg";
       }
       console.log("file", file, "thumbnail", thumbnail);
-    },
-    (err) => {
+    })
+    .catch((err) => {
       console.log("failed to generate thumbnail", err);
-    }
-  );
+    });
 
   // scaleImage(
   //   file,
@@ -56,7 +55,7 @@ const SubmitHandler: (e: SubmitEventPromise) => any = (e: SubmitEventPromise) =>
   //     console.log("failed to generate thumbnail", err);
   //   }
   // );
-  
+
   // /v1/testEncryptedUpload
   // /v1/testNormalUpload
   // axios

@@ -1,6 +1,8 @@
 import axios, { type AxiosResponse } from "axios";
+import { encrypt } from "crypto-js/aes";
 import { Chacha20 } from "ts-chacha20";
 import { fileType } from "./file";
+import { generateThumbnailAsArrayBuffer } from "./thumbnail";
 
 type ProgressCallback = (percentage: number) => void;
 // todo update promise<any> to request info or something
@@ -17,28 +19,53 @@ export function chunkUpload(
   callback: ProgressCallback
 ): Promise<ChunkUploadInfo> {
   return new Promise((resolve, reject) => {
+    const password = "01234567890123456789012345678901";
+    const nonce = "012345678901";
+    const textEncoder = new TextEncoder();
+    const encryptor = new Chacha20(
+      textEncoder.encode(password),
+      textEncoder.encode(nonce)
+    );
     initChunkUpload(file, bearerToken, controller)
       .then((chunkRequestInfo) => {
-        uploadFileChunks(file, chunkRequestInfo, controller, callback)
+        uploadFileChunks(
+          file,
+          chunkRequestInfo,
+          encryptor,
+          controller,
+          callback
+        )
           .then((uploadedBytes) => {
             console.log("uploaded " + uploadedBytes + " bytes of " + file.name);
-            finishChunkUpload(chunkRequestInfo, controller)
+            uploadThumbnail(chunkRequestInfo, file, encryptor, controller)
               .then((success) => {
-                if (success) {
-                  // todo
-                  resolve({
-                    requestID: chunkRequestInfo.requestID,
-                    uploadedBytes: uploadedBytes,
-                  });
-                  return;
-                } else {
-                  reject(new Error("finish chunk upload request failed"));
-                  return;
+                if (!success) {
+                  // todo send warning on UI
+                  console.warn("thumbnail upload failed");
                 }
               })
               .catch((err) => {
-                reject(err);
-                return;
+                console.warn("thumbnail upload failed", err);
+              })
+              .finally(() => {
+                finishChunkUpload(chunkRequestInfo, controller)
+                  .then((success) => {
+                    if (success) {
+                      // todo
+                      resolve({
+                        requestID: chunkRequestInfo.requestID,
+                        uploadedBytes: uploadedBytes,
+                      });
+                      return;
+                    } else {
+                      reject(new Error("finish chunk upload request failed"));
+                      return;
+                    }
+                  })
+                  .catch((err) => {
+                    reject(err);
+                    return;
+                  });
               });
           })
           .catch((err) => {
@@ -109,6 +136,7 @@ const defaultChunkSize = 25 * 1024 * 1024;
 function uploadFileChunks(
   file: File,
   chunkRequestInfo: ChunkRequestInfo,
+  encryptor: Chacha20,
   controller: AbortController,
   callback: ProgressCallback
 ): Promise<number> {
@@ -119,13 +147,6 @@ function uploadFileChunks(
   let bytesUploaded = 0;
   const requestID = chunkRequestInfo.requestID;
   // init upload
-  const password = "01234567890123456789012345678901";
-  const nonce = "012345678901";
-  const textEncoder = new TextEncoder();
-  const encryptor = new Chacha20(
-    textEncoder.encode(password),
-    textEncoder.encode(nonce)
-  );
   let chunkSize = defaultChunkSize;
   if (chunkSize > file.size) {
     chunkSize = file.size;
@@ -289,6 +310,56 @@ function finishChunkUpload(
       })
       .catch((err) => {
         reject(err);
+      });
+  });
+}
+
+// thumbnail type must be a jpeg
+function uploadThumbnail(
+  chunkRequestInfo: ChunkRequestInfo,
+  file: File,
+  encryptor: Chacha20,
+  controller: AbortController
+): Promise<boolean> {
+  return new Promise((resolve, reject) => {
+    // finish upload
+    generateThumbnailAsArrayBuffer(file, {
+      maxHeightWidth: 300,
+    })
+      .then((thumbnail) => {
+        const encryptedThumbnail = encryptor.encrypt(thumbnail);
+        axios
+          .post(
+            "/v1/uploadThumbnail",
+            {
+              requestID: chunkRequestInfo.requestID,
+              size: encryptedThumbnail.length,
+              thumbnail: thumbnail,
+            },
+            {
+              headers: {
+                "Content-Type": "multipart/form-data",
+              },
+              signal: controller.signal,
+            }
+          )
+          .then((res) => {
+            if (res.status !== 200) {
+              throw new Error(
+                "upload chuck request failed with status" + res.status
+              );
+            }
+            resolve(true);
+            return;
+          })
+          .catch((err) => {
+            reject(err);
+            return;
+          });
+      })
+      .catch((err) => {
+        reject(err);
+        return;
       });
   });
 }
