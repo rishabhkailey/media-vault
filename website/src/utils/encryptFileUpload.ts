@@ -1,5 +1,4 @@
 import axios, { type AxiosResponse } from "axios";
-import { encrypt } from "crypto-js/aes";
 import { Chacha20 } from "ts-chacha20";
 import { fileType } from "./file";
 import { generateThumbnailAsArrayBuffer } from "./thumbnail";
@@ -30,6 +29,7 @@ export function chunkUpload(
       .then((chunkRequestInfo) => {
         uploadFileChunks(
           file,
+          bearerToken,
           chunkRequestInfo,
           encryptor,
           controller,
@@ -37,7 +37,13 @@ export function chunkUpload(
         )
           .then((uploadedBytes) => {
             console.log("uploaded " + uploadedBytes + " bytes of " + file.name);
-            uploadThumbnail(chunkRequestInfo, file, encryptor, controller)
+            uploadThumbnail(
+              chunkRequestInfo,
+              file,
+              bearerToken,
+              encryptor,
+              controller
+            )
               .then((success) => {
                 if (!success) {
                   // todo send warning on UI
@@ -48,7 +54,7 @@ export function chunkUpload(
                 console.warn("thumbnail upload failed", err);
               })
               .finally(() => {
-                finishChunkUpload(chunkRequestInfo, controller)
+                finishChunkUpload(chunkRequestInfo, bearerToken, controller)
                   .then((success) => {
                     if (success) {
                       // todo
@@ -135,6 +141,7 @@ const defaultChunkSize = 25 * 1024 * 1024;
 // todo buffer reading, once buffer full then send upload request
 function uploadFileChunks(
   file: File,
+  bearerToken: string,
   chunkRequestInfo: ChunkRequestInfo,
   encryptor: Chacha20,
   controller: AbortController,
@@ -163,6 +170,7 @@ function uploadFileChunks(
           if (bufferIndex != 0) {
             try {
               await encryptAndUploadChunk(
+                bearerToken,
                 requestID,
                 bytesUploaded,
                 buffer.slice(0, bufferIndex),
@@ -195,6 +203,7 @@ function uploadFileChunks(
           // upload buffer
           try {
             await encryptAndUploadChunk(
+              bearerToken,
               requestID,
               bytesUploaded,
               buffer,
@@ -234,6 +243,7 @@ function uploadFileChunks(
 }
 
 async function encryptAndUploadChunk(
+  bearerToken: string,
   requestID: string,
   index: number,
   value: Uint8Array,
@@ -263,6 +273,7 @@ async function encryptAndUploadChunk(
       {
         headers: {
           "Content-Type": "multipart/form-data",
+          Authorization: `Bearer ${bearerToken}`,
         },
         signal: controller.signal,
       }
@@ -281,6 +292,7 @@ async function encryptAndUploadChunk(
 
 function finishChunkUpload(
   chunkRequestInfo: ChunkRequestInfo,
+  bearerToken: string,
   controller: AbortController
 ): Promise<boolean> {
   return new Promise((resolve, reject) => {
@@ -295,6 +307,7 @@ function finishChunkUpload(
         {
           headers: {
             "Content-Type": "application/json",
+            Authorization: `Bearer ${bearerToken}`,
           },
           signal: controller.signal,
         }
@@ -318,6 +331,7 @@ function finishChunkUpload(
 function uploadThumbnail(
   chunkRequestInfo: ChunkRequestInfo,
   file: File,
+  bearerToken: string,
   encryptor: Chacha20,
   controller: AbortController
 ): Promise<boolean> {
@@ -339,6 +353,7 @@ function uploadThumbnail(
             {
               headers: {
                 "Content-Type": "multipart/form-data",
+                Authorization: `Bearer ${bearerToken}`,
               },
               signal: controller.signal,
             }

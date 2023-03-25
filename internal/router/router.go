@@ -29,9 +29,6 @@ func NewRouter(v1ApiServer *v1Api.Server, config config.Config) (*gin.Engine, er
 
 	v1 := router.Group("/v1")
 	{
-		v1.GET("/login", v1ApiServer.LoginHandler)
-		v1.POST("/logout", v1ApiServer.LogoutHandler)
-		v1.GET("/authorize", v1ApiServer.AuthHandler)
 		v1.GET("/testGetVideo", v1ApiServer.TestGetVideo)
 		v1.GET("/testGetVideoWithRange", v1ApiServer.TestGetVideoWithRange)
 		v1.GET("/testDownloadFileWithRange", v1ApiServer.TestGetVideoWithRange)
@@ -45,22 +42,18 @@ func NewRouter(v1ApiServer *v1Api.Server, config config.Config) (*gin.Engine, er
 		v1.POST("/testVideoUploadWithThumbnail", v1ApiServer.TestVideoUploadWithThumbnail)
 		v1.POST("/testEncryptedFileSave", v1ApiServer.TestEncryptedFileSave)
 		v1.POST("/testStreamVideoUploadWithThumbnail", v1ApiServer.TestStreamVideoUploadWithThumbnail)
-		v1.POST("/initChunkUpload", v1ApiServer.InitChunkUpload)
-		v1.POST("/uploadChunk", v1ApiServer.UploadChunk)
-		v1.POST("/finishChunkUpload", v1ApiServer.FinishChunkUpload)
-		v1.POST("/uploadThumbnail", v1ApiServer.UploadThumbnail)
 	}
-	// authorized endpoints
-	authorized := router.Group("/")
-	// is it good to have redirects at backend?
-	// we will have the AuthMiddleware just for authentication check and will move the redirect part to /login method
-	// add current /login will be renamed to afterLogin or postlogin
-	authorized.Use(v1ApiServer.AuthMiddleware)
+	userProtected := router.Group("/")
+	userProtected.Use(v1ApiServer.UserAuthMiddleware)
 	{
-		v1Authorized := authorized.Group("/v1")
+		v1UserProtected := userProtected.Group("/v1")
 		{
-			v1Authorized.GET("/userinfo", v1ApiServer.UserInfo)
-			v1Authorized.GET("/testProtectedGetEncryptedImage", v1ApiServer.TestGetEncryptedImage)
+			v1UserProtected.GET("/testProtectedEndpoint", v1ApiServer.TestProtectedEndpoint)
+			v1UserProtected.GET("/testProtectedGetEncryptedImage", v1ApiServer.TestGetEncryptedImage)
+			v1UserProtected.POST("/initChunkUpload", v1ApiServer.InitChunkUpload)
+			v1UserProtected.POST("/uploadChunk", v1ApiServer.UploadChunk)
+			v1UserProtected.POST("/finishChunkUpload", v1ApiServer.FinishChunkUpload)
+			v1UserProtected.POST("/uploadThumbnail", v1ApiServer.UploadThumbnail)
 		}
 	}
 

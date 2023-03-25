@@ -12,7 +12,6 @@ import (
 	"github.com/gin-gonic/gin"
 	"github.com/go-session/session/v3"
 	"github.com/minio/minio-go/v7"
-	"github.com/rishabhkailey/media-service/internal/auth"
 	dbservices "github.com/rishabhkailey/media-service/internal/db/services"
 	"github.com/rishabhkailey/media-service/internal/utils"
 	"github.com/sirupsen/logrus"
@@ -83,18 +82,9 @@ type initRequestBody struct {
 }
 
 func (server *Server) InitChunkUpload(c *gin.Context) {
-	token, ok := auth.GetBearerToken(c.Request)
-	if !ok {
-		c.AbortWithStatus(http.StatusUnauthorized)
-		return
-	}
-	tokenInfo, err := server.OidcClient.IntrospectToken(token)
-	if errors.Is(err, auth.ErrUnauthorized) || !tokenInfo.ValidateScope(auth.SCOPE_USER) {
-		c.AbortWithStatus(http.StatusUnauthorized)
-		return
-	}
-	if len(tokenInfo.Subject) == 0 {
-		logrus.Errorf("token info doesn't contain user info")
+	userID, ok := c.Keys["userID"].(string)
+	if !ok || len(userID) == 0 {
+		logrus.Error("[InitChunkUpload]: empty userID")
 		c.AbortWithStatus(http.StatusInternalServerError)
 		return
 	}
@@ -105,7 +95,7 @@ func (server *Server) InitChunkUpload(c *gin.Context) {
 		return
 	}
 	if len(requestBody.FileName) == 0 || requestBody.Size == 0 {
-		logrus.Infof("[InitUpload] invalid request: %v", err)
+		logrus.Infof("[InitUpload] invalid request")
 		c.Status(http.StatusBadRequest)
 		return
 	}
@@ -115,7 +105,7 @@ func (server *Server) InitChunkUpload(c *gin.Context) {
 	if requestBody.Date == 0 {
 		requestBody.Date = time.Now().Unix()
 	}
-	uploadRequest, err := server.UploadRequests.Create(c.Request.Context(), tokenInfo.Subject)
+	uploadRequest, err := server.UploadRequests.Create(c.Request.Context(), userID)
 	if err != nil {
 		logrus.Errorf("[InitUpload] uploadRequest creation failed: %w", err)
 		c.AbortWithStatus(http.StatusInternalServerError)
@@ -138,26 +128,19 @@ func (server *Server) InitChunkUpload(c *gin.Context) {
 		c.AbortWithStatus(http.StatusInternalServerError)
 		return
 	}
-	_, err = server.UserMediaBindings.Create(c.Request.Context(), tokenInfo.Subject, *media)
+	_, err = server.UserMediaBindings.Create(c.Request.Context(), userID, *media)
 	if err != nil {
 		logrus.Errorf("[InitUpload] UserMediaBindings creation failed: %w", err)
 		c.AbortWithStatus(http.StatusInternalServerError)
 		return
 	}
-	// for 1 upload request we will only validate token on init request and store info in the session
-	// if session contains requestID:user = UserID then user is authenticated
-	store, err := session.Start(c.Request.Context(), c.Writer, c.Request)
+	err = saveUserUploadRequest(c, uploadRequest.ID, userID)
 	if err != nil {
-		logrus.WithFields(logrus.Fields{"error": err, "function": "server.InitUpload"}).Errorf("session start failed")
-		// todo error response
+		logrus.WithFields(logrus.Fields{"error": err, "function": "server.InitUpload"}).Errorf("saveUserUploadRequest failed")
 		c.Status(http.StatusInternalServerError)
 		return
 	}
-	// todo - requestID to check if the request belongs to user or not
-	// further userID will be used in the upload requests slice
-	store.Set(fmt.Sprintf("%s:user", uploadRequest.ID), tokenInfo.Subject)
-	store.Save()
-	go server.startUploadInBackground(uploadRequest.ID, tokenInfo.Subject, media.FileName, requestBody.Size)
+	go server.startUploadInBackground(uploadRequest.ID, userID, media.FileName, requestBody.Size)
 	c.JSON(http.StatusOK, gin.H{
 		"requestID": uploadRequest.ID,
 	})
@@ -230,19 +213,20 @@ func (server *Server) UploadChunk(c *gin.Context) {
 		c.AbortWithStatus(http.StatusBadRequest)
 		return
 	}
-	store, err := session.Start(c.Request.Context(), c.Writer, c.Request)
-	if err != nil {
-		logrus.WithFields(logrus.Fields{"error": err, "function": "server.InitUpload"}).Errorf("session start failed")
-		// todo error response
-		c.Status(http.StatusInternalServerError)
+	userID, ok := c.Keys["userID"].(string)
+	if !ok || len(userID) == 0 {
+		logrus.Error("[InitChunkUpload]: empty userID")
+		c.AbortWithStatus(http.StatusInternalServerError)
 		return
 	}
-	var userID string
-	if value, ok := store.Get(fmt.Sprintf("%s:user", requestID)); ok {
-		userID, _ = value.(string)
+	ok, err := verifyUploadRequestUser(c, requestID, userID)
+	if err != nil {
+		logrus.Error("[Server.uploadChunk] verifyUploadRequestUser failed: %w", err)
+		c.AbortWithStatus(http.StatusInternalServerError)
+		return
 	}
-	if len(userID) == 0 {
-		logrus.Errorf("[UploadChunk]: requestID not found in session")
+	if !ok {
+		logrus.Errorf("[Server.uploadChunk] mentioned upload request doesn't belong to user")
 		c.AbortWithStatus(http.StatusUnauthorized)
 		return
 	}
@@ -359,21 +343,20 @@ func (server *Server) UploadThumbnail(c *gin.Context) {
 		c.AbortWithStatus(http.StatusBadRequest)
 		return
 	}
-	// just for auth
-	// todo replace this with session and also add endpoint for revoke session which can be called on logout
-	store, err := session.Start(c.Request.Context(), c.Writer, c.Request)
-	if err != nil {
-		logrus.WithFields(logrus.Fields{"error": err, "function": "server.InitUpload"}).Errorf("session start failed")
-		// todo error response
-		c.Status(http.StatusInternalServerError)
+	userID, ok := c.Keys["userID"].(string)
+	if !ok || len(userID) == 0 {
+		logrus.Error("[InitChunkUpload]: empty userID")
+		c.AbortWithStatus(http.StatusInternalServerError)
 		return
 	}
-	var userID string
-	if value, ok := store.Get(fmt.Sprintf("%s:user", requestID)); ok {
-		userID, _ = value.(string)
+	ok, err = verifyUploadRequestUser(c, requestID, userID)
+	if err != nil {
+		logrus.Error("[Server.uploadChunk] verifyUploadRequestUser failed: %w", err)
+		c.AbortWithStatus(http.StatusInternalServerError)
+		return
 	}
-	if len(userID) == 0 {
-		logrus.Errorf("[UploadChunk]: requestID not found in session")
+	if !ok {
+		logrus.Errorf("[Server.uploadChunk] mentioned upload request doesn't belong to user")
 		c.AbortWithStatus(http.StatusUnauthorized)
 		return
 	}
@@ -414,19 +397,20 @@ func (server *Server) FinishChunkUpload(c *gin.Context) {
 		c.AbortWithStatus(http.StatusBadRequest)
 		return
 	}
-	store, err := session.Start(c.Request.Context(), c.Writer, c.Request)
-	if err != nil {
-		logrus.WithFields(logrus.Fields{"error": err, "function": "server.InitUpload"}).Errorf("session start failed")
-		// todo error response
-		c.Status(http.StatusInternalServerError)
+	userID, ok := c.Keys["userID"].(string)
+	if !ok || len(userID) == 0 {
+		logrus.Error("[InitChunkUpload]: empty userID")
+		c.AbortWithStatus(http.StatusInternalServerError)
 		return
 	}
-	var userID string
-	if value, ok := store.Get(fmt.Sprintf("%s:user", requestBody.RequestID)); ok {
-		userID, _ = value.(string)
+	ok, err = verifyUploadRequestUser(c, requestBody.RequestID, userID)
+	if err != nil {
+		logrus.Error("[Server.uploadChunk] verifyUploadRequestUser failed: %w", err)
+		c.AbortWithStatus(http.StatusInternalServerError)
+		return
 	}
-	if len(userID) == 0 {
-		logrus.Errorf("[UploadChunk]: requestID not found in session")
+	if !ok {
+		logrus.Errorf("[Server.uploadChunk] mentioned upload request doesn't belong to user")
 		c.AbortWithStatus(http.StatusUnauthorized)
 		return
 	}
@@ -455,6 +439,29 @@ func (server *Server) FinishChunkUpload(c *gin.Context) {
 		return
 	}
 	c.Status(http.StatusOK)
+}
+
+// todo use redis instead of session?
+func saveUserUploadRequest(c *gin.Context, requestID, userID string) error {
+	store, err := session.Start(c.Request.Context(), c.Writer, c.Request)
+	if err != nil {
+		return fmt.Errorf("[saveRequestIDUserID] session start failed: %w", err)
+	}
+	store.Set(fmt.Sprintf("%s:user", requestID), userID)
+	return store.Save()
+}
+
+// verify if requestID belongs to the user
+func verifyUploadRequestUser(c *gin.Context, requestID, userID string) (bool, error) {
+	store, err := session.Start(c.Request.Context(), c.Writer, c.Request)
+	if err != nil {
+		return false, fmt.Errorf("[verifyUserUploadRequest] session start failed: %w", err)
+	}
+	var sessionUserID string
+	if value, ok := store.Get(fmt.Sprintf("%s:user", requestID)); ok {
+		sessionUserID, _ = value.(string)
+	}
+	return sessionUserID == userID, nil
 }
 
 // todo if upload fail delete file in minio

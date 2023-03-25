@@ -100,3 +100,7 @@ Stack:
 ```
 * make login persistence
 * make the file upload dialog persistence? like it restart the upload if state is updated
+* test handling of expired tokens
+* todo domain for the cookies
+* way to clear sessions from redis
+* redis key eviction policy and max memory (also different db of redis for different puposes with different limits and eviction policy)
