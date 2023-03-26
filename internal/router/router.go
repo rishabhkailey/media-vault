@@ -42,13 +42,15 @@ func NewRouter(v1ApiServer *v1Api.Server, config config.Config) (*gin.Engine, er
 		v1.POST("/testVideoUploadWithThumbnail", v1ApiServer.TestVideoUploadWithThumbnail)
 		v1.POST("/testEncryptedFileSave", v1ApiServer.TestEncryptedFileSave)
 		v1.POST("/testStreamVideoUploadWithThumbnail", v1ApiServer.TestStreamVideoUploadWithThumbnail)
+		// todo need to be tested
 	}
+
+	// session based and fallback to bearer token
 	userProtected := router.Group("/")
 	userProtected.Use(v1ApiServer.UserAuthMiddleware)
 	{
 		v1UserProtected := userProtected.Group("/v1")
 		{
-			v1UserProtected.GET("/testProtectedEndpoint", v1ApiServer.TestProtectedEndpoint)
 			v1UserProtected.GET("/testProtectedGetEncryptedImage", v1ApiServer.TestGetEncryptedImage)
 			v1UserProtected.POST("/initChunkUpload", v1ApiServer.InitChunkUpload)
 			v1UserProtected.POST("/uploadChunk", v1ApiServer.UploadChunk)
@@ -56,6 +58,20 @@ func NewRouter(v1ApiServer *v1Api.Server, config config.Config) (*gin.Engine, er
 			v1UserProtected.POST("/uploadThumbnail", v1ApiServer.UploadThumbnail)
 			v1UserProtected.GET("/mediaList", v1ApiServer.MediaList)
 		}
+	}
+
+	v1FileAccessProtected := router.Group("/v1")
+	v1FileAccessProtected.Use(v1ApiServer.SessionBasedMediaAuthMiddleware)
+	{
+		v1FileAccessProtected.GET("/media/:fileName", v1ApiServer.GetMedia)
+	}
+
+	// bearer token only
+	v1ProtectedBearerOnly := router.Group("/v1")
+	v1ProtectedBearerOnly.Use(v1ApiServer.UserTokenAuthMiddleWare)
+	{
+		v1ProtectedBearerOnly.POST("/refreshSession", v1ApiServer.RefreshSession)
+		v1ProtectedBearerOnly.POST("/terminateSession")
 	}
 
 	debug := router.Group("/debug")

@@ -2,10 +2,12 @@ package v1
 
 import (
 	"fmt"
+	"io"
 	"net/http"
 	"net/url"
 
 	"github.com/gin-gonic/gin"
+	"github.com/minio/minio-go/v7"
 	dbservices "github.com/rishabhkailey/media-service/internal/db/services"
 	"github.com/rishabhkailey/media-service/internal/utils"
 	"github.com/sirupsen/logrus"
@@ -29,6 +31,7 @@ type MediaApiData struct {
 	dbservices.Metadata
 }
 
+// todo- ignore upload status failed media
 func (server *Server) MediaList(c *gin.Context) {
 	userID, ok := c.Keys["userID"].(string)
 	if !ok || len(userID) == 0 {
@@ -56,28 +59,36 @@ func (server *Server) MediaList(c *gin.Context) {
 	}
 	response := []MediaApiData{}
 	for _, media := range mediaList {
+		mediaUrl, err := server.parseMediaURL(media.FileName, false)
+		if err != nil {
+			logrus.Errorf("[MediaList] error parsing media url: %w", err)
+			c.AbortWithStatus(http.StatusInternalServerError)
+			return
+		}
 		mediaData := MediaApiData{
-			MediaUrl: server.parseMediaURL(media.FileName, false),
+			MediaUrl: mediaUrl,
 			Metadata: media.Metadata.Metadata,
 		}
 		if media.Metadata.Thumbnail {
-			mediaData.ThumbnailUrl = server.parseMediaURL(media.FileName, true)
+			thumbnailUrl, err := server.parseMediaURL(media.FileName, true)
+			if err != nil {
+				logrus.Errorf("[MediaList] error parsing media url: %w", err)
+				c.AbortWithStatus(http.StatusInternalServerError)
+				return
+			}
+			mediaData.ThumbnailUrl = thumbnailUrl
 		}
 		response = append(response, mediaData)
 	}
 	c.JSON(http.StatusOK, &response)
 }
 
-func (server *Server) parseMediaURL(fileName string, thumbnail bool) string {
+func (server *Server) parseMediaURL(fileName string, thumbnail bool) (string, error) {
 	path := "/v1/media"
 	if thumbnail {
 		path = "/v1/thumbnail"
 	}
-	url := url.URL{
-		Path:     path,
-		RawQuery: fmt.Sprintf("file=%s", fileName),
-	}
-	return url.String()
+	return url.JoinPath(path, fileName)
 }
 
 func genThumbnailName(fileName string) string {
@@ -113,5 +124,7 @@ func (requestBody *MediaListRequestParams) validate() error {
 }
 
 func (server *Server) GetMedia(c *gin.Context) {
-
+	c.JSON(http.StatusOK, gin.H{
+		"message": "ok",
+	})
 }

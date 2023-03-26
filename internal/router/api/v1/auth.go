@@ -3,52 +3,30 @@ package v1
 import (
 	"errors"
 	"net/http"
-	"strconv"
 	"time"
 
 	"github.com/gin-gonic/gin"
-	"github.com/go-session/session/v3"
 	"github.com/rishabhkailey/media-service/internal/auth"
+	"github.com/rishabhkailey/media-service/internal/db"
 	"github.com/sirupsen/logrus"
 )
 
 func (server Server) UserAuthMiddleware(c *gin.Context) {
-	// token is required no matter what even if we are using session to make APIs behave consistent
+	// to make APIs behave consistent, token is required no matter what even if we are using session.
 	_, ok := auth.GetBearerToken(c.Request)
 	if !ok {
 		c.AbortWithStatus(http.StatusUnauthorized)
 		return
 	}
-	store, err := session.Start(c.Request.Context(), c.Writer, c.Request)
+	userSession, err := db.GetUserSession(c)
 	if err != nil {
-		logrus.WithFields(logrus.Fields{"error": err, "function": "server.UserAuthMiddleware"}).Errorf("session start failed")
-		c.Status(http.StatusInternalServerError)
+		logrus.Errorf("[UserAuthMiddleware] get user session failed: %w", err)
+		c.AbortWithStatus(http.StatusInternalServerError)
 		return
 	}
-	// check session if user is already authenticated
-	var hasUserScope bool
-	if value, ok := store.Get("hasUserScope"); ok {
-		hasUserScope, _ = value.(bool)
-	}
-	var sessionExpireTime int64
-	if value, ok := store.Get("sessionExpireTime"); ok {
-		// ignoring errors here because on error the default sessionExpirteTime will be 0 which is not valid
-		svalue, _ := value.(string)
-		if len(svalue) != 0 {
-			sessionExpireTime, _ = strconv.ParseInt(svalue, 10, 64)
-		}
-	}
-	var userID string
-	if value, ok := store.Get("userID"); ok {
-		userID, _ = value.(string)
-	}
-	var userScope string
-	if value, ok := store.Get("userScope"); ok {
-		userScope, _ = value.(string)
-	}
-	if hasUserScope && sessionExpireTime > time.Now().Unix() {
-		c.Keys["userID"] = userID
-		c.Keys["userScope"] = userScope
+	if userSession.HasUserScope && userSession.SessionExpireTime > time.Now().Unix() {
+		c.Keys["userID"] = userSession.UserID
+		c.Keys["userScope"] = userSession.UserScope
 		c.Next()
 		return
 	}
@@ -56,12 +34,6 @@ func (server Server) UserAuthMiddleware(c *gin.Context) {
 }
 
 func (server Server) UserTokenAuthMiddleWare(c *gin.Context) {
-	store, err := session.Start(c.Request.Context(), c.Writer, c.Request)
-	if err != nil {
-		logrus.WithFields(logrus.Fields{"error": err, "function": "server.UserAuthMiddleware"}).Errorf("session start failed")
-		c.Status(http.StatusInternalServerError)
-		return
-	}
 	token, ok := auth.GetBearerToken(c.Request)
 	if !ok {
 		c.AbortWithStatus(http.StatusUnauthorized)
@@ -77,26 +49,83 @@ func (server Server) UserTokenAuthMiddleWare(c *gin.Context) {
 		c.AbortWithStatus(http.StatusInternalServerError)
 		return
 	}
-	store.Set("userID", tokenInfo.Subject)
-	store.Set("userScope", tokenInfo.Scope)
-	store.Set("hasUserScope", true)
 	// min of 1 hour or token expire time
-	sessionExpireTime := time.Now().Add(1 * time.Hour).Unix()
-	if sessionExpireTime > tokenInfo.ExpireTime {
-		sessionExpireTime = tokenInfo.ExpireTime
+	// sessionExpireTime := time.Now().Add(1 * time.Hour).Unix()
+	// if sessionExpireTime > tokenInfo.ExpireTime {
+	// 	sessionExpireTime = tokenInfo.ExpireTime
+	// }
+	if err := db.SetUserSession(c, db.UserSession{
+		UserID:            tokenInfo.Subject,
+		UserScope:         tokenInfo.Subject,
+		SessionExpireTime: tokenInfo.ExpireTime,
+		HasUserScope:      true,
+	}); err != nil {
+		logrus.Warnf("[UserTokenAuthMiddleWare] failed to set user session: %w", err)
 	}
-	// we will store the unix time as string, as the values are stored in redis we looses the actual type for the value
-	// int64 is converted to float64 when jsonunmarshall is called check these 2 issues for better understanding https://github.com/json-iterator/go/issues/351 and https://github.com/json-iterator/go/issues/145
-	store.Set("sessionExpireTime", strconv.FormatInt(sessionExpireTime, 10))
-	store.Save()
-
 	c.Keys["userID"] = tokenInfo.Subject
 	c.Keys["userScope"] = tokenInfo.Scope
+	c.Keys["expires"] = tokenInfo.ExpireTime
 	c.Next()
 }
 
-func (server Server) TestProtectedEndpoint(c *gin.Context) {
+func (server Server) RefreshSession(c *gin.Context) {
+	expires, ok := c.Keys["expires"].(int64)
+	if !ok || expires == 0 {
+		c.Status(http.StatusInternalServerError)
+		return
+	}
 	c.JSON(http.StatusOK, gin.H{
-		"message": "hi..",
+		"expires": expires,
 	})
+}
+
+// session based only, we cannot use bearer token for media files request
+// on app open we will check if the token is expiring in less than 24 hours we will request new token and referesh user session to avoid interupption
+// as session can expire while user is mid download/playback
+func (server *Server) SessionBasedMediaAuthMiddleware(c *gin.Context) {
+	userSession, err := db.GetUserSession(c)
+	if err != nil {
+		logrus.Errorf("[SessionBasedMediaAuthMiddleware] get user session failed: %w", err)
+		c.AbortWithStatus(http.StatusInternalServerError)
+		return
+	}
+	if !userSession.HasUserScope || userSession.SessionExpireTime < time.Now().Unix() {
+		c.AbortWithStatus(http.StatusUnauthorized)
+		return
+	}
+	fileName := c.Param("fileName")
+	if len(fileName) == 0 {
+		logrus.Errorf("[SessionBasedMediaAuthMiddleware]: empty file name")
+		c.AbortWithStatus(http.StatusBadRequest)
+	}
+	fileBelongsToUser, err := db.GetUserFileAccessFromSession(c, fileName, userSession.UserID)
+	if err != nil {
+		logrus.Errorf("[SessionBasedMediaAuthMiddleware] get user file access from session failed: %w", err)
+		c.AbortWithStatus(http.StatusInternalServerError)
+		return
+	}
+	if fileBelongsToUser {
+		c.Next()
+	}
+	ok, err := server.UserMediaBindings.CheckFileBelongsToUser(c.Request.Context(), userSession.UserID, fileName)
+	if err != nil {
+		logrus.WithFields(logrus.Fields{"error": err, "function": "server.UserFileAuthMiddleware"}).Errorf("db.CheckFileBelongsToUser failed: %w", err)
+		c.AbortWithStatus(http.StatusInternalServerError)
+		return
+	}
+	if !ok {
+		c.AbortWithStatus(http.StatusForbidden)
+		return
+	}
+	if err := db.SetUserFileAccessInSession(c, fileName, userSession.UserID); err != nil {
+		logrus.Warn("[SessionBasedMediaAuthMiddleware] set user file access in session failed: %w", err)
+	}
+	c.Next()
+}
+
+func (server *Server) TerminateSession(c *gin.Context) {
+	if err := db.DeleteUserSession(c); err != nil {
+		c.AbortWithStatus(http.StatusInternalServerError)
+	}
+	c.Status(http.StatusOK)
 }

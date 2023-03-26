@@ -2,6 +2,7 @@ package services
 
 import (
 	"context"
+	"errors"
 	"fmt"
 
 	"gorm.io/gorm"
@@ -39,4 +40,23 @@ func (model *UserMediaBindingModel) Create(ctx context.Context, userID string, m
 		return nil, fmt.Errorf("[Create]: insert failed: %w", err)
 	}
 	return userMediaBinding, nil
+}
+
+func (model *UserMediaBindingModel) FindByMediaID(ctx context.Context, mediaID string) (userMediaBinding UserMediaBinding, err error) {
+	err = model.Db.First(&userMediaBinding, "media_id = ?", mediaID).Error
+	return
+}
+
+func (model *UserMediaBindingModel) CheckFileBelongsToUser(ctx context.Context, userID, fileName string) (ok bool, err error) {
+	db := model.Db
+	getMediaByFileNameQuery := db.Model(&Media{}).Select("media_id").Where("file_name = ?", fileName)
+	userMediaBinding := UserMediaBinding{}
+	err = db.Model(&UserMediaBinding{}).Where("media_id = (?)", getMediaByFileNameQuery).First(&userMediaBinding).Error
+	if errors.Is(err, gorm.ErrRecordNotFound) {
+		return false, nil
+	}
+	if err != nil {
+		return
+	}
+	return userMediaBinding.UserID == userID, nil
 }

@@ -20,7 +20,7 @@ const SORT_DESCENDING = "desc"
 // todo make uploadrequest pointer so we can set the foreign key to null of media without upload request
 type Media struct {
 	gorm.Model
-	FileName        string
+	FileName        string `gorm:"index,unique"`
 	UploadRequestID string `gorm:"index"`
 	UploadRequest   UploadRequest
 	Metadata        MediaMetadata
@@ -56,6 +56,11 @@ func (model *MediaModel) Create(ctx context.Context, uploadRequestID string, met
 
 func (model *MediaModel) FindByUploadRequest(ctx context.Context, uploadRequestID string) (media Media, err error) {
 	err = model.Db.First(&media, "upload_request_id = ?", uploadRequestID).Error
+	return
+}
+
+func (model *MediaModel) FindByFileName(ctx context.Context, fileName string) (media Media, err error) {
+	err = model.Db.First(&media, "file_name = ?", fileName).Error
 	return
 }
 
