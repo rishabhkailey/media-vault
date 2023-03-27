@@ -5,7 +5,6 @@ import (
 	"fmt"
 	"time"
 
-	oredis "github.com/go-oauth2/redis/v4"
 	gsredis "github.com/go-session/redis/v3"
 	"github.com/go-session/session/v3"
 
@@ -14,11 +13,10 @@ import (
 )
 
 type RedisStore struct {
-	*oredis.TokenStore
 	Client *redis.Client
 }
 
-func NewRedisTokenStore(config config.RedisCacheConfig) (*RedisStore, error) {
+func NewRedisStore(config config.RedisCacheConfig) (*RedisStore, error) {
 	redis := redis.NewClient(&redis.Options{
 		Addr:     fmt.Sprintf("%s:%d", config.Host, config.Port),
 		Password: config.Password,
@@ -27,7 +25,7 @@ func NewRedisTokenStore(config config.RedisCacheConfig) (*RedisStore, error) {
 	if err := redis.Ping(context.Background()).Err(); err != nil {
 		return nil, err
 	}
-	store := &RedisStore{oredis.NewRedisStoreWithCli(redis), redis}
+	store := &RedisStore{Client: redis}
 	return store, nil
 }
 
@@ -39,42 +37,26 @@ func NewRedisSessionStore(config config.RedisCacheConfig) session.ManagerStore {
 	})
 }
 
-func getNonceKey(userID string) string {
-	return fmt.Sprintf("code:%v:nonce", userID)
+func mediaTypeKey(fileName string) string {
+	return fmt.Sprintf("mediaType:%s", fileName)
 }
 
-func (store *RedisStore) CreateNonceByUserID(ctx context.Context, userID string, nonce string) error {
-	// todo - expire time? for new request new nonce will be generated and for refresh as well i'm assuming new code verifier, state and nonce will be generated.
-	// i think for refresh we don't verify nonce, state and code_verifier
-	expire := 10 * time.Minute
-	err := store.Client.Set(ctx, getNonceKey(userID), nonce, expire).Err()
-	if err != nil {
-		return fmt.Errorf("[CreateNonce]: failed to save nonce: %w", err)
-	}
-	return nil
-}
-
-func (store *RedisStore) GetNonceByUserID(ctx context.Context, userID string) (nonce string, err error) {
-	nonce, err = store.Client.Get(ctx, getNonceKey(userID)).Result()
+func (store *RedisStore) GetMediaType(ctx context.Context, fileName string) (mediaType string, err error) {
+	mediaType, err = store.Client.Get(ctx, mediaTypeKey(fileName)).Result()
 	if err != nil {
 		if err == redis.Nil {
-			return nonce, fmt.Errorf("[GetNonceByCode]: key doesn't exist: %w", err)
+			return mediaType, fmt.Errorf("[GetMediaType]: key doesn't exist: %w", err)
 		}
-		return nonce, fmt.Errorf("[GetNonceByCode]: failed to get nonce: %w", err)
+		return mediaType, fmt.Errorf("[GetMediaType]: failed to get nonce: %w", err)
 	}
-	return nonce, err
+	return mediaType, err
 }
 
-func (store *RedisStore) GetAndDeleteNonceByUserID(ctx context.Context, userID string) (nonce string, err error) {
-	nonce, err = store.GetNonceByUserID(ctx, userID)
+func (store *RedisStore) SetMediaType(ctx context.Context, fileName string, mediaType string) error {
+	expire := 1 * time.Hour
+	err := store.Client.Set(ctx, mediaTypeKey(fileName), mediaType, expire).Err()
 	if err != nil {
-		// in case of failure we will not be deleting key if client want's to retry the request
-		// it will be automatticaly expire after 10 minutes
-		return nonce, err
+		return fmt.Errorf("[SetMediaType]: failed to save nonce: %w", err)
 	}
-	err = store.Client.Del(ctx, getNonceKey(userID)).Err()
-	if err != nil {
-		return nonce, fmt.Errorf("[GetAndDeleteNonceByCode]: key deletion failed: %w", err)
-	}
-	return nonce, err
+	return nil
 }

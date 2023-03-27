@@ -13,7 +13,7 @@ import (
 
 type Server struct {
 	Config     *config.Config
-	TokenStore *db.RedisStore
+	RedisStore *db.RedisStore
 	Db         *gorm.DB
 	Minio      *minio.Client
 	OidcClient auth.OidcClient
@@ -22,7 +22,7 @@ type Server struct {
 
 func NewServer(config *config.Config) (*Server, error) {
 
-	tokenStore, err := db.NewRedisTokenStore(config.Cache)
+	redisStore, err := db.NewRedisStore(config.Cache)
 	if err != nil {
 		return nil, err
 	}
@@ -58,7 +58,7 @@ func NewServer(config *config.Config) (*Server, error) {
 
 	return &Server{
 		Config:     config,
-		TokenStore: tokenStore,
+		RedisStore: redisStore,
 		Db:         DbConn,
 		Services:   *services,
 		Minio:      minioClient,

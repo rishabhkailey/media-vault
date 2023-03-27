@@ -1,6 +1,7 @@
 package v1
 
 import (
+	"context"
 	"fmt"
 	"io"
 	"net/http"
@@ -124,7 +125,134 @@ func (requestBody *MediaListRequestParams) validate() error {
 }
 
 func (server *Server) GetMedia(c *gin.Context) {
-	c.JSON(http.StatusOK, gin.H{
-		"message": "ok",
-	})
+	fileName := c.Param("fileName")
+	if len(fileName) == 0 {
+		c.AbortWithStatus(http.StatusBadRequest)
+		return
+	}
+	rangeHeader := c.Request.Header["Range"]
+	var parsedRangeHeader *RangeHeader
+	if len(rangeHeader) != 0 && len(rangeHeader[0]) != 0 {
+		var err error
+		parsedRangeHeader, err = parseRangeHeader(rangeHeader[0])
+		if err != nil {
+			logrus.Errorf("[GetMedia] parse range header failed: %w", err)
+			c.AbortWithStatus(http.StatusInternalServerError)
+			return
+		}
+	}
+	object, err := getMinioObjectFromCache(c.Request.Context(), server.Minio, "test", fileName)
+	if err != nil {
+		logrus.Error(err)
+		c.AbortWithStatus(http.StatusInternalServerError)
+		return
+	}
+
+	mediaType, err := server.getMediaType(c.Request.Context(), fileName)
+	if err != nil {
+		logrus.Errorf("[GetMedia] get media type failed: %w", err)
+		c.AbortWithStatus(http.StatusInternalServerError)
+		return
+	}
+	// todo support for multiple ranges
+	if parsedRangeHeader == nil || len(parsedRangeHeader.ranges) != 1 {
+		server.GetMediaFirstRequest(c, object, mediaType)
+		return
+	}
+	server.GetMediaRange(c, parsedRangeHeader.ranges[0], object, mediaType)
+}
+
+func (server *Server) GetMediaFirstRequest(c *gin.Context, object *minio.Object, contentType string) {
+	objInfo, err := object.Stat()
+	if err != nil {
+		logrus.Error(err)
+	}
+	// this is for giving client the hint that response is a video file
+	contentLength := objInfo.Size
+	c.Header("Content-Length", fmt.Sprintf("%d", contentLength))
+	c.Header("Content-Type", contentType)
+	c.Header("Connection", "keep-alive")
+	c.Header("Accept-Ranges", "bytes")
+	c.Status(http.StatusPartialContent)
+}
+
+// todo browsers which don't support range requests
+// todo what to do on first request without range
+// https://vjs.zencdn.net/v/oceans.mp4 this return a 200 response with content length only?
+// if range end not provided
+const defaultRangeSize int64 = 1000000 // 1mb
+func (server *Server) GetMediaRange(c *gin.Context, r Range, object *minio.Object, contentType string) {
+
+	objInfo, err := object.Stat()
+	if err != nil {
+		logrus.Error(err)
+	}
+	if objInfo.Size == 0 {
+		// todo gracefully handle to this for empty files
+		c.Status(http.StatusInternalServerError)
+		return
+	}
+	if r.end == -1 {
+		r.end = r.start + defaultRangeSize
+	}
+	if r.end > objInfo.Size-1 {
+		r.end = objInfo.Size - 1
+	}
+	contentLength := r.end - r.start + 1
+	c.Header("Content-Length", fmt.Sprintf("%d", contentLength))
+	c.Header("Content-Type", contentType)
+	c.Header("Connection", "keep-alive")
+	c.Header("Content-Range", fmt.Sprintf("bytes %d-%d/%d", r.start, r.end, objInfo.Size))
+	c.Header("Accept-Ranges", "bytes")
+	// c.SSEvent()
+	// todo use of stream?
+	logrus.WithField("range", r).Info("request received")
+	_, err = object.Seek(r.start, 0)
+	if err != nil {
+		c.AbortWithStatus(http.StatusInternalServerError)
+		return
+	}
+	c.Status(http.StatusPartialContent)
+	n, err := io.CopyN(c.Writer, object, contentLength)
+	logrus.WithField("bytes", n).Info("sent")
+	if err != nil {
+		// todo this will not helm i guess, status code set earlier will be sent when we start copying the data
+		c.Status(http.StatusInternalServerError)
+		logrus.Error(err)
+		return
+	}
+}
+
+func (server *Server) getMediaType(ctx context.Context, fileName string) (mediaType string, err error) {
+	mediaType, err = server.RedisStore.GetMediaType(ctx, fileName)
+	if err == nil && len(mediaType) != 0 {
+		return mediaType, err
+	}
+	mediaType, err = server.Media.GetMediaTypeByFileName(ctx, fileName)
+	if err != nil {
+		if err := server.RedisStore.SetMediaType(ctx, fileName, mediaType); err != nil {
+			logrus.Warnf("[getMediaType] redis set media type failed: %w", err)
+		}
+	}
+	return mediaType, err
+}
+
+// todo lfu
+var minioObjectCache map[string]*minio.Object
+
+func getMinioObjectFromCache(ctx context.Context, minioClient *minio.Client, bucket string, objectName string) (object *minio.Object, err error) {
+	if minioObjectCache == nil {
+		minioObjectCache = make(map[string]*minio.Object)
+	}
+	cacheKey := fmt.Sprintf("%s:%s", bucket, objectName)
+	object, ok := minioObjectCache[cacheKey]
+	if !ok || object == nil {
+		logrus.Warnf("cache miss bucket=%s object=%s", bucket, object)
+		object, err = minioClient.GetObject(context.Background(), bucket, objectName, minio.GetObjectOptions{})
+		if err != nil {
+			return nil, err
+		}
+		minioObjectCache[cacheKey] = object
+	}
+	return object, nil
 }

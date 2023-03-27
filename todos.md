@@ -104,3 +104,12 @@ Stack:
 * todo domain for the cookies
 * way to clear sessions from redis
 * redis key eviction policy and max memory (also different db of redis for different puposes with different limits and eviction policy)
+* increase auth server token expire time, it is set to 2 hour right now
+* encrypt file name? but then we will not be able to use file name in search
+
+
+## Test Commands
+```bash
+curl -X GET 'http://localhost:8090/v1/mediaList?perPage=5&sort=desc&page=1' -H "Authorization: Bearer <token>" | tee test.json
+curl -v -X GET 'http://localhost:8090/v1/media?file=8379ada2-e309-4d3a-b4b8-18d49211748e' -H "Authorization: Bearer <token>" | tee test.json
+```

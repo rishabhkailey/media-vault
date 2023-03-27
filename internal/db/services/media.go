@@ -75,6 +75,16 @@ func (model *MediaModel) GetUserMediaList(ctx context.Context, userID string, or
 	return
 }
 
+func (model *MediaModel) GetMediaTypeByFileName(ctx context.Context, fileName string) (mediaType string, err error) {
+	db := model.Db
+	media := Media{}
+	err = db.Preload("Metadata").First(&media, "file_name = ?", fileName).Error
+	if err == nil {
+		mediaType = media.Metadata.Type
+	}
+	return
+}
+
 // todo redis for user media count update on each upload and delete operation
 // 1 more counter for failed uploads if user wants to see
 

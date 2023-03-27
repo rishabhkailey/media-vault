@@ -1,7 +1,6 @@
 package v1
 
 import (
-	"context"
 	"fmt"
 	"io"
 	"net/http"
@@ -51,25 +50,6 @@ func (server *Server) TestGetVideo(c *gin.Context) {
 	})
 }
 
-var minioObjectCache map[string]*minio.Object
-
-func getMinioObjectFromCache(ctx context.Context, minioClient *minio.Client, bucket string, objectName string) (object *minio.Object, err error) {
-	if minioObjectCache == nil {
-		minioObjectCache = make(map[string]*minio.Object)
-	}
-	cacheKey := fmt.Sprintf("%s-%s", bucket, objectName)
-	object, ok := minioObjectCache[cacheKey]
-	if !ok || object == nil {
-		logrus.Warnf("cache miss bucket=%s object=%s", bucket, object)
-		object, err = minioClient.GetObject(context.Background(), bucket, objectName, minio.GetObjectOptions{})
-		if err != nil {
-			return nil, err
-		}
-		minioObjectCache[cacheKey] = object
-	}
-	return object, nil
-}
-
 func (server *Server) TestDownload(c *gin.Context) {
 	fileName := c.Request.FormValue("file")
 	if len(fileName) == 0 {
@@ -95,7 +75,6 @@ func (server *Server) TestDownload(c *gin.Context) {
 	c.Header("Content-Length", strconv.FormatInt(objectInfo.Size, 10))
 	c.Header("Connection", "keep-alive")
 	logrus.Info(io.Copy(c.Writer, object))
-	return
 }
 
 // todo cache headers cache-control, x-cache ...
@@ -171,7 +150,7 @@ func (server *Server) TestGetVideoFirstRequest(c *gin.Context, object *minio.Obj
 // todo what to do on first request without range
 // https://vjs.zencdn.net/v/oceans.mp4 this return a 200 response with content length only?
 // if range end not provided
-const defaultRangeSize int64 = 1000000 // 1mb
+// const defaultRangeSize int64 = 1000000 // 1mb
 func (server *Server) TestGetRangeVideo(c *gin.Context, r Range, object *minio.Object) {
 
 	objInfo, err := object.Stat()

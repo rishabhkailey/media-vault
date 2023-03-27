@@ -106,6 +106,7 @@ func (server *Server) SessionBasedMediaAuthMiddleware(c *gin.Context) {
 	}
 	if fileBelongsToUser {
 		c.Next()
+		return
 	}
 	ok, err := server.UserMediaBindings.CheckFileBelongsToUser(c.Request.Context(), userSession.UserID, fileName)
 	if err != nil {
