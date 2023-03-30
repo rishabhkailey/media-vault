@@ -1,5 +1,7 @@
-<script setup lang="ts"></script>
+<script setup lang="ts">
+import MediaPreview from "./MediaPreview.vue";
+</script>
 
 <template>
-  <h1>Home Page</h1>
+  <MediaPreview />
 </template>

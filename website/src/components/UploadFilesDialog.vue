@@ -6,7 +6,6 @@ const store = useStore();
 // todo store getter typing
 // todo check
 const accessToken = store.getters.accessToken;
-console.log(accessToken);
 const props = withDefaults(
   defineProps<{
     modelValue: boolean;

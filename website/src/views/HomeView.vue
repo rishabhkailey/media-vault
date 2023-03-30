@@ -2,8 +2,177 @@
 import AppBar from "../components/AppBar.vue";
 import NavigationBar from "../components/NavigationBar.vue";
 import HomePage from "../components/HomePage.vue";
+import { inject, onMounted, provide, ref } from "vue";
+import store from "@/store";
+import { SET_USERINFO_ACTION } from "@/store/actions-type";
+import { initializingKey, userManagerKey } from "@/symbols/injectionSymbols";
+import type { UserManager } from "oidc-client-ts";
+import decryptWorker from "@/worker/decrypt?url";
 // todo if not authenticated redirect to some different page
 // maybe /about
+const initializingRef = ref(true);
+provide(initializingKey, initializingRef);
+const userManager: UserManager | undefined = inject(userManagerKey);
+
+const userInit = () => {
+  return new Promise<boolean>((resolve, reject) => {
+    if (userManager === undefined) {
+      reject(new Error("undefined userManager"));
+      return;
+    }
+    userManager
+      .getUser()
+      .then((user) => {
+        if (user?.expired) {
+          resolve(true);
+          return;
+        }
+        store
+          .dispatch(SET_USERINFO_ACTION, user)
+          .then(() => {
+            console.log("user details restored");
+            resolve(true);
+            return;
+          })
+          .catch((err) => {
+            reject(err);
+            return;
+          });
+      })
+      .catch((err) => {
+        reject(err);
+        return;
+      });
+  });
+};
+
+const updateOrRegisterServiceWorker = () => {
+  return new Promise<ServiceWorker>((resolve, reject) => {
+    navigator.serviceWorker.getRegistration().then((registration) => {
+      if (registration === undefined) {
+        registerServiceWorker()
+          .then((serviceWorker) => {
+            resolve(serviceWorker);
+            return;
+          })
+          .catch((err) => {
+            reject(err);
+            return;
+          });
+      } else {
+        updateServiceWorker()
+          .then((serviceWorker) => {
+            resolve(serviceWorker);
+            return;
+          })
+          .catch((err) => {
+            reject(err);
+            return;
+          });
+      }
+    });
+  });
+};
+
+const updateServiceWorker = () => {
+  return new Promise<ServiceWorker>((resolve, reject) => {
+    navigator.serviceWorker.getRegistration().then((registration) => {
+      if (registration === undefined) {
+        reject(true);
+        return;
+      }
+      registration
+        .update()
+        .then(() => {
+          console.log("updated");
+          if (registration.active === null) {
+            reject(new Error("got null service worker after update"));
+            return;
+          }
+          resolve(registration.active);
+          return;
+        })
+        .catch((err) => {
+          reject(err);
+          return;
+        });
+    });
+  });
+};
+
+// https://github.com/jimmywarting/StreamSaver.js/blob/master/mitm.html#L39
+const registerServiceWorker = () => {
+  return new Promise<ServiceWorker>((resolve, reject) => {
+    if ("serviceWorker" in navigator) {
+      // unregister the existing service worker
+      navigator.serviceWorker
+        .register(decryptWorker, {
+          scope: "./",
+          type: "module",
+        })
+        .then((swReg) => {
+          if (swReg.active !== null) {
+            resolve(swReg.active);
+            return;
+          }
+          const swRegTmp = swReg.installing || swReg.waiting;
+          if (swRegTmp === null) {
+            reject(new Error("got null service worker registration"));
+            return;
+          }
+          let callback: () => void;
+          swRegTmp.addEventListener(
+            "statechange",
+            (callback = () => {
+              if (swRegTmp.state === "activated") {
+                console.log("registed and activated");
+                swRegTmp.removeEventListener("statechange", callback);
+                resolve(swRegTmp);
+              }
+            })
+          );
+        })
+        .catch((err) => {
+          reject(err);
+          return;
+        });
+
+      // navigator.serviceWorker.ready
+      //   .then(() => {
+      //     console.log("Service worker active");
+      //     resolve(true);
+      //     return;
+      //   })
+      //   .catch((err) => {
+      //     console.log("service worker registeration failed ", err);
+      //     reject(err);
+      //     return;
+      //   });
+    }
+  });
+};
+
+const init = () => {
+  updateOrRegisterServiceWorker()
+    .then(() => {
+      userInit()
+        .then(() => {
+          initializingRef.value = false;
+          // setTimeout(() => {
+          // }, 3000);
+        })
+        .catch((err) => {
+          console.log("user init failed ", err);
+        });
+    })
+    .catch((err) => {
+      console.log("worker registeration failed ", err);
+    });
+};
+
+onMounted(() => {
+  init();
+});
 </script>
 
 <template>
@@ -12,10 +181,14 @@ import HomePage from "../components/HomePage.vue";
       <v-layout>
         <AppBar />
         <NavigationBar />
-        <v-main style="height: 100vh">
+        <v-main style="height: 100vh; overflow-y: scroll">
           <HomePage />
         </v-main>
       </v-layout>
     </v-card>
   </v-container>
 </template>
+
+//
+https://stackoverflow.com/questions/48859119/why-my-service-worker-is-always-waiting-to-activate
+// https://web.dev/service-worker-lifecycle/

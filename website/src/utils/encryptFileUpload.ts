@@ -41,7 +41,10 @@ export function chunkUpload(
               chunkRequestInfo,
               file,
               bearerToken,
-              encryptor,
+              new Chacha20(
+                textEncoder.encode(password),
+                textEncoder.encode(nonce)
+              ),
               controller
             )
               .then((success) => {
@@ -341,14 +344,16 @@ function uploadThumbnail(
       maxHeightWidth: 300,
     })
       .then((thumbnail) => {
+        // todo try catch
         const encryptedThumbnail = encryptor.encrypt(thumbnail);
+        const encryptedThumbnailBlob = new Blob([encryptedThumbnail]);
         axios
           .post(
             "/v1/uploadThumbnail",
             {
               requestID: chunkRequestInfo.requestID,
               size: encryptedThumbnail.length,
-              thumbnail: thumbnail,
+              thumbnail: encryptedThumbnailBlob,
             },
             {
               headers: {

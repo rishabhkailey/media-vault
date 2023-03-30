@@ -256,3 +256,41 @@ func getMinioObjectFromCache(ctx context.Context, minioClient *minio.Client, buc
 	}
 	return object, nil
 }
+
+func (server *Server) GetThumbnail(c *gin.Context) {
+	fileName := c.Param("fileName")
+	if len(fileName) == 0 {
+		c.AbortWithStatus(http.StatusBadRequest)
+		return
+	}
+	thumbnailFile := genThumbnailName(fileName)
+	object, err := getMinioObjectFromCache(c.Request.Context(), server.Minio, "test", thumbnailFile)
+	if err != nil {
+		logrus.Errorf("[GetThumbnail] failed to get object: %w", err)
+		c.AbortWithStatus(http.StatusInternalServerError)
+		return
+	}
+	objInfo, err := object.Stat()
+	if err != nil {
+		logrus.Errorf("[GetThumbnail] failed to get object info: %w", err)
+		c.AbortWithStatus(http.StatusInternalServerError)
+		return
+	}
+	_, err = object.Seek(0, 0)
+	if err != nil {
+		c.AbortWithStatus(http.StatusInternalServerError)
+		return
+	}
+	c.Header("Content-Range", fmt.Sprintf("bytes %d-%d/%d", 0, objInfo.Size, objInfo.Size))
+	n, err := io.CopyN(c.Writer, object, objInfo.Size)
+	if err != nil || n != objInfo.Size {
+		logrus.Errorf("[GetThumbnail] failed to write thumbnail data respose: %w. expected bytes=%d, written bytes=%d,", err, objInfo.Size, n)
+		c.AbortWithStatus(http.StatusInternalServerError)
+		return
+	}
+	// setting content length and not returning that conent will cause the js fetch to stuck so only set the content length after the data is written
+	c.Header("Content-Length", fmt.Sprintf("%d", objInfo.Size))
+	c.Header("Content-Type", dbservices.IMAGE_JPEG)
+	c.Header("Connection", "keep-alive")
+	c.Status(http.StatusOK)
+}

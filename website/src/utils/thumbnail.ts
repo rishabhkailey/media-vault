@@ -131,7 +131,35 @@ export type thumbnailConstraints = {
 // 9/16 < maxHeightWidth
 // horizontal long image < maxHeightWidth
 // verticle long image < maxHeightWidth
-const proccessThumbnailConstraints = (
+
+// returns
+// offset - offset for the image according to the source resolution
+// sourceResolution - cropped thumbnail but full resolution
+// thumbnailResolution - cropped thumbnail with required resolution
+
+/*
+// cases for thumbnail resolution
+if image is horizontal long
+  thumbnail will also be long 16/9
+  height will be set to max dimension
+
+if image is verically long
+  thumnail will also be vertically long 9/16
+  height will be set to max dimension
+
+
+  
+// cases for source resolution
+if thumbnail resolution > source resolution
+  sourcewidth will remain same
+  height will be cropped
+
+if thumbnail resolution < source resolution
+  sourceheight will not change
+  widht will be cropped
+*/
+
+export const proccessThumbnailConstraints = (
   constraints: thumbnailConstraints,
   imageResolution: WidthHeight
 ) => {
@@ -157,39 +185,43 @@ const proccessThumbnailConstraints = (
     requiredAspectRatio = 9 / 16;
     // we don't want thumbnail bigger than image
     maxDimention = Math.min(maxDimention, imageResolution.height);
+    destinationResolution.height = maxDimention;
+    destinationResolution.width =
+      destinationResolution.height * requiredAspectRatio;
   } else if (imageResolution.width > imageResolution.height) {
     requiredAspectRatio = 16 / 9;
     // we don't want thumbnail bigger than image
     maxDimention = Math.min(maxDimention, imageResolution.width);
+    destinationResolution.width = maxDimention;
+    destinationResolution.height =
+      destinationResolution.width / requiredAspectRatio;
   } else {
     requiredAspectRatio = 1;
     maxDimention = Math.min(maxDimention, imageResolution.width);
+    destinationResolution.width = maxDimention;
+    destinationResolution.height = maxDimention;
   }
   const imageAspectRatio: number =
     imageResolution.width / imageResolution.height;
   if (imageAspectRatio > requiredAspectRatio) {
     // image is longer in the horizontal direction then reqruired
-    // we will be ignoring horizontal si
-    destinationResolution.width = maxDimention;
-    destinationResolution.height =
-      destinationResolution.width / requiredAspectRatio;
-
+    // we will be ignoring horizontal sides
     // source image height will remain same only width will be cropped
     sourceResolution.height = imageResolution.height;
-    sourceResolution.width = sourceResolution.height * requiredAspectRatio;
+    sourceResolution.width = Math.floor(
+      sourceResolution.height * requiredAspectRatio
+    );
 
     // offset.y = actualImageWidth - actualImageWidthused / 2
     // eslint-disable-next-line prettier/prettier
     offset.x = Math.abs((imageResolution.width - (imageResolution.height * requiredAspectRatio))/2);
     offset.y = 0;
   } else {
-    destinationResolution.height = maxDimention;
-    destinationResolution.width =
-      destinationResolution.height * requiredAspectRatio;
-
     // source image width will remain same only height will be cropped
     sourceResolution.width = imageResolution.width;
-    sourceResolution.height = sourceResolution.width / requiredAspectRatio;
+    sourceResolution.height = Math.floor(
+      sourceResolution.width / requiredAspectRatio
+    );
     // offset.y = actualImageHeight - actualImageHeightUsed / 2
     // eslint-disable-next-line prettier/prettier
     offset.y = Math.abs((imageResolution.height - (imageResolution.width / requiredAspectRatio))/2);

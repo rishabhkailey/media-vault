@@ -1,8 +1,9 @@
-import { encrypt } from "crypto-js/aes";
 import { Chacha20 } from "ts-chacha20";
 // stream saver worker code + our custom code for decryption
-
 /* global self ReadableStream Response */
+
+declare let self: ServiceWorkerGlobalScope;
+// const sw = self as ServiceWorkerGlobalScope & typeof globalThis;
 
 self.addEventListener("install", () => {
   self.skipWaiting();
@@ -54,7 +55,7 @@ self.onmessage = (event) => {
   port.postMessage({ download: downloadUrl });
 };
 
-function createStream(port) {
+function createStream(port: MessagePort) {
   // ReadableStream is only supported by chrome 52
   return new ReadableStream({
     start(controller) {
@@ -112,29 +113,27 @@ function parseRangeHeader(range: string): IRequestRange {
   };
 }
 
-const newDecryptTransformer: () => TransformStream<
+const newDecryptTransformer: (decryptor: Chacha20) => TransformStream<
   Uint8Array,
   Uint8Array
-> = () =>
+> = (decryptor) =>
   new TransformStream<Uint8Array, Uint8Array>({
     start() {},
     transform(chunk, controller) {
       if (!chunk) {
         console.log("undefined chunk");
       }
-      console.log("encrypted ", new TextDecoder().decode(chunk));
-      const decryptedChunk = decryptChunk(chunk);
-      console.log("decrypted ", new TextDecoder().decode(decryptedChunk));
+      // console.log("encrypted ", new TextDecoder().decode(chunk));
+      const decryptedChunk = decryptChunk(chunk, decryptor);
+      // console.log("decrypted ", new TextDecoder().decode(decryptedChunk));
       controller.enqueue(decryptedChunk);
     },
     flush() {},
   });
 
-let _global_decryptor: Chacha20;
-
-const decryptChunk: (input: Uint8Array) => Uint8Array = (input) => {
+const decryptChunk: (input: Uint8Array, decryptor: Chacha20) => Uint8Array = (input, decryptor) => {
   try {
-    const decrypted = _global_decryptor.decrypt(input);
+    const decrypted = decryptor.decrypt(input);
     if (!decrypted?.length || decrypted.length !== input.length) {
       console.log(decrypted);
     }
@@ -166,35 +165,45 @@ const internalFetch: (req: Request) => Response = async (req) => {
   const byteCounter = i % 64;
 
   const textEncoder = new TextEncoder();
-  _global_decryptor = new Chacha20(
+  let decryptor = new Chacha20(
     textEncoder.encode(password),
     textEncoder.encode(nonce),
     counter
   );
   // set the internal byte counter
   if (byteCounter !== 0) {
-    _global_decryptor.decrypt(useless.slice(0, byteCounter));
+    decryptor.decrypt(useless.slice(0, byteCounter));
   }
-  console.log(fetch);
+  console.log(req, self.clients.matchAll());
   // await new Promise((r) => {
   //   setTimeout(r, 1000);
   // });
-  const res = await fetch(req);
-  // return;
-  const encryptedStream = res.body;
-  if (encryptedStream === null) {
-    return new Response("res");
+  try {
+    const res = await fetch(req);
+    // return;
+    const encryptedStream = res.body;
+    if (encryptedStream === null) {
+      return new Response("res");
+    }
+    const decryptedStream = encryptedStream.pipeThrough(
+      newDecryptTransformer(decryptor)
+    );
+    console.log(rangeHeader, range);
+    console.log(req);
+    // const blob = await new Response(decryptedStream).blob();
+    // console.log(await blob.text());
+    console.log(res.headers.get("Content-Type"));
+    return new Response(decryptedStream, {
+      headers: res.headers,
+      status: res.status,
+      statusText: res.statusText,
+    });
+  } catch (err) {
+    console.log(err);
+    return new Response(undefined, {
+      status: 500,
+    });
   }
-  const decryptedStream = encryptedStream.pipeThrough(newDecryptTransformer());
-  console.log(rangeHeader, range);
-  console.log(req);
-  // const blob = await new Response(decryptedStream).blob();
-  // console.log(await blob.text());
-  return new Response(decryptedStream, {
-    headers: res.headers,
-    status: res.status,
-    statusText: res.statusText,
-  });
 };
 
 self.onfetch = (event: Event) => {
@@ -204,11 +213,13 @@ self.onfetch = (event: Event) => {
   if (url.endsWith("/ping")) {
     return event.respondWith(new Response("pong"));
   }
-
+  const urlObj = new URL(url);
   if (
     event?.request?.method === "GET" &&
     typeof event?.request?.url === "string" &&
-    new URL(event.request.url).pathname.startsWith("/v1/testGetVideoWithRange")
+    (urlObj.pathname.startsWith("/v1/media/") ||
+      urlObj.pathname.startsWith("/v1/thumbnail/"))
+    // new URL(event.request.url).pathname.startsWith("/v1/testGetVideoWithRange")
   ) {
     return event.respondWith(internalFetch(event.request));
 

@@ -64,6 +64,7 @@ func NewRouter(v1ApiServer *v1Api.Server, config config.Config) (*gin.Engine, er
 	v1FileAccessProtected.Use(v1ApiServer.SessionBasedMediaAuthMiddleware)
 	{
 		v1FileAccessProtected.GET("/media/:fileName", v1ApiServer.GetMedia)
+		v1FileAccessProtected.GET("/thumbnail/:fileName", v1ApiServer.GetThumbnail)
 	}
 
 	// bearer token only

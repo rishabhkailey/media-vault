@@ -12,7 +12,8 @@
 			"extensions": [
 				"Vue.vscode-typescript-vue-plugin",
 				"Wscats.vue",
-				"Vue.volar"
+				"Vue.volar",
+				"ZixuanChen.vitest-explorer"
 			]
 		}
 	}

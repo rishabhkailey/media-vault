@@ -10,24 +10,24 @@ import (
 
 // https://developer.mozilla.org/en-US/docs/Web/Media/Formats/Image_types
 // https://developer.mozilla.org/en-US/docs/Web/Media/Formats/Containers
-type MediaType string
+// type MediaType string
 
 // todo more or custom media type from client or dynamic from file extension
-const VIDEO_MP4 MediaType = "video/mp4"
-const VIDEO_WEBM MediaType = "video/webm"
-const IMAGE_PNG MediaType = "image/png"
-const IMAGE_JPEG MediaType = "image/jpeg"
-const UNKNOWN MediaType = "unknown"
+const VIDEO_MP4 string = "video/mp4"
+const VIDEO_WEBM string = "video/webm"
+const IMAGE_PNG string = "image/png"
+const IMAGE_JPEG string = "image/jpeg"
+const UNKNOWN string = "unknown"
 
-var ValidMediaTypes = []MediaType{VIDEO_MP4, VIDEO_WEBM, IMAGE_JPEG, IMAGE_PNG, UNKNOWN}
+var ValidMediaTypes = []string{VIDEO_MP4, VIDEO_WEBM, IMAGE_JPEG, IMAGE_PNG, UNKNOWN}
 
 // todo thumbnail bool
 type Metadata struct {
-	Name      string
-	Date      time.Time
-	Type      string
-	Size      uint64
-	Thumbnail bool `gorm:"default:false"`
+	Name      string    `json:"name"`
+	Date      time.Time `json:"date"`
+	Type      string    `json:"type"`
+	Size      uint64    `json:"size"`
+	Thumbnail bool      `gorm:"default:false" json:"thumbnail"`
 }
 
 type MediaMetadata struct {

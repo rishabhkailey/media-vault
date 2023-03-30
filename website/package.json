@@ -16,6 +16,7 @@
     "@ffmpeg/ffmpeg": "^0.11.6",
     "@mdi/font": "^7.1.96",
     "@types/dom-webcodecs": "^0.1.5",
+    "@types/serviceworker": "^0.0.67",
     "@videojs-player/vue": "^1.0.0",
     "axios": "^1.2.3",
     "crypto-js": "^4.1.1",
