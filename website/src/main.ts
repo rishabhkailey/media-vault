@@ -35,7 +35,6 @@ const vuetify = createVuetify({
 });
 
 const userManager = new UserManager({
-  userStore: new WebStorageStateStore(),
   authority: "http://localhost:8080",
   metadataUrl:
     "http://localhost:8080/v1/spa-test/.well-known/openid-configuration",
@@ -50,6 +49,8 @@ const userManager = new UserManager({
   // if true it removes the nonce
   filterProtocolClaims: false,
   loadUserInfo: true,
+  stateStore: new WebStorageStateStore({ store: window.localStorage }),
+  userStore: new WebStorageStateStore({ store: window.localStorage }),
 });
 
 app.use(router);
@@ -57,5 +58,5 @@ app.use(store);
 app.use(vuetify);
 app.use(VueVideoPlayer);
 app.use(VueAxios, axios);
-app.provide(userManagerKey, userManager)
+app.provide(userManagerKey, userManager);
 app.mount("#app");

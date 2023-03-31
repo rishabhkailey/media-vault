@@ -181,8 +181,13 @@ onMounted(() => {
       <v-layout>
         <AppBar />
         <NavigationBar />
-        <v-main style="height: 100vh; overflow-y: scroll">
-          <HomePage />
+        <v-main
+          style="height: 100vh; overflow-y: hidden"
+          class="d-flex flex-column align-stretch"
+        >
+          <div class="flex-grow-1" style="overflow-y: scroll">
+            <HomePage />
+          </div>
         </v-main>
       </v-layout>
     </v-card>

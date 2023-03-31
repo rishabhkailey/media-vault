@@ -7,6 +7,7 @@ import { RESET_USERINFO_ACTION } from "@/store/actions-type";
 import { userManagerKey } from "@/symbols/injectionSymbols";
 import type { UserManager } from "oidc-client-ts";
 import { signinUsingUserManager } from "@/utils/auth";
+import axios from "axios";
 
 const search = ref("");
 const searchInputRules: Array<any> = [];
@@ -23,23 +24,25 @@ const selectedFiles = ref<Array<File>>([]);
 const uploadFilesDialogModel = ref(false);
 const userManager: UserManager | undefined = inject(userManagerKey);
 
-const logOut = () => {
-  loading.value = true;
+const logOut = async () => {
   if (userManager === undefined) {
     console.error("userManager not defined");
     return;
   }
-  userManager
-    ?.revokeTokens(["access_token", "refresh_token"])
-    .then(() => {
-      store.dispatch(RESET_USERINFO_ACTION).catch(() => {
-        error.value = true;
-      });
-      console.log("token revoked");
-    })
-    .catch((err) => {
-      console.log(err);
-    });
+  loading.value = true;
+  try {
+    await userManager.revokeTokens(["access_token", "refresh_token"]);
+    await store.dispatch(RESET_USERINFO_ACTION);
+    await userManager.removeUser();
+    let response = await axios.post("/v1/terminateSession");
+    if (response.status !== 200) {
+      console.log("terminate session failed");
+    }
+  } catch (err) {
+    console.log("logout failed ", err);
+  } finally {
+    loading.value = false;
+  }
 };
 const logIn = () => {
   if (userManager === undefined) {
