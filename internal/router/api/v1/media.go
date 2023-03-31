@@ -141,7 +141,7 @@ func (server *Server) GetMedia(c *gin.Context) {
 			return
 		}
 	}
-	object, err := getMinioObjectFromCache(c.Request.Context(), server.Minio, "test", fileName)
+	object, err := server.MinioObjectCache.Get(c.Request.Context(), "test", fileName)
 	if err != nil {
 		logrus.Error(err)
 		c.AbortWithStatus(http.StatusInternalServerError)
@@ -199,11 +199,6 @@ func (server *Server) GetMediaRange(c *gin.Context, r Range, object *minio.Objec
 		r.end = objInfo.Size - 1
 	}
 	contentLength := r.end - r.start + 1
-	c.Header("Content-Length", fmt.Sprintf("%d", contentLength))
-	c.Header("Content-Type", contentType)
-	c.Header("Connection", "keep-alive")
-	c.Header("Content-Range", fmt.Sprintf("bytes %d-%d/%d", r.start, r.end, objInfo.Size))
-	c.Header("Accept-Ranges", "bytes")
 	// c.SSEvent()
 	// todo use of stream?
 	logrus.WithField("range", r).Info("request received")
@@ -212,7 +207,6 @@ func (server *Server) GetMediaRange(c *gin.Context, r Range, object *minio.Objec
 		c.AbortWithStatus(http.StatusInternalServerError)
 		return
 	}
-	c.Status(http.StatusPartialContent)
 	n, err := io.CopyN(c.Writer, object, contentLength)
 	logrus.WithField("bytes", n).Info("sent")
 	if err != nil {
@@ -221,6 +215,12 @@ func (server *Server) GetMediaRange(c *gin.Context, r Range, object *minio.Objec
 		logrus.Error(err)
 		return
 	}
+	c.Header("Content-Length", fmt.Sprintf("%d", contentLength))
+	c.Header("Content-Type", contentType)
+	c.Header("Connection", "keep-alive")
+	c.Header("Content-Range", fmt.Sprintf("bytes %d-%d/%d", r.start, r.end, objInfo.Size))
+	c.Header("Accept-Ranges", "bytes")
+	c.Status(http.StatusPartialContent)
 }
 
 func (server *Server) getMediaType(ctx context.Context, fileName string) (mediaType string, err error) {
@@ -237,26 +237,6 @@ func (server *Server) getMediaType(ctx context.Context, fileName string) (mediaT
 	return mediaType, err
 }
 
-// todo lfu
-var minioObjectCache map[string]*minio.Object
-
-func getMinioObjectFromCache(ctx context.Context, minioClient *minio.Client, bucket string, objectName string) (object *minio.Object, err error) {
-	if minioObjectCache == nil {
-		minioObjectCache = make(map[string]*minio.Object)
-	}
-	cacheKey := fmt.Sprintf("%s:%s", bucket, objectName)
-	object, ok := minioObjectCache[cacheKey]
-	if !ok || object == nil {
-		logrus.Warnf("cache miss bucket=%s object=%s", bucket, object)
-		object, err = minioClient.GetObject(context.Background(), bucket, objectName, minio.GetObjectOptions{})
-		if err != nil {
-			return nil, err
-		}
-		minioObjectCache[cacheKey] = object
-	}
-	return object, nil
-}
-
 func (server *Server) GetThumbnail(c *gin.Context) {
 	fileName := c.Param("fileName")
 	if len(fileName) == 0 {
@@ -264,7 +244,7 @@ func (server *Server) GetThumbnail(c *gin.Context) {
 		return
 	}
 	thumbnailFile := genThumbnailName(fileName)
-	object, err := getMinioObjectFromCache(c.Request.Context(), server.Minio, "test", thumbnailFile)
+	object, err := server.MinioObjectCache.Get(c.Request.Context(), "test", thumbnailFile)
 	if err != nil {
 		logrus.Errorf("[GetThumbnail] failed to get object: %w", err)
 		c.AbortWithStatus(http.StatusInternalServerError)

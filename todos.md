@@ -77,6 +77,7 @@
     * manual tags
     * location
     * album name
+* https://github.com/typesense/typesense
 
 
 ## Issues

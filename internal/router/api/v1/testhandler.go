@@ -60,7 +60,7 @@ func (server *Server) TestDownload(c *gin.Context) {
 		return
 	}
 	// object, err := server.Minio.GetObject(c.Request.Context(), "test", fileName, minio.GetObjectOptions{})
-	object, err := getMinioObjectFromCache(c.Request.Context(), server.Minio, "test", fileName)
+	object, err := server.MinioObjectCache.Get(c.Request.Context(), "test", fileName)
 	if err != nil {
 		logrus.Error(err)
 		c.AbortWithStatus(http.StatusInternalServerError)
@@ -114,7 +114,7 @@ func (server *Server) TestGetVideoWithRange(c *gin.Context) {
 		return
 	}
 	// object, err := server.Minio.GetObject(c.Request.Context(), "test", fileName, minio.GetObjectOptions{})
-	object, err := getMinioObjectFromCache(c.Request.Context(), server.Minio, "test", fileName)
+	object, err := server.MinioObjectCache.Get(c.Request.Context(), "test", fileName)
 	if err != nil {
 		logrus.Error(err)
 		c.AbortWithStatus(http.StatusInternalServerError)

@@ -12,11 +12,12 @@ import (
 )
 
 type Server struct {
-	Config     *config.Config
-	RedisStore *db.RedisStore
-	Db         *gorm.DB
-	Minio      *minio.Client
-	OidcClient auth.OidcClient
+	Config           *config.Config
+	RedisStore       *db.RedisStore
+	Db               *gorm.DB
+	Minio            *minio.Client
+	OidcClient       auth.OidcClient
+	MinioObjectCache *db.MinioObjectCache
 	db.Services
 }
 
@@ -57,11 +58,12 @@ func NewServer(config *config.Config) (*Server, error) {
 	}
 
 	return &Server{
-		Config:     config,
-		RedisStore: redisStore,
-		Db:         DbConn,
-		Services:   *services,
-		Minio:      minioClient,
-		OidcClient: *oidcClient,
+		Config:           config,
+		RedisStore:       redisStore,
+		Db:               DbConn,
+		Services:         *services,
+		Minio:            minioClient,
+		OidcClient:       *oidcClient,
+		MinioObjectCache: db.NewMinioObjectCache(minioClient),
 	}, nil
 }

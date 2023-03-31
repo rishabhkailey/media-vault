@@ -72,7 +72,7 @@ func NewRouter(v1ApiServer *v1Api.Server, config config.Config) (*gin.Engine, er
 	v1ProtectedBearerOnly.Use(v1ApiServer.UserTokenAuthMiddleWare)
 	{
 		v1ProtectedBearerOnly.POST("/refreshSession", v1ApiServer.RefreshSession)
-		v1ProtectedBearerOnly.POST("/terminateSession")
+		v1ProtectedBearerOnly.POST("/terminateSession", v1ApiServer.TerminateSession)
 	}
 
 	debug := router.Group("/debug")
