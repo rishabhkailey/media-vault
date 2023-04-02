@@ -1,7 +1,7 @@
 <script setup lang="ts">
-import LazyMediaPreview from "@/components/LazyMediaPreview.vue";
+import LazyMediaThumbnailsPreview from "@/components/LazyMediaThumbnailsPreview.vue";
 </script>
 
 <template>
-  <LazyMediaPreview />
+  <LazyMediaThumbnailsPreview />
 </template>

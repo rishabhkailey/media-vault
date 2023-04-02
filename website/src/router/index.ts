@@ -16,6 +16,7 @@ import TestEncryptedFileDownloadUsingTs from "@/views/TestEncryptedFileDownloadU
 import EncryptedVideoPlayView from "@/views/EncryptedVideoPlayView.vue";
 import VideoThumbnailView from "@/views/VideoThumbnailView.vue";
 import PKCEVue from "@/views/PKCE.vue";
+import MediaView from "@/views/MediaView.vue";
 // todo pages without redirect from vue should be lazy loaded on external/server redirect
 const router = createRouter({
   history: createWebHistory(import.meta.env.BASE_URL),
@@ -104,6 +105,16 @@ const router = createRouter({
       path: "/pkce",
       name: "pkce",
       component: PKCEVue,
+    },
+    {
+      path: "/pkce",
+      name: "pkce",
+      component: PKCEVue,
+    },
+    {
+      path: "/media/:index",
+      name: "Media",
+      component: MediaView,
     },
   ],
 });

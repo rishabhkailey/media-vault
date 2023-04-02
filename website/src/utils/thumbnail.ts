@@ -159,6 +159,7 @@ if thumbnail resolution < source resolution
   widht will be cropped
 */
 
+// todo don't change the aspect ratio for thumbnail as we are not able to use the correct aspect ratio anyway
 export const proccessThumbnailConstraints = (
   constraints: thumbnailConstraints,
   imageResolution: WidthHeight
@@ -233,6 +234,7 @@ export const proccessThumbnailConstraints = (
   destinationResolution.height = Math.floor(destinationResolution.height);
   return { offset, destinationResolution, sourceResolution };
 };
+
 function getnerateVideoThumbnail(
   file: File,
   constraints: thumbnailConstraints
