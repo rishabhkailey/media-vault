@@ -156,24 +156,36 @@ func (server *Server) GetMedia(c *gin.Context) {
 	}
 	// todo support for multiple ranges
 	if parsedRangeHeader == nil || len(parsedRangeHeader.ranges) != 1 {
-		server.GetMediaFirstRequest(c, object, mediaType)
+		server.getMedia(c, object, mediaType)
 		return
 	}
 	server.GetMediaRange(c, parsedRangeHeader.ranges[0], object, mediaType)
 }
 
-func (server *Server) GetMediaFirstRequest(c *gin.Context, object *minio.Object, contentType string) {
+func (server *Server) getMedia(c *gin.Context, object *minio.Object, contentType string) {
 	objInfo, err := object.Stat()
 	if err != nil {
 		logrus.Error(err)
 	}
+	_, err = object.Seek(0, 0)
+	if err != nil {
+		logrus.Errorf("[getMedia] object seek failed: %w", err)
+		c.AbortWithStatus(http.StatusInternalServerError)
+		return
+	}
 	// this is for giving client the hint that response is a video file
 	contentLength := objInfo.Size
+	n, err := io.CopyN(c.Writer, object, objInfo.Size)
+	if err != nil || n != objInfo.Size {
+		logrus.Errorf("[getMedia] failed to write thumbnail data respose: %w. expected bytes=%d, written bytes=%d,", err, objInfo.Size, n)
+		c.Status(http.StatusInternalServerError)
+		return
+	}
 	c.Header("Content-Length", fmt.Sprintf("%d", contentLength))
 	c.Header("Content-Type", contentType)
 	c.Header("Connection", "keep-alive")
 	c.Header("Accept-Ranges", "bytes")
-	c.Status(http.StatusPartialContent)
+	c.Status(http.StatusOK)
 }
 
 // todo browsers which don't support range requests
@@ -207,20 +219,22 @@ func (server *Server) GetMediaRange(c *gin.Context, r Range, object *minio.Objec
 		c.AbortWithStatus(http.StatusInternalServerError)
 		return
 	}
-	n, err := io.CopyN(c.Writer, object, contentLength)
-	logrus.WithField("bytes", n).Info("sent")
-	if err != nil {
-		// todo this will not helm i guess, status code set earlier will be sent when we start copying the data
-		c.Status(http.StatusInternalServerError)
-		logrus.Error(err)
-		return
-	}
+	// can not change status after we have started writting the response
+	c.Status(http.StatusPartialContent)
+	// todo request can get stuck in js if it doesn't receive the data equals to content length
 	c.Header("Content-Length", fmt.Sprintf("%d", contentLength))
 	c.Header("Content-Type", contentType)
 	c.Header("Connection", "keep-alive")
 	c.Header("Content-Range", fmt.Sprintf("bytes %d-%d/%d", r.start, r.end, objInfo.Size))
 	c.Header("Accept-Ranges", "bytes")
-	c.Status(http.StatusPartialContent)
+	n, err := io.CopyN(c.Writer, object, contentLength)
+	logrus.WithField("bytes", n).Info("sent")
+	if err != nil {
+		// todo this will not help i guess, status code set earlier will be sent when we start copying the data
+		c.Status(http.StatusInternalServerError)
+		logrus.Error(err)
+		return
+	}
 }
 
 func (server *Server) getMediaType(ctx context.Context, fileName string) (mediaType string, err error) {
