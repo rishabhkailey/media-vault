@@ -1,6 +1,7 @@
 import { Chacha20 } from "ts-chacha20";
+import { parseRequestRangeHeader } from "@/utils/request";
+import type { IRequestRange } from "@/utils/request";
 // stream saver worker code + our custom code for decryption
-/* global self ReadableStream Response */
 
 declare let self: ServiceWorkerGlobalScope;
 // const sw = self as ServiceWorkerGlobalScope & typeof globalThis;
@@ -80,43 +81,9 @@ function createStream(port: MessagePort) {
   });
 }
 
-interface IRequestRange {
-  unit: string;
-  start: number;
-  end: number;
-}
-
-interface Event {
-  request: Request;
-  respondWith: (response: Response) => any;
-}
-
-function parseRangeHeader(range: string): IRequestRange {
-  const parts = range.split("=");
-  if (parts.length != 2) {
-    throw new Error("Invalid range header " + range);
-  }
-  const unit = parts[0];
-  const rangePart = parts[1];
-  let end: number = -1;
-  if (
-    rangePart.split("-").length === 2 &&
-    rangePart.split("-")[1].length !== 0
-  ) {
-    end = Number(rangePart.split("-")[1]);
-  }
-  const start = Number(rangePart.split("-")[0]);
-  return {
-    unit,
-    start,
-    end,
-  };
-}
-
-const newDecryptTransformer: (decryptor: Chacha20) => TransformStream<
-  Uint8Array,
-  Uint8Array
-> = (decryptor) =>
+const newDecryptTransformer: (
+  decryptor: Chacha20
+) => TransformStream<Uint8Array, Uint8Array> = (decryptor) =>
   new TransformStream<Uint8Array, Uint8Array>({
     start() {},
     transform(chunk, controller) {
@@ -131,7 +98,10 @@ const newDecryptTransformer: (decryptor: Chacha20) => TransformStream<
     flush() {},
   });
 
-const decryptChunk: (input: Uint8Array, decryptor: Chacha20) => Uint8Array = (input, decryptor) => {
+const decryptChunk: (input: Uint8Array, decryptor: Chacha20) => Uint8Array = (
+  input,
+  decryptor
+) => {
   try {
     const decrypted = decryptor.decrypt(input);
     if (!decrypted?.length || decrypted.length !== input.length) {
@@ -144,11 +114,11 @@ const decryptChunk: (input: Uint8Array, decryptor: Chacha20) => Uint8Array = (in
   return new Uint8Array(0);
 };
 
-const internalFetch: (req: Request) => Response = async (req) => {
+async function internalFetch(req: Request) {
   const rangeHeader = req.headers.get("Range");
   let range: IRequestRange | undefined;
   if (rangeHeader !== null && rangeHeader.length !== 0) {
-    range = parseRangeHeader(rangeHeader);
+    range = parseRequestRangeHeader(rangeHeader);
   } else {
     // todo
   }
@@ -165,7 +135,7 @@ const internalFetch: (req: Request) => Response = async (req) => {
   const byteCounter = i % 64;
 
   const textEncoder = new TextEncoder();
-  let decryptor = new Chacha20(
+  const decryptor = new Chacha20(
     textEncoder.encode(password),
     textEncoder.encode(nonce),
     counter
@@ -204,9 +174,9 @@ const internalFetch: (req: Request) => Response = async (req) => {
       status: 500,
     });
   }
-};
+}
 
-self.onfetch = (event: Event) => {
+self.onfetch = (event) => {
   const url = event.request.url;
 
   // this only works for Firefox

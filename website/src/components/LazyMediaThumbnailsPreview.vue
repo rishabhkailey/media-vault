@@ -126,6 +126,7 @@ watch(lazyApiLoadObserverTarget, (newValue, oldvalue) => {
         :close-delay="0"
         :open-delay="0"
         class="d-flex justify-center align-center"
+        :z-index="2000"
       >
         <MediaPreview
           v-if="selectedMediaIndex !== undefined"
@@ -133,6 +134,11 @@ watch(lazyApiLoadObserverTarget, (newValue, oldvalue) => {
           :index="selectedMediaIndex"
           :allMediaLoaded="allMediaLoaded"
           :loadMoreMedia="() => store.dispatch(LOAD_MORE_MEDIA_ACTION)"
+          @close="
+            () => {
+              prviewOverlay = false;
+            }
+          "
         />
       </v-overlay>
     </div>
