@@ -107,7 +107,7 @@ func (requestBody *MediaListRequestParams) initDefaultValues() {
 		requestBody.PerPage = MAX_MEDIA_PER_PAGE
 	}
 	if len(requestBody.OrderBy) == 0 {
-		requestBody.OrderBy = dbservices.ORDER_BY_UPLOAD_TIME
+		requestBody.OrderBy = dbservices.ORDER_BY_MEDIA_CREATION_TIME
 	}
 	if len(requestBody.Sort) == 0 {
 		requestBody.Sort = dbservices.SORT_DESCENDING

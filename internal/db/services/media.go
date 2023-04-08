@@ -9,7 +9,7 @@ import (
 )
 
 const ORDER_BY_UPLOAD_TIME = "created_at"
-const ORDER_BY_MEDIA_CREATION_TIME = "time"
+const ORDER_BY_MEDIA_CREATION_TIME = "date"
 
 var SUPPORTED_ORDER_BY = []string{ORDER_BY_UPLOAD_TIME, ORDER_BY_MEDIA_CREATION_TIME}
 
@@ -67,11 +67,15 @@ func (model *MediaModel) FindByFileName(ctx context.Context, fileName string) (m
 func (model *MediaModel) GetUserMediaList(ctx context.Context, userID string, orderBy string, sort string, offset, limit int) (mediaList []Media, err error) {
 	db := model.Db
 	mediaIdQuery := db.Model(&UserMediaBinding{}).Select("media_id").Where("user_id = ?", userID)
+	orderBy = fmt.Sprintf("\"Metadata\".\"%s\"", orderBy)
 	if sort == SORT_DESCENDING {
 		orderBy = fmt.Sprintf("%s desc", orderBy)
 	}
 	// todo check preload vs join
-	err = db.Preload("Metadata").Model(&Media{}).Where("id IN (?)", mediaIdQuery).Limit(limit).Order(orderBy).Offset(offset).Find(&mediaList).Error
+	// err = db.Preload("Metadata", func(db *gorm.DB) *gorm.DB {
+	// 	return db.Order(orderBy).Limit(limit).Offset(offset)
+	// }).Model(&Media{}).Where("id IN (?)", mediaIdQuery).Find(&mediaList).Error
+	err = db.Joins("Metadata").Model(&Media{}).Where("media.id IN (?)", mediaIdQuery).Limit(limit).Order(orderBy).Offset(offset).Find(&mediaList).Error
 	return
 }
 
