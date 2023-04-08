@@ -1,37 +1,42 @@
 <script setup lang="ts">
-import { ref } from "vue";
+import { computed, ref } from "vue";
 import ImagePreview from "./ImagePreview.vue";
 import VideoPreview from "./VideoPreview.vue";
 import { download } from "@/utils/encryptedFileDownload";
+import { useStore } from "vuex";
+import { LOAD_MORE_MEDIA_ACTION } from "@/store/modules/media";
+
+const store = useStore();
+
 const props = defineProps<{
   index: number;
-  mediaList: Array<Media>;
-  allMediaLoaded: boolean;
-  loadMoreMedia: () => Promise<any>; // emit always returns void so we cannot use emit
 }>();
+
+const mediaList = computed<Array<Media>>(() => store.getters.mediaList);
+const allMediaLoaded = computed<boolean>(() => store.getters.allMediaLoaded);
+const loadMoreMedia = () => store.dispatch(LOAD_MORE_MEDIA_ACTION);
 
 const emits = defineEmits<{
   (e: "close"): void;
 }>();
 
 const internalIndex = ref(props.index);
-const media = ref(props.mediaList[props.index]);
+const media = ref(mediaList.value[props.index]);
 const loadingMoreMedia = ref(false);
 const next = () => {
-  if (internalIndex.value <= props.mediaList.length - 2) {
-    media.value = props.mediaList[++internalIndex.value];
+  if (internalIndex.value <= mediaList.value.length - 2) {
+    media.value = mediaList.value[++internalIndex.value];
     return;
   }
-  if (props.allMediaLoaded) {
+  if (allMediaLoaded.value) {
     return;
   }
   loadingMoreMedia.value = true;
-  props
-    .loadMoreMedia()
+  loadMoreMedia()
     .then(() => {
       loadingMoreMedia.value = false;
-      if (internalIndex.value <= props.mediaList.length - 2) {
-        media.value = props.mediaList[++internalIndex.value];
+      if (internalIndex.value <= mediaList.value.length - 2) {
+        media.value = mediaList.value[++internalIndex.value];
       }
     })
     .catch((err) => {
@@ -49,8 +54,7 @@ const next = () => {
     <!-- header -->
     <div
       class="pt-1 pr-4 d-flex justify-end align-center"
-      style="
-        background-color: rgba(50, 50, 50, 0.3);
+      style="background-color: rgba(50, 50, 50, 0.3);
         box-shadow: 0px 5px 15px rgb(50, 50, 50, 0.3);
         position: absolute;
         width: 100vw;
@@ -94,8 +98,7 @@ const next = () => {
             icon="mdi-chevron-right"
             @click="next"
             :disabled="
-              (internalIndex === props.mediaList.length &&
-                props.allMediaLoaded) ||
+              (internalIndex === mediaList.length - 1 && allMediaLoaded) ||
               loadingMoreMedia
             "
           >
@@ -112,7 +115,7 @@ const next = () => {
             :disabled="internalIndex === 0"
             @click="
               () => {
-                media = props.mediaList[--internalIndex];
+                media = mediaList[--internalIndex];
               }
             "
           >
@@ -152,7 +155,7 @@ const next = () => {
         </v-window-item>
         <!-- next required for left arrow -->
         <v-window-item
-          v-if="internalIndex !== props.mediaList.length - 1"
+          v-if="!(internalIndex === mediaList.length - 1 && allMediaLoaded)"
           :value="internalIndex + 1"
         >
           <template v-slot:default>

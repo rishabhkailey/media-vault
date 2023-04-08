@@ -3,9 +3,9 @@ import axios from "axios";
 import { computed, inject, ref, type Ref, watch } from "vue";
 import { useStore } from "vuex";
 import { initializingKey } from "@/symbols/injectionSymbols";
-import MediaThumbnail from "./MediaThumbnail.vue";
-import MediaPreview from "./MediaPreview.vue";
 import { LOAD_MORE_MEDIA_ACTION } from "@/store/modules/media";
+import MonthlyThumbnailPreview from "./MonthlyThumbnailPreview.vue";
+import { getMonthlyMediaIndex } from "@/utils/date";
 
 const store = useStore();
 const initializing: Ref<boolean> | undefined = inject(initializingKey);
@@ -13,9 +13,9 @@ const accessToken = computed<string>(() => store.getters.accessToken);
 const mediaList = computed<Array<Media>>(() => store.getters.mediaList);
 const allMediaLoaded = computed<boolean>(() => store.getters.allMediaLoaded);
 
-const selectedMediaIndex = ref<number | undefined>(undefined);
-const prviewOverlay = ref<boolean>(false);
-
+const monthlyMediaList = computed<Array<MonthlyMedia>>(() =>
+  getMonthlyMediaIndex(mediaList.value)
+);
 if (initializing === undefined) {
   throw new Error("undefined initializing");
 }
@@ -93,54 +93,20 @@ watch(lazyApiLoadObserverTarget, (newValue, oldvalue) => {
   <v-container>
     <div v-if="initializing">loading...</div>
     <div v-else>
-      <v-row>
-        <v-col
-          :key="`${index}+${media.name}`"
-          v-for="(media, index) in mediaList"
-          class="d-flex child-flex"
-          xs="12"
-          sm="6"
-          md="4"
-          lg="3"
-          xl="2"
-        >
-          <MediaThumbnail
-            :media="media"
-            @click="
-              () => {
-                prviewOverlay = true;
-                selectedMediaIndex = index;
-              }
-            "
-          />
-        </v-col>
-        <div
-          ref="lazyApiLoadObserverTarget"
-          style="min-height: 100px"
-          v-if="!allMediaLoaded"
-        ></div>
-      </v-row>
-      <v-overlay
-        v-model="prviewOverlay"
-        :close-on-content-click="false"
-        :close-delay="0"
-        :open-delay="0"
-        class="d-flex justify-center align-center"
-        :z-index="2000"
-      >
-        <MediaPreview
-          v-if="selectedMediaIndex !== undefined"
-          :media-list="mediaList"
-          :index="selectedMediaIndex"
-          :allMediaLoaded="allMediaLoaded"
-          :loadMoreMedia="() => store.dispatch(LOAD_MORE_MEDIA_ACTION)"
-          @close="
-            () => {
-              prviewOverlay = false;
-            }
-          "
-        />
-      </v-overlay>
+      <MonthlyThumbnailPreview
+        v-for="(monthlyMedia, index) in monthlyMediaList"
+        :key="index"
+        :month="monthlyMedia.month"
+        :year="monthlyMedia.year"
+        :index-media-list="monthlyMedia.media"
+        :index-offset="0"
+      />
+
+      <div
+        ref="lazyApiLoadObserverTarget"
+        style="min-height: 100px"
+        v-if="!allMediaLoaded"
+      ></div>
     </div>
   </v-container>
 </template>

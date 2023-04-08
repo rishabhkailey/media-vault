@@ -22,7 +22,7 @@ const getIcon = (mediaType: string) => {
 </script>
 <template>
   <div
-    class="thumbnail"
+    class="thumbnail flex-grow-1 d-flex justify-content-strech"
     @click="
       () => {
         emit('click');

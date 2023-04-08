@@ -6,7 +6,7 @@ type WidthHeight = {
 type point = {
   x: number;
   y: number;
-}
+};
 
 interface Media {
   name: string;
@@ -16,4 +16,24 @@ interface Media {
   thumbnail: boolean;
   url: string;
   thumbnail_url: string;
+}
+
+interface IndexMedia {
+  media: Media;
+  index: number;
+}
+
+interface MonthlyMedia {
+  month: number;
+  year: number;
+  media: Array<IndexMedia>;
+  indexOffset: number;
+}
+
+interface DailyMedia {
+  month: number;
+  day: number;
+  year: number;
+  date: number;
+  media: Array<IndexMedia>;
 }

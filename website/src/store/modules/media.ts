@@ -1,5 +1,6 @@
 import type { Module } from "vuex";
 import axios from "axios";
+import { UNKNOWN_DATE } from "@/utils/date";
 
 // mutations
 const SET_MEDIA_LIST = "setLoggedInUserInfo";
@@ -36,7 +37,21 @@ export const mediaModule: Module<MediaModuleState, any> = {
     },
     [ADD_MEDIA_TO_LIST](state, payload: Array<Media>) {
       if (payload.length > 0) {
-        state.mediaList = [...state.mediaList, ...payload];
+        const newMediaList = payload
+          .map((media) => {
+            if (typeof media.date === "string") {
+              try {
+                media.date = new Date(media.date);
+              } catch (err) {
+                media.date = UNKNOWN_DATE;
+              }
+            }
+            return media;
+          })
+          .sort((m1, m2) => {
+            return m1.date > m2.date ? 1 : -1;
+          });
+        state.mediaList = [...state.mediaList, ...newMediaList];
       }
     },
     [SET_LOADED_ALL_MEDIA](state, payload: boolean) {
