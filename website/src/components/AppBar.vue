@@ -8,10 +8,23 @@ import { userManagerKey } from "@/symbols/injectionSymbols";
 import type { UserManager } from "oidc-client-ts";
 import { signinUsingUserManager } from "@/utils/auth";
 import axios from "axios";
+import { useDisplay } from "vuetify/lib/framework.mjs";
+import SearchInputField from "./SearchInputField.vue";
+
+const display = useDisplay();
+const smallDisplay = computed(
+  () => display.mobile.value || display.smAndDown.value
+);
+
+const props = defineProps<{
+  navigationBar: boolean;
+}>();
+
+const emit = defineEmits<{
+  (e: "update:navigationBar", value: boolean): void;
+}>();
 
 const search = ref("");
-const searchInputRules: Array<any> = [];
-
 const store = useStore();
 const loading = ref(false);
 // todo error and error message pop up
@@ -57,32 +70,46 @@ const uploadFiles = (files: Array<File>) => {
   uploadFilesDialogModel.value = true;
   console.log(files);
 };
+console.log(display.mobile.value);
 </script>
 
 <template>
-  <v-app-bar :rounded="false">
+  <v-app-bar :rounded="false" elevation="2">
     <v-row class="d-flex align-center ml-2">
       <!-- start -->
-      <v-col class="d-flex flex-row justify-start">
+      <v-col
+        v-if="smallDisplay"
+        @click.stop="
+          () => {
+            emit('update:navigationBar', !props.navigationBar);
+          }
+        "
+      >
+        <v-btn icon="mdi-menu"> </v-btn>
+      </v-col>
+      <v-col v-else class="d-flex flex-row justify-start">
         <v-toolbar-title>TODO</v-toolbar-title>
       </v-col>
       <!-- mid -->
       <v-col class="d-flex flex-row justify-center">
-        <v-form class="d-flex flex-grow-1">
-          <v-text-field
-            :clearable="true"
-            clear-icon="mdi-close"
-            append-inner-icon="mdi-magnify"
-            v-model="search"
-            :rules="searchInputRules"
-            label="search"
-            :hide-details="true"
-          ></v-text-field>
-        </v-form>
+        <SearchInputField
+          v-if="!smallDisplay"
+          v-model="search"
+          :collapsed="false"
+        />
       </v-col>
       <!-- end -->
       <v-col>
-        <v-row class="d-flex flex-row justify-end align-center mr-2">
+        <v-row
+          class="d-flex flex-row flex-nowrap justify-end align-center mr-2"
+        >
+          <div>
+            <SearchInputField
+              v-if="smallDisplay"
+              v-model="search"
+              :collapsed="true"
+            />
+          </div>
           <div>
             <SelectFileButton
               label="upload"

@@ -21,23 +21,26 @@ const getIcon = (mediaType: string) => {
 };
 </script>
 <template>
-  <div
-    class="thumbnail flex-grow-1 d-flex justify-content-strech"
-    @click="
-      () => {
-        emit('click');
-      }
-    "
-  >
-    <v-img
-      v-if="props.media.thumbnail"
-      :src="props.media.thumbnail_url"
-      width="150"
-      aspect-ratio="1"
-      ref="imageElement"
-      cover
+  <v-hover v-slot="{ isHovering, props: hoverProps }">
+    <v-card
+      class="flex-grow-1 d-flex justify-content-strech"
+      @click="
+        () => {
+          emit('click');
+        }
+      "
+      v-bind="hoverProps"
+      :elevation="isHovering ? 6 : 0"
     >
-      <!-- <template v-slot:placeholder>
+      <v-img
+        v-if="props.media.thumbnail"
+        :src="props.media.thumbnail_url"
+        width="150"
+        aspect-ratio="1"
+        ref="imageElement"
+        cover
+      >
+        <!-- <template v-slot:placeholder>
         <div class="d-flex align-center justify-center fill-height">
           <v-progress-circular
             color="grey-lighten-4"
@@ -46,23 +49,20 @@ const getIcon = (mediaType: string) => {
         </div>
       </template> -->
 
-      <template v-slot:error>
+        <template v-slot:error>
+          <div class="d-flex align-center justify-center fill-height">
+            <v-icon
+              :icon="getIcon(props.media.type)"
+              style="font-size: 150px"
+            />
+          </div>
+        </template>
+      </v-img>
+      <div v-else>
         <div class="d-flex align-center justify-center fill-height">
           <v-icon :icon="getIcon(props.media.type)" style="font-size: 150px" />
         </div>
-      </template>
-    </v-img>
-    <div v-else>
-      <div class="d-flex align-center justify-center fill-height">
-        <v-icon :icon="getIcon(props.media.type)" style="font-size: 150px" />
       </div>
-    </div>
-  </div>
+    </v-card>
+  </v-hover>
 </template>
-<style scoped>
-.thumbnail:hover {
-  filter: drop-shadow(8px 8px 10px gray) brightness(90%);
-  cursor: pointer;
-  transition: 0.2s ease;
-}
-</style>

@@ -71,6 +71,15 @@ export function getMonthlyMediaIndex(mediaList: Array<Media>) {
       indexOffset: 0,
     });
   });
+  monthlyMediaList.sort((a, b) => {
+    if (a.year > b.year) {
+      return -1;
+    }
+    if (a.month > b.month) {
+      return -1;
+    }
+    return 1;
+  });
   return monthlyMediaList;
 }
 
@@ -121,5 +130,6 @@ export function getDailyMediaIndex(mediaList: Array<IndexMedia>) {
       media: mediaList,
     });
   });
+  dailyMediaList.sort((a, b) => (a.date > b.date ? -1 : 1));
   return dailyMediaList;
 }

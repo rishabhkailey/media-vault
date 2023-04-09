@@ -54,7 +54,8 @@ const next = () => {
     <!-- header -->
     <div
       class="pt-1 pr-4 d-flex justify-end align-center"
-      style="background-color: rgba(50, 50, 50, 0.3);
+      style="
+        background-color: rgba(50, 50, 50, 0.3);
         box-shadow: 0px 5px 15px rgb(50, 50, 50, 0.3);
         position: absolute;
         width: 100vw;

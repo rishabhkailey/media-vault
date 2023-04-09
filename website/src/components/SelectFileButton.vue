@@ -21,9 +21,17 @@ const cancel = () => {
 </script>
 
 <template>
-  <v-dialog v-model="selectFileDialog" width="auto" min-width="500px" scrollable>
+  <v-dialog
+    v-model="selectFileDialog"
+    width="auto"
+    min-width="500px"
+    scrollable
+  >
     <template v-slot:activator>
-      <v-btn class="bg-primary mx-2" @click.stop="() => (selectFileDialog = true)">
+      <v-btn
+        class="bg-primary mx-2"
+        @click.stop="() => (selectFileDialog = true)"
+      >
         <v-icon :icon="props.prependIcon" />
         {{ props.label }}
       </v-btn>

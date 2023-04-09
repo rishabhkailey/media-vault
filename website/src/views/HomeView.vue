@@ -2,7 +2,7 @@
 import AppBar from "../components/AppBar.vue";
 import NavigationBar from "../components/NavigationBar.vue";
 import HomePage from "../components/HomePage.vue";
-import { inject, onMounted, provide, ref } from "vue";
+import { computed, inject, onMounted, provide, ref } from "vue";
 import store from "@/store";
 import { SET_USERINFO_ACTION } from "@/store/actions-type";
 import { initializingKey, userManagerKey } from "@/symbols/injectionSymbols";
@@ -10,7 +10,14 @@ import type { UserManager } from "oidc-client-ts";
 import decryptWorker from "@/worker/decrypt?url";
 // todo if not authenticated redirect to some different page
 // maybe /about
+import { useDisplay } from "vuetify";
+const display = useDisplay();
+
+const smallDisplay = computed(
+  () => display.mobile.value || display.smAndDown.value
+);
 const initializingRef = ref(true);
+const navigationBar = ref(!smallDisplay.value);
 provide(initializingKey, initializingRef);
 const userManager: UserManager | undefined = inject(userManagerKey);
 
@@ -136,18 +143,6 @@ const registerServiceWorker = () => {
           reject(err);
           return;
         });
-
-      // navigator.serviceWorker.ready
-      //   .then(() => {
-      //     console.log("Service worker active");
-      //     resolve(true);
-      //     return;
-      //   })
-      //   .catch((err) => {
-      //     console.log("service worker registeration failed ", err);
-      //     reject(err);
-      //     return;
-      //   });
     }
   });
 };
@@ -173,14 +168,26 @@ const init = () => {
 onMounted(() => {
   init();
 });
+
+const test = (value: boolean) => {
+  console.log("called", value);
+};
 </script>
 
 <template>
   <v-container class="pa-0 ma-0" fluid>
     <v-card>
       <v-layout>
-        <AppBar />
-        <NavigationBar />
+        <AppBar
+          :navigation-bar="navigationBar"
+          @update:navigation-bar="
+            (value) => {
+              test(value);
+              navigationBar = value;
+            }
+          "
+        />
+        <NavigationBar v-model="navigationBar" />
         <v-main
           style="height: 100vh; overflow-y: hidden"
           class="d-flex flex-column align-stretch"

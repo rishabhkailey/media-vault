@@ -90,17 +90,18 @@ watch(lazyApiLoadObserverTarget, (newValue, oldvalue) => {
 </script>
 
 <template>
-  <v-container>
+  <div class="pa-0 ma-0">
     <div v-if="initializing">loading...</div>
-    <div v-else>
-      <MonthlyThumbnailPreview
-        v-for="(monthlyMedia, index) in monthlyMediaList"
-        :key="index"
-        :month="monthlyMedia.month"
-        :year="monthlyMedia.year"
-        :index-media-list="monthlyMedia.media"
-        :index-offset="0"
-      />
+    <div v-else class="d-flex flex-column align-stretch">
+      <div v-for="(monthlyMedia, index) in monthlyMediaList" :key="index">
+        <MonthlyThumbnailPreview
+          :month="monthlyMedia.month"
+          :year="monthlyMedia.year"
+          :index-media-list="monthlyMedia.media"
+          :index-offset="0"
+        />
+        <v-divider />
+      </div>
 
       <div
         ref="lazyApiLoadObserverTarget"
@@ -108,5 +109,5 @@ watch(lazyApiLoadObserverTarget, (newValue, oldvalue) => {
         v-if="!allMediaLoaded"
       ></div>
     </div>
-  </v-container>
+  </div>
 </template>

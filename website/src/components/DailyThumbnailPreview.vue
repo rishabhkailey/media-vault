@@ -1,8 +1,8 @@
 <script setup lang="ts">
 import MediaThumbnail from "./MediaThumbnail.vue";
 import MediaPreview from "./MediaPreview.vue";
-import { computed, ref } from "vue";
-import { daysLong, daysShort, monthShort } from "@/utils/date";
+import { ref } from "vue";
+import { daysShort, monthShort } from "@/utils/date";
 // interface doesn't work https://github.com/vuejs/core/issues/4294
 // const props = defineProps<DailyMedia>();
 const props = defineProps<{
@@ -22,7 +22,7 @@ const prviewOverlay = ref<boolean>(false);
     :subtitle="`${daysShort[props.day]}, ${monthShort[props.month]} ${
       props.date
     }, ${props.year}`"
-    class="flex-grow-1"
+    class="bg-secondary-background"
   >
     <div>
       <div class="d-flex flex-row flex-wrap">

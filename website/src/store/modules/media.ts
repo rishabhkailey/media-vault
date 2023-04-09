@@ -49,7 +49,7 @@ export const mediaModule: Module<MediaModuleState, any> = {
             return media;
           })
           .sort((m1, m2) => {
-            return m1.date > m2.date ? 1 : -1;
+            return m1.date > m2.date ? -1 : 1;
           });
         state.mediaList = [...state.mediaList, ...newMediaList];
       }
