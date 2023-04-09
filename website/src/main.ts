@@ -6,7 +6,7 @@ import "@/assets/main.css";
 // Vuetify;
 import "@mdi/font/css/materialdesignicons.css";
 import "vuetify/styles";
-import { createVuetify } from "vuetify";
+import { createVuetify, type ThemeDefinition } from "vuetify";
 import * as components from "vuetify/components";
 import * as directives from "vuetify/directives";
 import { aliases, mdi } from "vuetify/iconsets/mdi";
@@ -22,6 +22,56 @@ import { userManagerKey } from "./symbols/injectionSymbols";
 
 const app = createApp(App);
 
+const darkTheme: ThemeDefinition = {
+  dark: true,
+  colors: {
+    primary: "#29B6F6", // indigo
+    secondary: "#ffca28", // yellow
+    accent: "#00bcd4", // cyan
+    success: "#4caf50", // green
+    info: "#2196f3", // light blue
+    warning: "#ffc107", // amber
+    error: "#f44336", // red
+    background: "#121212", // dark grey
+    "secondary-background": "#000000", // black
+    surface: "#191919", // grey
+    onPrimary: "#ffffff",
+    onSecondary: "#000000",
+    onAccent: "#000000",
+    onSuccess: "#ffffff",
+    onInfo: "#ffffff",
+    onWarning: "#000000",
+    onError: "#ffffff",
+    onBackground: "#ffffff",
+    onSurface: "#ffffff",
+  },
+};
+
+const lightTheme: ThemeDefinition = {
+  dark: false,
+  colors: {
+    primary: "#2C3E50",
+    secondary: "#E67E22",
+    accent: "#1ABC9C",
+    success: "#27AE60",
+    info: "#3498DB",
+    warning: "#F1C40F",
+    error: "#E74C3C",
+    background: "#F5F5F5",
+    "secondary-background": "#F5F5F5",
+    surface: "#FFFFFF",
+    onPrimary: "#FFFFFF",
+    onSecondary: "#FFFFFF",
+    onAccent: "#FFFFFF",
+    onSuccess: "#FFFFFF",
+    onInfo: "#FFFFFF",
+    onWarning: "#000000",
+    onError: "#FFFFFF",
+    onBackground: "#000000",
+    onSurface: "#000000",
+  },
+};
+
 const vuetify = createVuetify({
   components,
   directives,
@@ -31,6 +81,10 @@ const vuetify = createVuetify({
     sets: {
       mdi,
     },
+  },
+  theme: {
+    defaultTheme: "lightTheme",
+    themes: { darkTheme, lightTheme },
   },
 });
 
