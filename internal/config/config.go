@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"os"
 
+	"github.com/meilisearch/meilisearch-go"
 	"github.com/spf13/viper"
 )
 
@@ -55,6 +56,10 @@ type AuthService struct {
 	URL          string
 }
 
+type MeiliSearch struct {
+	meilisearch.ClientConfig
+}
+
 type Config struct {
 	Cache RedisCacheConfig
 	// JWT        *JWTConfig
@@ -64,6 +69,7 @@ type Config struct {
 	WebUIConfig WebUIConfig
 	MinioConfig MinioConfig
 	AuthService AuthService
+	MeiliSearch MeiliSearch
 }
 
 // todo validation
@@ -109,6 +115,12 @@ func GetConfig() (*Config, error) {
 			URL:          viper.GetString("auth-service.url"),
 			ClientSecret: viper.GetString("auth-service.client.secret"),
 			ClientID:     viper.GetString("auth-service.client.ID"),
+		},
+		MeiliSearch: MeiliSearch{
+			meilisearch.ClientConfig{
+				Host:   viper.GetString("meiliSearch.host"),
+				APIKey: viper.GetString("meiliSearch.APIKey"),
+			},
 		},
 	}
 	return &config, nil

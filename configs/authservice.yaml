@@ -42,3 +42,6 @@ auth-service:
   client:
     ID: media-service-2
     secret: aslkjfdalksdfjlksadfjlkasjlkfjasdfjlkasjd
+meiliSearch:
+  host: http://localhost:7700
+  APIKey: meilisearchmeilisearch

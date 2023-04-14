@@ -25,9 +25,10 @@
 * https://github.com/mozilla/send
 * we cannot have 2 service workers in 1 scope so let's write our own code for stream download
 * continue download even after closing the tab https://developer.mozilla.org/en-US/docs/Web/API/Background_Fetch_API
-* image location from metadata (use for search)
+* image location from metadata (use for search) (https://www.npmjs.com/package/exif-js)
 * password storage client side (https://developer.mozilla.org/en-US/docs/Learn/JavaScript/Client-side_web_APIs/Client-side_storage)
 * status column in media table
+* code structure https://github.com/grafana/grafana/blob/main/pkg/services
 
 ## Problems
 * avi format not supported so we might need to transcode videos and files
@@ -78,8 +79,43 @@
     * location
     * album name
 * https://github.com/typesense/typesense
+* https://github.com/apache/lucene
+* https://docs.meilisearch.com/learn/what_is_meilisearch/overview.html
+* https://blog.meilisearch.com/why-should-you-use-meilisearch-over-elasticsearch/
 
+* user time zones
 
+new user_info table?
+```js
+const tz = Intl.DateTimeFormat().resolvedOptions().timeZone
+```
+
+```go
+//init the loc
+loc, _ := time.LoadLocation("Asia/Shanghai")
+//set timezone,  
+now := time.Now().In(loc)
+```
+
+### MeiliSearch
+* facet based on media type
+* [filtering](https://docs.meilisearch.com/learn/getting_started/filtering_and_sorting.html#settings) based on userID
+* we can [add or update](https://docs.meilisearch.com/reference/api/documents.html#add-or-update-documents) the document using put request 
+#### document Schema
+> todo geo location
+```json
+{
+    "media_id": "mediaID", // primary key
+    "user_id": "userID", // for filter
+    "metadata": {
+        "name": "", // search name
+        "timestamp": "", // unix time stamp for filters, before and after some time
+        "date": "", // wed 19 feb 2023
+        "type": "", // like video, audio
+    }
+}
+```
+synonyms for day and months
 ## Issues
 * todo mutex for map
 ```log

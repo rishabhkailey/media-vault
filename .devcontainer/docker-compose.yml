@@ -4,6 +4,7 @@ volumes:
   postgres-data:
   redis-data:
   minio-data:
+  meilisearch-data:
 
 services:
   app:
@@ -56,7 +57,7 @@ services:
     env_file:
       - .env
     volumes:
-      - minio-data:/data'
+      - minio-data:/data
       - ./certs:/root/.minio/certs
     network_mode: host
 
@@ -66,3 +67,12 @@ services:
     env_file:
       - .env
     network_mode: host
+
+  meilisearch:
+    image: getmeili/meilisearch:v1.1
+    restart: unless-stopped
+    env_file:
+      - .env
+    network_mode: host
+    volumes:
+      - meilisearch-data:/meili_data
