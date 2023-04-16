@@ -12,7 +12,10 @@ import (
 	"github.com/gin-gonic/gin"
 	"github.com/go-session/session/v3"
 	"github.com/minio/minio-go/v7"
-	dbservices "github.com/rishabhkailey/media-service/internal/db/services"
+	"github.com/rishabhkailey/media-service/internal/services/media"
+	mediametadata "github.com/rishabhkailey/media-service/internal/services/mediaMetadata"
+	uploadrequests "github.com/rishabhkailey/media-service/internal/services/uploadRequests"
+	usermediabindings "github.com/rishabhkailey/media-service/internal/services/userMediaBindings"
 	"github.com/rishabhkailey/media-service/internal/utils"
 	"github.com/sirupsen/logrus"
 	"gorm.io/gorm"
@@ -100,35 +103,45 @@ func (server *Server) InitChunkUpload(c *gin.Context) {
 		return
 	}
 	if len(requestBody.MediaType) == 0 {
-		requestBody.MediaType = string(dbservices.UNKNOWN)
+		requestBody.MediaType = string(mediametadata.TYPE_UNKNOWN)
 	}
 	if requestBody.Date == 0 {
 		requestBody.Date = time.Now().Unix()
 	}
-	uploadRequest, err := server.UploadRequests.Create(c.Request.Context(), userID)
+	uploadRequest, err := server.UploadRequests.Create(c.Request.Context(), uploadrequests.CreateUploadRequestCommand{
+		UserID: userID,
+	})
 	if err != nil {
 		logrus.Errorf("[InitUpload] uploadRequest creation failed: %w", err)
 		c.AbortWithStatus(http.StatusInternalServerError)
 		return
 	}
-	mediaMetadata, err := server.MediaMetadata.Create(c.Request.Context(), dbservices.Metadata{
-		Name: requestBody.FileName,
-		Date: time.UnixMilli(requestBody.Date),
-		Size: uint64(requestBody.Size),
-		Type: requestBody.MediaType,
+	mediaMetadata, err := server.MediaMetadata.Create(c.Request.Context(), mediametadata.CreateCommand{
+		Metadata: mediametadata.Metadata{
+			Name: requestBody.FileName,
+			Date: time.UnixMilli(requestBody.Date),
+			Size: uint64(requestBody.Size),
+			Type: requestBody.MediaType,
+		},
 	})
 	if err != nil {
 		logrus.Errorf("[InitUpload] media metadata creation failed: %w", err)
 		c.AbortWithStatus(http.StatusInternalServerError)
 		return
 	}
-	media, err := server.Media.Create(c.Request.Context(), uploadRequest.ID, mediaMetadata.ID)
+	media, err := server.Media.Create(c.Request.Context(), media.CreateMediaCommand{
+		UploadRequestID: uploadRequest.ID,
+		MetadataID:      mediaMetadata.ID,
+	})
 	if err != nil {
 		logrus.Errorf("[InitUpload] media creation failed: %w", err)
 		c.AbortWithStatus(http.StatusInternalServerError)
 		return
 	}
-	_, err = server.UserMediaBindings.Create(c.Request.Context(), userID, media.ID)
+	_, err = server.UserMediaBindings.Create(c.Request.Context(), usermediabindings.CreateCommand{
+		UserID:  userID,
+		MediaID: media.ID,
+	})
 	if err != nil {
 		logrus.Errorf("[InitUpload] UserMediaBindings creation failed: %w", err)
 		c.AbortWithStatus(http.StatusInternalServerError)
@@ -177,7 +190,10 @@ func (server *Server) startUploadInBackground(requestID, userID, fileNameOnServe
 		uploadRequest.err = err
 		uploadRequest.cancelFunc()
 		deleteUploadRequestAfter(0*time.Second, requestID, userID)
-		err := server.UploadRequests.UpdateStatus(context.Background(), requestID, dbservices.FAILED_UPLOAD_STATUS)
+		err := server.UploadRequests.UpdateStatus(context.Background(), uploadrequests.UpdateStatusCommand{
+			ID:     requestID,
+			Status: uploadrequests.FAILED_UPLOAD_STATUS,
+		})
 		if err != nil {
 			logrus.Errorf("[server.startUploadInBackground] uploadRequest update status failed: %v", err)
 		}
@@ -187,7 +203,10 @@ func (server *Server) startUploadInBackground(requestID, userID, fileNameOnServe
 	uploadRequest.completed = true
 	uploadRequest.err = nil
 	uploadRequest.cancelFunc()
-	err = server.UploadRequests.UpdateStatus(context.Background(), requestID, dbservices.COMPLETED_UPLOAD_STATUS)
+	err = server.UploadRequests.UpdateStatus(context.Background(), uploadrequests.UpdateStatusCommand{
+		ID:     requestID,
+		Status: uploadrequests.COMPLETED_UPLOAD_STATUS,
+	})
 	if err != nil {
 		logrus.Errorf("[server.startUploadInBackground] uploadRequest update status failed: %v", err)
 	}
@@ -360,9 +379,16 @@ func (server *Server) UploadThumbnail(c *gin.Context) {
 		c.AbortWithStatus(http.StatusUnauthorized)
 		return
 	}
-	media, err := server.Media.FindByUploadRequest(c.Request.Context(), requestID)
+	media, err := server.Media.GetByUploadRequestID(c.Request.Context(), media.GetByUploadRequestQuery{
+		UploadRequestID: requestID,
+	})
 	if errors.Is(err, gorm.ErrRecordNotFound) {
 		c.AbortWithStatus(http.StatusNotFound)
+		return
+	}
+	if err != nil {
+		logrus.Errorf("[UploadThumbnail]: %w", err)
+		c.AbortWithStatus(http.StatusInternalServerError)
 		return
 	}
 	thumbnailFileName := genThumbnailName(media.FileName)
@@ -373,7 +399,10 @@ func (server *Server) UploadThumbnail(c *gin.Context) {
 		return
 	}
 	logrus.Infof("[server.UploadThumbnail] upload completed: %v", uploadedInfo)
-	err = server.MediaMetadata.UpdateThumbnail(c.Request.Context(), media.MetadataID, true)
+	err = server.MediaMetadata.UpdateThumbnail(c.Request.Context(), mediametadata.UpdateThumbnailCommand{
+		Thumbnail: true,
+		ID:        media.MetadataID,
+	})
 	if err != nil {
 		logrus.Errorf("[server.UploadThumbnail] failed to update media metadata: %w", err)
 		c.AbortWithStatus(http.StatusInternalServerError)

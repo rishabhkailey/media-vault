@@ -9,7 +9,9 @@ import (
 
 	"github.com/gin-gonic/gin"
 	"github.com/minio/minio-go/v7"
-	dbservices "github.com/rishabhkailey/media-service/internal/db/services"
+	"github.com/rishabhkailey/media-service/internal/services/media"
+	mediametadata "github.com/rishabhkailey/media-service/internal/services/mediaMetadata"
+	usermediabindings "github.com/rishabhkailey/media-service/internal/services/userMediaBindings"
 	"github.com/rishabhkailey/media-service/internal/utils"
 	"github.com/sirupsen/logrus"
 )
@@ -29,7 +31,7 @@ type MediaListRequestParams struct {
 type MediaApiData struct {
 	MediaUrl     string `json:"url"`
 	ThumbnailUrl string `json:"thumbnail_url"`
-	dbservices.Metadata
+	mediametadata.Metadata
 }
 
 // todo- ignore upload status failed media
@@ -52,7 +54,13 @@ func (server *Server) MediaList(c *gin.Context) {
 		c.AbortWithStatus(http.StatusBadRequest)
 		return
 	}
-	mediaList, err := server.Media.GetUserMediaList(c.Request.Context(), userID, requestBody.OrderBy, requestBody.Sort, int((requestBody.Page-1)*requestBody.PerPage), int(requestBody.PerPage))
+	mediaList, err := server.Media.GetByUserID(c.Request.Context(), media.GetByUserIDQuery{
+		UserID:  userID,
+		OrderBy: requestBody.OrderBy,
+		Sort:    requestBody.Sort,
+		Offset:  int((requestBody.Page - 1) * requestBody.PerPage),
+		Limit:   int(requestBody.PerPage),
+	})
 	if err != nil {
 		logrus.Errorf("[MediaList] db.GetUserMediaList failed: %w", err)
 		c.AbortWithStatus(http.StatusInternalServerError)
@@ -107,18 +115,18 @@ func (requestBody *MediaListRequestParams) initDefaultValues() {
 		requestBody.PerPage = MAX_MEDIA_PER_PAGE
 	}
 	if len(requestBody.OrderBy) == 0 {
-		requestBody.OrderBy = dbservices.ORDER_BY_MEDIA_CREATION_TIME
+		requestBody.OrderBy = usermediabindings.ORDER_BY_MEDIA_CREATION_TIME
 	}
 	if len(requestBody.Sort) == 0 {
-		requestBody.Sort = dbservices.SORT_DESCENDING
+		requestBody.Sort = usermediabindings.SORT_DESCENDING
 	}
 }
 
 func (requestBody *MediaListRequestParams) validate() error {
-	if !utils.Contains(dbservices.SUPPORTED_ORDER_BY, requestBody.OrderBy) {
+	if !utils.Contains(usermediabindings.SUPPORTED_ORDER_BY, requestBody.OrderBy) {
 		return fmt.Errorf("invalid orderBy value")
 	}
-	if requestBody.Sort != dbservices.SORT_ASCENDING && requestBody.Sort != dbservices.SORT_DESCENDING {
+	if requestBody.Sort != usermediabindings.SORT_ASCENDING && requestBody.Sort != usermediabindings.SORT_DESCENDING {
 		return fmt.Errorf("invalid sort value")
 	}
 	return nil
@@ -242,7 +250,9 @@ func (server *Server) getMediaType(ctx context.Context, fileName string) (mediaT
 	if err == nil && len(mediaType) != 0 {
 		return mediaType, err
 	}
-	mediaType, err = server.Media.GetMediaTypeByFileName(ctx, fileName)
+	mediaType, err = server.Media.GetTypeByFileName(ctx, media.GetTypeByFileNameQuery{
+		FileName: fileName,
+	})
 	if err != nil {
 		if err := server.RedisStore.SetMediaType(ctx, fileName, mediaType); err != nil {
 			logrus.Warnf("[getMediaType] redis set media type failed: %w", err)
@@ -284,7 +294,7 @@ func (server *Server) GetThumbnail(c *gin.Context) {
 	}
 	// setting content length and not returning that conent will cause the js fetch to stuck so only set the content length after the data is written
 	c.Header("Content-Length", fmt.Sprintf("%d", objInfo.Size))
-	c.Header("Content-Type", dbservices.IMAGE_JPEG)
+	c.Header("Content-Type", mediametadata.TYPE_IMAGE_JPEG)
 	c.Header("Connection", "keep-alive")
 	c.Status(http.StatusOK)
 }

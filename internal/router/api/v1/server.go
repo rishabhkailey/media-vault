@@ -8,6 +8,7 @@ import (
 	"github.com/rishabhkailey/media-service/internal/auth"
 	"github.com/rishabhkailey/media-service/internal/config"
 	"github.com/rishabhkailey/media-service/internal/db"
+	"github.com/rishabhkailey/media-service/internal/services"
 	"gorm.io/gorm"
 )
 
@@ -18,7 +19,7 @@ type Server struct {
 	Minio            *minio.Client
 	OidcClient       auth.OidcClient
 	MinioObjectCache *db.MinioObjectCache
-	db.Services
+	services.Services
 }
 
 func NewServer(config *config.Config) (*Server, error) {
@@ -38,7 +39,7 @@ func NewServer(config *config.Config) (*Server, error) {
 		session.SetStore(db.NewRedisSessionStore(config.Cache)),
 	)
 
-	services, err := db.NewServices(DbConn)
+	services, err := services.NewServices(DbConn)
 	if err != nil {
 		return nil, err
 	}

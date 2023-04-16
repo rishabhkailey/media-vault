@@ -8,6 +8,7 @@ import (
 	"github.com/gin-gonic/gin"
 	"github.com/rishabhkailey/media-service/internal/auth"
 	"github.com/rishabhkailey/media-service/internal/db"
+	usermediabindings "github.com/rishabhkailey/media-service/internal/services/userMediaBindings"
 	"github.com/sirupsen/logrus"
 )
 
@@ -108,7 +109,10 @@ func (server *Server) SessionBasedMediaAuthMiddleware(c *gin.Context) {
 		c.Next()
 		return
 	}
-	ok, err := server.UserMediaBindings.CheckFileBelongsToUser(c.Request.Context(), userSession.UserID, fileName)
+	ok, err := server.UserMediaBindings.CheckFileBelongsToUser(c.Request.Context(), usermediabindings.CheckFileBelongsToUserQuery{
+		UserID:   userSession.UserID,
+		FileName: fileName,
+	})
 	if err != nil {
 		logrus.WithFields(logrus.Fields{"error": err, "function": "server.UserFileAuthMiddleware"}).Errorf("db.CheckFileBelongsToUser failed: %w", err)
 		c.AbortWithStatus(http.StatusInternalServerError)
