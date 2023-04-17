@@ -3,7 +3,7 @@ package app
 import (
 	"os"
 
-	"github.com/rishabhkailey/media-service/internal/router"
+	"github.com/rishabhkailey/media-service/internal/server"
 	"github.com/spf13/cobra"
 	"github.com/spf13/viper"
 )
@@ -24,7 +24,7 @@ It supports Authorization Code Grant flow.
 }
 
 func startServer(cmd *cobra.Command, args []string) error {
-	return router.Start()
+	return server.Start()
 }
 
 // Execute adds all child commands to the root command and sets flags appropriately.
