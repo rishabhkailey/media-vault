@@ -139,10 +139,10 @@ func (server *Server) GetMedia(c *gin.Context) {
 		return
 	}
 	rangeHeader := c.Request.Header["Range"]
-	var parsedRangeHeader *RangeHeader
+	var parsedRangeHeader *utils.RangeHeader
 	if len(rangeHeader) != 0 && len(rangeHeader[0]) != 0 {
 		var err error
-		parsedRangeHeader, err = parseRangeHeader(rangeHeader[0])
+		parsedRangeHeader, err = utils.ParseRangeHeader(rangeHeader[0])
 		if err != nil {
 			logrus.Errorf("[GetMedia] parse range header failed: %w", err)
 			c.AbortWithStatus(http.StatusInternalServerError)
@@ -163,11 +163,11 @@ func (server *Server) GetMedia(c *gin.Context) {
 		return
 	}
 	// todo support for multiple ranges
-	if parsedRangeHeader == nil || len(parsedRangeHeader.ranges) != 1 {
+	if parsedRangeHeader == nil || len(parsedRangeHeader.Ranges) != 1 {
 		server.getMedia(c, object, mediaType)
 		return
 	}
-	server.GetMediaRange(c, parsedRangeHeader.ranges[0], object, mediaType)
+	server.GetMediaRange(c, parsedRangeHeader.Ranges[0], object, mediaType)
 }
 
 func (server *Server) getMedia(c *gin.Context, object *minio.Object, contentType string) {
@@ -201,7 +201,7 @@ func (server *Server) getMedia(c *gin.Context, object *minio.Object, contentType
 // https://vjs.zencdn.net/v/oceans.mp4 this return a 200 response with content length only?
 // if range end not provided
 const defaultRangeSize int64 = 1000000 // 1mb
-func (server *Server) GetMediaRange(c *gin.Context, r Range, object *minio.Object, contentType string) {
+func (server *Server) GetMediaRange(c *gin.Context, r utils.Range, object *minio.Object, contentType string) {
 
 	objInfo, err := object.Stat()
 	if err != nil {
@@ -212,17 +212,17 @@ func (server *Server) GetMediaRange(c *gin.Context, r Range, object *minio.Objec
 		c.Status(http.StatusInternalServerError)
 		return
 	}
-	if r.end == -1 {
-		r.end = r.start + defaultRangeSize
+	if r.End == -1 {
+		r.End = r.Start + defaultRangeSize
 	}
-	if r.end > objInfo.Size-1 {
-		r.end = objInfo.Size - 1
+	if r.End > objInfo.Size-1 {
+		r.End = objInfo.Size - 1
 	}
-	contentLength := r.end - r.start + 1
+	contentLength := r.End - r.Start + 1
 	// c.SSEvent()
 	// todo use of stream?
 	logrus.WithField("range", r).Info("request received")
-	_, err = object.Seek(r.start, 0)
+	_, err = object.Seek(r.Start, 0)
 	if err != nil {
 		c.AbortWithStatus(http.StatusInternalServerError)
 		return
@@ -233,7 +233,7 @@ func (server *Server) GetMediaRange(c *gin.Context, r Range, object *minio.Objec
 	c.Header("Content-Length", fmt.Sprintf("%d", contentLength))
 	c.Header("Content-Type", contentType)
 	c.Header("Connection", "keep-alive")
-	c.Header("Content-Range", fmt.Sprintf("bytes %d-%d/%d", r.start, r.end, objInfo.Size))
+	c.Header("Content-Range", fmt.Sprintf("bytes %d-%d/%d", r.Start, r.End, objInfo.Size))
 	c.Header("Accept-Ranges", "bytes")
 	n, err := io.CopyN(c.Writer, object, contentLength)
 	logrus.WithField("bytes", n).Info("sent")

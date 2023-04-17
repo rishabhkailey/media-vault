@@ -1,4 +1,4 @@
-package v1
+package utils
 
 import (
 	"testing"
@@ -53,11 +53,11 @@ func TestParseRangeHeader(t *testing.T) {
 			name:  "range without end",
 			input: "bytes=0-",
 			expectedOutput: &RangeHeader{
-				unit: "bytes",
-				ranges: []Range{
+				Unit: "bytes",
+				Ranges: []Range{
 					{
-						start: 0,
-						end:   -1,
+						Start: 0,
+						End:   -1,
 					},
 				},
 			},
@@ -67,15 +67,15 @@ func TestParseRangeHeader(t *testing.T) {
 			name:  "multiple range",
 			input: "bytes=0-10, 10-100",
 			expectedOutput: &RangeHeader{
-				unit: "bytes",
-				ranges: []Range{
+				Unit: "bytes",
+				Ranges: []Range{
 					{
-						start: 0,
-						end:   10,
+						Start: 0,
+						End:   10,
 					},
 					{
-						start: 10,
-						end:   100,
+						Start: 10,
+						End:   100,
 					},
 				},
 			},
@@ -83,7 +83,7 @@ func TestParseRangeHeader(t *testing.T) {
 		},
 	}
 	for _, test := range tests {
-		output, err := parseRangeHeader(test.input)
+		output, err := ParseRangeHeader(test.input)
 		if test.errorExpected {
 			assert.Error(t, err, test.name)
 			continue
