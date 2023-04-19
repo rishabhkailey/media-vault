@@ -15,6 +15,7 @@ type store interface {
 	GetByUploadRequestID(context.Context, string) (media.Model, error)
 	GetByFileName(context.Context, string) (media.Model, error)
 	GetByUserID(context.Context, media.GetByUserIDQuery) ([]media.Model, error)
+	GetByMediaIDs(context.Context, []uint) ([]media.Model, error)
 	GetTypeByFileName(context.Context, string) (string, error)
 }
 
@@ -66,5 +67,10 @@ func (s *sqlStore) GetTypeByFileName(ctx context.Context, fileName string) (medi
 	if err == nil {
 		mediaType = media.Metadata.Type
 	}
+	return
+}
+
+func (s *sqlStore) GetByMediaIDs(ctx context.Context, mediaIDs []uint) (mediaList []media.Model, err error) {
+	err = s.db.WithContext(ctx).Joins("Metadata").Model(&media.Model{}).Where("media.id IN (?)", mediaIDs).Find(&mediaList).Error
 	return
 }

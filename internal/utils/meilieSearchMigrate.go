@@ -1,12 +1,14 @@
 package utils
 
 import (
+	"context"
 	"errors"
 	"fmt"
 	"sync"
 
 	"github.com/meilisearch/meilisearch-go"
-	"github.com/rishabhkailey/media-service/internal/db"
+	mediasearch "github.com/rishabhkailey/media-service/internal/services/mediaSearch"
+	mediasearchimpl "github.com/rishabhkailey/media-service/internal/services/mediaSearch/mediaSearchimpl"
 	usermediabindings "github.com/rishabhkailey/media-service/internal/services/userMediaBindings"
 	"github.com/sirupsen/logrus"
 	"gorm.io/gorm"
@@ -27,22 +29,9 @@ func MeiliSearchMigrate(gormDB *gorm.DB, meiliSearch *meilisearch.Client, batchS
 	var offset int64 = 0
 	var batchNumber int = 0
 	var waitGroup sync.WaitGroup
-	mediaIndex := meiliSearch.Index("media")
-	resp, err := mediaIndex.UpdateSearchableAttributes(&db.MeilieSearchMediaIndexSearchable)
+	mediaSearch, err := mediasearchimpl.NewService(meiliSearch)
 	if err != nil {
-		return fmt.Errorf("[MeiliSearchMigrate] update searchable attributes failed: %w", err)
-	}
-	// wait for UpdateSearchableAttributes
-	{
-		task, err := meiliSearch.WaitForTask(resp.TaskUID)
-		if err == nil && task.Status == meilisearch.TaskStatusFailed {
-			err = errors.New(task.Error.Message)
-		}
-		if err != nil {
-			return fmt.Errorf("[MeiliSearchMigrate] update searchable attributes failed: %w", err)
-		} else {
-			logrus.Info("[MeiliSearchMigrate] succesfuly update searchable attribute")
-		}
+		return err
 	}
 	for offset < total {
 		mediaList, err := getMediaBatch(gormDB, int(offset), batchSize)
@@ -60,14 +49,14 @@ func MeiliSearchMigrate(gormDB *gorm.DB, meiliSearch *meilisearch.Client, batchS
 		if len(meiliSearchMediaList) != len(mediaList) {
 			return fmt.Errorf("[MeiliSearchMigrate] meiliSearchMediaList returned slice of different length for batch %v", batchNumber)
 		}
-		taskInfo, err := mediaIndex.AddDocuments(meiliSearchMediaList, "media_id")
+		taskID, err := mediaSearch.CreateMany(context.Background(), meiliSearchMediaList)
 		if err != nil {
 			return fmt.Errorf("[MeiliSearchMigrate] add documents failed for batch %v: %w", batchNumber, err)
 		}
-		logrus.Infof("[MeiliSearchMigrate] batch %d status is %v", batchNumber, taskInfo.Status)
+		logrus.Infof("[MeiliSearchMigrate] batch %d is proccessing", batchNumber)
 		waitGroup.Add(1)
 		go func(batchNumber int) {
-			task, err := meiliSearch.WaitForTask(taskInfo.TaskUID)
+			task, err := meiliSearch.WaitForTask(taskID)
 			if err == nil && task.Status == meilisearch.TaskStatusFailed {
 				err = errors.New(task.Error.Message)
 			}
@@ -86,17 +75,18 @@ func MeiliSearchMigrate(gormDB *gorm.DB, meiliSearch *meilisearch.Client, batchS
 	return nil
 }
 
-func toMeiliSearchMediaIndex(userMediaBindingList []usermediabindings.Model) (meiliSearchMediaList []db.MeiliSearchMediaIndex, err error) {
+func toMeiliSearchMediaIndex(userMediaBindingList []usermediabindings.Model) (meiliSearchMediaList []mediasearch.Model, err error) {
 	defer func() {
 		if r := recover(); r != nil {
 			err = fmt.Errorf("[toMeiliSearchMediaIndex] panic :%v", r)
 		}
 	}()
 	for _, userMediaBinding := range userMediaBindingList {
-		meiliSearchMediaList = append(meiliSearchMediaList, db.MeiliSearchMediaIndex{
-			MediaID: userMediaBinding.Media.ID,
-			UserID:  userMediaBinding.UserID,
-			Metadata: db.MeiliSearchMediaMetadata{
+		meiliSearchMediaList = append(meiliSearchMediaList, mediasearch.Model{
+			MediaID:    userMediaBinding.Media.ID,
+			UserID:     userMediaBinding.UserID,
+			UploadedAt: userMediaBinding.CreatedAt.Unix(),
+			Metadata: mediasearch.MeiliSearchMediaMetadata{
 				Name:      userMediaBinding.Media.Metadata.Name,
 				Type:      userMediaBinding.Media.Metadata.Type,
 				Timestamp: userMediaBinding.Media.Metadata.Date.Unix(),

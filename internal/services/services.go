@@ -1,10 +1,13 @@
 package services
 
 import (
+	"github.com/meilisearch/meilisearch-go"
 	"github.com/rishabhkailey/media-service/internal/services/media"
 	"github.com/rishabhkailey/media-service/internal/services/media/mediaimpl"
 	mediametadata "github.com/rishabhkailey/media-service/internal/services/mediaMetadata"
 	mediametadataimpl "github.com/rishabhkailey/media-service/internal/services/mediaMetadata/mediaMetadataImpl"
+	mediasearch "github.com/rishabhkailey/media-service/internal/services/mediaSearch"
+	mediasearchimpl "github.com/rishabhkailey/media-service/internal/services/mediaSearch/mediaSearchimpl"
 	uploadrequests "github.com/rishabhkailey/media-service/internal/services/uploadRequests"
 	"github.com/rishabhkailey/media-service/internal/services/uploadRequests/uploadrequestsimpl"
 	usermediabindings "github.com/rishabhkailey/media-service/internal/services/userMediaBindings"
@@ -17,9 +20,10 @@ type Services struct {
 	MediaMetadata     mediametadata.Service
 	UserMediaBindings usermediabindings.Service
 	UploadRequests    uploadrequests.Service
+	MediaSearch       mediasearch.Service
 }
 
-func NewServices(db *gorm.DB) (*Services, error) {
+func NewServices(db *gorm.DB, ms *meilisearch.Client) (*Services, error) {
 	// order matters, order of table creation
 	uploadRequestsService, err := uploadrequestsimpl.NewService(db)
 	if err != nil {
@@ -37,11 +41,15 @@ func NewServices(db *gorm.DB) (*Services, error) {
 	if err != nil {
 		return nil, err
 	}
-
+	mediaSearchService, err := mediasearchimpl.NewService(ms)
+	if err != nil {
+		return nil, err
+	}
 	return &Services{
 		Media:             mediaService,
 		UserMediaBindings: userMediaBindingsService,
 		MediaMetadata:     mediaMetadataService,
 		UploadRequests:    uploadRequestsService,
+		MediaSearch:       mediaSearchService,
 	}, nil
 }

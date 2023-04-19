@@ -53,3 +53,7 @@ func (s *Service) GetByUserID(ctx context.Context, query media.GetByUserIDQuery)
 func (s *Service) GetTypeByFileName(ctx context.Context, query media.GetTypeByFileNameQuery) (string, error) {
 	return s.store.GetTypeByFileName(ctx, query.FileName)
 }
+
+func (s *Service) GetByMediaIDs(ctx context.Context, mediaIDs []uint) ([]media.Model, error) {
+	return s.store.GetByMediaIDs(ctx, mediaIDs)
+}

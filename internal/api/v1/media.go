@@ -16,9 +16,14 @@ import (
 	"github.com/sirupsen/logrus"
 )
 
-// todo better name
-const MAX_MEDIA_PER_PAGE uint = 100
-const DEFAULT_MEDIA_PER_PAGE uint = 30
+const (
+	MEDIA_API_MAX_PER_PAGE                 uint   = 100
+	MEDIA_API_DEFAULT_PER_PAGE             uint   = 30
+	MEDIA_API_ORDER_BY_UPLOAD_TIME         string = "created_at"
+	MEDIA_API_ORDER_BY_MEDIA_CREATION_TIME string = "date"
+)
+
+var SUPPORTED_ORDER_BY = []string{MEDIA_API_ORDER_BY_MEDIA_CREATION_TIME, MEDIA_API_ORDER_BY_UPLOAD_TIME}
 
 type MediaListRequestParams struct {
 	Page    uint   `form:"page" json:"page,omitempty"`
@@ -109,10 +114,10 @@ func (requestBody *MediaListRequestParams) initDefaultValues() {
 		requestBody.Page = 1
 	}
 	if requestBody.PerPage == 0 {
-		requestBody.PerPage = DEFAULT_MEDIA_PER_PAGE
+		requestBody.PerPage = MEDIA_API_DEFAULT_PER_PAGE
 	}
-	if requestBody.PerPage > MAX_MEDIA_PER_PAGE {
-		requestBody.PerPage = MAX_MEDIA_PER_PAGE
+	if requestBody.PerPage > MEDIA_API_MAX_PER_PAGE {
+		requestBody.PerPage = MEDIA_API_MAX_PER_PAGE
 	}
 	if len(requestBody.OrderBy) == 0 {
 		requestBody.OrderBy = usermediabindings.ORDER_BY_MEDIA_CREATION_TIME

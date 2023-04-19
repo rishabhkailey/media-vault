@@ -23,7 +23,6 @@ type Server struct {
 }
 
 func NewServer(config *config.Config) (*Server, error) {
-
 	redisStore, err := db.NewRedisStore(config.Cache)
 	if err != nil {
 		return nil, err
@@ -39,7 +38,12 @@ func NewServer(config *config.Config) (*Server, error) {
 		session.SetStore(db.NewRedisSessionStore(config.Cache)),
 	)
 
-	services, err := services.NewServices(DbConn)
+	meiliSearchClient, err := db.NewMeiliSearchClient(config.MeiliSearch)
+	if err != nil {
+		return nil, err
+	}
+
+	services, err := services.NewServices(DbConn, meiliSearchClient)
 	if err != nil {
 		return nil, err
 	}
