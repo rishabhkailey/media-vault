@@ -1,20 +1,38 @@
 <script setup lang="ts">
 import axios from "axios";
-import { computed, inject, ref, type Ref, watch } from "vue";
+import { computed, inject, ref, type Ref, watch, provide } from "vue";
 import { useStore } from "vuex";
-import { initializingKey } from "@/symbols/injectionSymbols";
-import { LOAD_MORE_MEDIA_ACTION } from "@/store/modules/media";
+import {
+  initializingKey,
+  loadMoreMediaKey,
+  allMediaLoadedKey,
+  mediaListKey,
+} from "@/symbols/injectionSymbols";
 import MonthlyThumbnailPreview from "./MonthlyThumbnailPreview.vue";
 import { getMonthlyMediaIndex } from "@/utils/date";
+
+const props = defineProps<{
+  mediaList: Array<Media>;
+  allMediaLoaded: boolean;
+  loadMoreMedia: () => Promise<any>;
+}>();
+
+provide(
+  mediaListKey,
+  computed(() => props.mediaList)
+);
+provide(
+  allMediaLoadedKey,
+  computed(() => props.allMediaLoaded)
+);
+provide(loadMoreMediaKey, props.loadMoreMedia);
 
 const store = useStore();
 const initializing: Ref<boolean> | undefined = inject(initializingKey);
 const accessToken = computed<string>(() => store.getters.accessToken);
-const mediaList = computed<Array<Media>>(() => store.getters.mediaList);
-const allMediaLoaded = computed<boolean>(() => store.getters.allMediaLoaded);
 
 const monthlyMediaList = computed<Array<MonthlyMedia>>(() =>
-  getMonthlyMediaIndex(mediaList.value)
+  getMonthlyMediaIndex(props.mediaList)
 );
 if (initializing === undefined) {
   throw new Error("undefined initializing");
@@ -54,9 +72,9 @@ const observer = new IntersectionObserver(
           console.log("lazyApiLoadObserverTarget matched");
           if (!lazyApiLoadTimedOut) {
             observer.unobserve(lazyApiLoadObserverTarget.value);
-            store.dispatch(LOAD_MORE_MEDIA_ACTION).then(() => {
+            props.loadMoreMedia().then(() => {
               if (
-                !allMediaLoaded.value &&
+                !props.allMediaLoaded &&
                 lazyApiLoadObserverTarget.value !== undefined
               ) {
                 observer.observe(lazyApiLoadObserverTarget.value);

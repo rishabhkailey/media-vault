@@ -17,6 +17,8 @@ import EncryptedVideoPlayView from "@/views/EncryptedVideoPlayView.vue";
 import VideoThumbnailView from "@/views/VideoThumbnailView.vue";
 import PKCEVue from "@/views/PKCE.vue";
 import MediaView from "@/views/MediaView.vue";
+import SearchView from "@/views/SearchView.vue";
+import HomePageVue from "@/components/HomePage.vue";
 // todo pages without redirect from vue should be lazy loaded on external/server redirect
 const router = createRouter({
   history: createWebHistory(import.meta.env.BASE_URL),
@@ -28,8 +30,19 @@ const router = createRouter({
     },
     {
       path: "/",
-      name: "Home",
       component: HomeView,
+      children: [
+        {
+          path: "",
+          component: HomePageVue,
+          name: "Home",
+        },
+        {
+          path: "search/:query",
+          component: SearchView,
+          name: "search",
+        },
+      ],
     },
     {
       path: "/error",

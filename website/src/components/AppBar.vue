@@ -10,7 +10,9 @@ import { signinUsingUserManager } from "@/utils/auth";
 import axios from "axios";
 import { useDisplay } from "vuetify/lib/framework.mjs";
 import SearchInputField from "./SearchInputField.vue";
+import { useRouter } from "vue-router";
 
+const router = useRouter();
 const display = useDisplay();
 const smallDisplay = computed(
   () => display.mobile.value || display.smAndDown.value
@@ -71,6 +73,18 @@ const uploadFiles = (files: Array<File>) => {
   console.log(files);
 };
 console.log(display.mobile.value);
+
+const searchSubmit = () => {
+  if (search.value.trim().length === 0) {
+    return;
+  }
+  router.push({
+    name: `search`,
+    params: {
+      query: search.value,
+    },
+  });
+};
 </script>
 
 <template>
@@ -96,6 +110,7 @@ console.log(display.mobile.value);
           v-if="!smallDisplay"
           v-model="search"
           :collapsed="false"
+          @submit="searchSubmit"
         />
       </v-col>
       <!-- end -->
@@ -108,6 +123,7 @@ console.log(display.mobile.value);
               v-if="smallDisplay"
               v-model="search"
               :collapsed="true"
+              @submit="searchSubmit"
             />
           </div>
           <div>

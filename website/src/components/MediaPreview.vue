@@ -1,27 +1,36 @@
 <script setup lang="ts">
-import { computed, ref } from "vue";
+import { inject, ref, type Ref } from "vue";
 import ImagePreview from "./ImagePreview.vue";
 import VideoPreview from "./VideoPreview.vue";
 import { download } from "@/utils/encryptedFileDownload";
-import { useStore } from "vuex";
-import { LOAD_MORE_MEDIA_ACTION } from "@/store/modules/media";
-
-const store = useStore();
+import {
+  loadMoreMediaKey,
+  allMediaLoadedKey,
+  mediaListKey,
+} from "@/symbols/injectionSymbols";
 
 const props = defineProps<{
   index: number;
 }>();
 
-const mediaList = computed<Array<Media>>(() => store.getters.mediaList);
-const allMediaLoaded = computed<boolean>(() => store.getters.allMediaLoaded);
-const loadMoreMedia = () => store.dispatch(LOAD_MORE_MEDIA_ACTION);
+const mediaList = inject<Ref<Array<Media>>>(mediaListKey);
+const loadMoreMedia = inject<() => Promise<Boolean>>(loadMoreMediaKey);
+const allMediaLoaded = inject<Ref<boolean>>(allMediaLoadedKey);
+
+if (
+  mediaList === undefined ||
+  loadMoreMedia === undefined ||
+  allMediaLoaded === undefined
+) {
+  throw new Error("got undefined props from inject");
+}
 
 const emits = defineEmits<{
   (e: "close"): void;
 }>();
 
 const internalIndex = ref(props.index);
-const media = ref(mediaList.value[props.index]);
+const media = ref<Media>(mediaList.value[props.index]);
 const loadingMoreMedia = ref(false);
 const next = () => {
   if (internalIndex.value <= mediaList.value.length - 2) {

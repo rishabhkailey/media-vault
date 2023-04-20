@@ -11,11 +11,14 @@ import decryptWorker from "@/worker/decrypt?url";
 // todo if not authenticated redirect to some different page
 // maybe /about
 import { useDisplay } from "vuetify";
+import { useRoute } from "vue-router";
 const display = useDisplay();
 
 const smallDisplay = computed(
   () => display.mobile.value || display.smAndDown.value
 );
+
+const route = useRoute();
 const initializingRef = ref(true);
 const navigationBar = ref(!smallDisplay.value);
 provide(initializingKey, initializingRef);
@@ -193,7 +196,8 @@ const test = (value: boolean) => {
           class="d-flex flex-column align-stretch"
         >
           <div class="flex-grow-1" style="overflow-y: scroll">
-            <HomePage />
+            <!-- <HomePage /> -->
+            <RouterView :key="route.fullPath" />
           </div>
         </v-main>
       </v-layout>

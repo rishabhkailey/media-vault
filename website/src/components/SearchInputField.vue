@@ -1,5 +1,6 @@
 <script setup lang="ts">
 import { ref, watch } from "vue";
+import type { SubmitEventPromise } from "vuetify/lib/framework.mjs";
 
 const props = withDefaults(
   defineProps<{
@@ -10,6 +11,7 @@ const props = withDefaults(
 );
 const emits = defineEmits<{
   (e: "update:modelValue", value: string): void;
+  (e: "submit", value: SubmitEventPromise): void;
 }>();
 const searchInputRules: Array<any> = [];
 const searchDialog = ref(false);
@@ -28,7 +30,10 @@ watch(searchElement, (newValue) => {
 </script>
 
 <template>
-  <v-form class="d-flex flex-grow-1">
+  <v-form
+    class="d-flex flex-grow-1"
+    @submit.prevent="(e) => emits('submit', e)"
+  >
     <v-text-field
       v-if="!props.collapsed"
       :clearable="true"
