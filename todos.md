@@ -29,6 +29,7 @@
 * password storage client side (https://developer.mozilla.org/en-US/docs/Learn/JavaScript/Client-side_web_APIs/Client-side_storage)
 * status column in media table
 * code structure https://github.com/grafana/grafana/blob/main/pkg/services
+* upload request returns the media so it can be added to the list and user can see it without page refresh 
 
 ## Problems
 * avi format not supported so we might need to transcode videos and files
