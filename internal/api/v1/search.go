@@ -59,24 +59,11 @@ func (server *Server) Search(c *gin.Context) {
 	}
 	response := []MediaApiData{}
 	for _, media := range mediaList {
-		mediaUrl, err := server.parseMediaURL(media.FileName, false)
+		mediaData, err := NewMediaApiData(media)
 		if err != nil {
-			logrus.Errorf("[Search] error parsing media url: %w", err)
+			logrus.Errorf("[Search] NewMediaApiData failed: %w", err)
 			c.AbortWithStatus(http.StatusInternalServerError)
 			return
-		}
-		mediaData := MediaApiData{
-			MediaUrl: mediaUrl,
-			Metadata: media.Metadata.Metadata,
-		}
-		if media.Metadata.Thumbnail {
-			thumbnailUrl, err := server.parseMediaURL(media.FileName, true)
-			if err != nil {
-				logrus.Errorf("[Search] error parsing media url: %w", err)
-				c.AbortWithStatus(http.StatusInternalServerError)
-				return
-			}
-			mediaData.ThumbnailUrl = thumbnailUrl
 		}
 		response = append(response, mediaData)
 	}

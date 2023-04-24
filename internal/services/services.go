@@ -1,13 +1,17 @@
 package services
 
 import (
+	"github.com/go-redis/redis/v8"
 	"github.com/meilisearch/meilisearch-go"
+	"github.com/minio/minio-go/v7"
 	"github.com/rishabhkailey/media-service/internal/services/media"
 	"github.com/rishabhkailey/media-service/internal/services/media/mediaimpl"
 	mediametadata "github.com/rishabhkailey/media-service/internal/services/mediaMetadata"
 	mediametadataimpl "github.com/rishabhkailey/media-service/internal/services/mediaMetadata/mediaMetadataImpl"
 	mediasearch "github.com/rishabhkailey/media-service/internal/services/mediaSearch"
 	mediasearchimpl "github.com/rishabhkailey/media-service/internal/services/mediaSearch/mediaSearchimpl"
+	mediastorage "github.com/rishabhkailey/media-service/internal/services/mediaStorage"
+	"github.com/rishabhkailey/media-service/internal/services/mediaStorage/mediastorageimpl"
 	uploadrequests "github.com/rishabhkailey/media-service/internal/services/uploadRequests"
 	"github.com/rishabhkailey/media-service/internal/services/uploadRequests/uploadrequestsimpl"
 	usermediabindings "github.com/rishabhkailey/media-service/internal/services/userMediaBindings"
@@ -21,15 +25,16 @@ type Services struct {
 	UserMediaBindings usermediabindings.Service
 	UploadRequests    uploadrequests.Service
 	MediaSearch       mediasearch.Service
+	MediaStorage      mediastorage.Service
 }
 
-func NewServices(db *gorm.DB, ms *meilisearch.Client) (*Services, error) {
+func NewServices(db *gorm.DB, ms *meilisearch.Client, minio *minio.Client, redis *redis.Client) (*Services, error) {
 	// order matters, order of table creation
 	uploadRequestsService, err := uploadrequestsimpl.NewService(db)
 	if err != nil {
 		return nil, err
 	}
-	mediaService, err := mediaimpl.NewService(db)
+	mediaService, err := mediaimpl.NewService(db, redis)
 	if err != nil {
 		return nil, err
 	}
@@ -45,11 +50,17 @@ func NewServices(db *gorm.DB, ms *meilisearch.Client) (*Services, error) {
 	if err != nil {
 		return nil, err
 	}
+	// todo move bucket name to config
+	mediaStorageService, err := mediastorageimpl.NewMinioService(minio, "test", uploadRequestsService)
+	if err != nil {
+		return nil, err
+	}
 	return &Services{
 		Media:             mediaService,
 		UserMediaBindings: userMediaBindingsService,
 		MediaMetadata:     mediaMetadataService,
 		UploadRequests:    uploadRequestsService,
 		MediaSearch:       mediaSearchService,
+		MediaStorage:      mediaStorageService,
 	}, nil
 }

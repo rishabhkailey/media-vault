@@ -3,7 +3,9 @@ package mediaimpl
 import (
 	"context"
 	"fmt"
+	"time"
 
+	"github.com/go-redis/redis/v8"
 	"github.com/rishabhkailey/media-service/internal/services/media"
 	usermediabindings "github.com/rishabhkailey/media-service/internal/services/userMediaBindings"
 	"gorm.io/gorm"
@@ -14,23 +16,26 @@ type store interface {
 	Insert(context.Context, *media.Model) (uint, error)
 	GetByUploadRequestID(context.Context, string) (media.Model, error)
 	GetByFileName(context.Context, string) (media.Model, error)
+	GetMediaWithMetadataByUploadRequestID(context.Context, string) (media.Model, error)
 	GetByUserID(context.Context, media.GetByUserIDQuery) ([]media.Model, error)
 	GetByMediaIDs(context.Context, []uint) ([]media.Model, error)
 	GetTypeByFileName(context.Context, string) (string, error)
 }
 
 type sqlStore struct {
-	db *gorm.DB
+	db    *gorm.DB
+	cache *redis.Client
 }
 
 var _ store = (*sqlStore)(nil)
 
-func newSqlStore(db *gorm.DB) (*sqlStore, error) {
+func newSqlStore(db *gorm.DB, cache *redis.Client) (*sqlStore, error) {
 	if err := db.Migrator().AutoMigrate(&media.Model{}); err != nil {
 		return nil, err
 	}
 	return &sqlStore{
-		db: db,
+		db:    db,
+		cache: cache,
 	}, nil
 }
 
@@ -41,6 +46,11 @@ func (s *sqlStore) Insert(ctx context.Context, media *media.Model) (uint, error)
 
 func (s *sqlStore) GetByUploadRequestID(ctx context.Context, uploadRequestID string) (media media.Model, err error) {
 	err = s.db.WithContext(ctx).First(&media, "upload_request_id = ?", uploadRequestID).Error
+	return
+}
+
+func (s *sqlStore) GetMediaWithMetadataByUploadRequestID(ctx context.Context, uploadRequestID string) (media media.Model, err error) {
+	err = s.db.WithContext(ctx).Preload("Metadata").First(&media, "upload_request_id = ?", uploadRequestID).Error
 	return
 }
 
@@ -60,13 +70,20 @@ func (s *sqlStore) GetByUserID(ctx context.Context, query media.GetByUserIDQuery
 	return
 }
 
+// todo instead just use minio file type ? but other storage types may not have this option
 func (s *sqlStore) GetTypeByFileName(ctx context.Context, fileName string) (mediaType string, err error) {
+	key := fmt.Sprintf("mediaType:%s", fileName)
+	mediaType, err = s.cache.Get(ctx, key).Result()
+	if err == nil {
+		return
+	}
 	db := s.db.WithContext(ctx)
 	media := media.Model{}
 	err = db.Preload("Metadata").First(&media, "file_name = ?", fileName).Error
 	if err == nil {
 		mediaType = media.Metadata.Type
 	}
+	s.cache.Set(ctx, key, mediaType, 1*time.Hour)
 	return
 }
 

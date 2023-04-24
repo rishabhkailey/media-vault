@@ -23,6 +23,13 @@ type Server struct {
 }
 
 func NewServer(config *config.Config) (*Server, error) {
+
+	redis, err := db.NewRedisClient(config.Cache)
+	if err != nil {
+		return nil, err
+	}
+
+	// todo remove this
 	redisStore, err := db.NewRedisStore(config.Cache)
 	if err != nil {
 		return nil, err
@@ -43,12 +50,12 @@ func NewServer(config *config.Config) (*Server, error) {
 		return nil, err
 	}
 
-	services, err := services.NewServices(DbConn, meiliSearchClient)
+	minioClient, err := db.NewMinioConnection(config.MinioConfig)
 	if err != nil {
 		return nil, err
 	}
 
-	minioClient, err := db.NewMinioConnection(config.MinioConfig)
+	services, err := services.NewServices(DbConn, meiliSearchClient, minioClient, redis)
 	if err != nil {
 		return nil, err
 	}

@@ -4,6 +4,7 @@ import (
 	"context"
 	"fmt"
 
+	"github.com/go-redis/redis/v8"
 	"github.com/google/uuid"
 	"github.com/rishabhkailey/media-service/internal/services/media"
 	"gorm.io/gorm"
@@ -15,8 +16,8 @@ type Service struct {
 
 var _ media.Service = (*Service)(nil)
 
-func NewService(db *gorm.DB) (media.Service, error) {
-	store, err := newSqlStore(db)
+func NewService(db *gorm.DB, cache *redis.Client) (media.Service, error) {
+	store, err := newSqlStore(db, cache)
 	if err != nil {
 		return nil, err
 	}
@@ -40,6 +41,10 @@ func (s *Service) Create(ctx context.Context, cmd media.CreateMediaCommand) (med
 
 func (s *Service) GetByUploadRequestID(ctx context.Context, query media.GetByUploadRequestQuery) (media.Model, error) {
 	return s.store.GetByUploadRequestID(ctx, query.UploadRequestID)
+}
+
+func (s *Service) GetMediaWithMetadataByUploadRequestID(ctx context.Context, query media.GetByUploadRequestQuery) (media.Model, error) {
+	return s.store.GetMediaWithMetadataByUploadRequestID(ctx, query.UploadRequestID)
 }
 
 func (s *Service) GetByFileName(ctx context.Context, query media.GetByFileNameQuery) (media.Model, error) {

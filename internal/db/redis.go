@@ -16,6 +16,18 @@ type RedisStore struct {
 	Client *redis.Client
 }
 
+func NewRedisClient(config config.RedisCacheConfig) (*redis.Client, error) {
+	redis := redis.NewClient(&redis.Options{
+		Addr:     fmt.Sprintf("%s:%d", config.Host, config.Port),
+		Password: config.Password,
+		DB:       config.Db,
+	})
+	if err := redis.Ping(context.Background()).Err(); err != nil {
+		return nil, err
+	}
+	return redis, nil
+}
+
 func NewRedisStore(config config.RedisCacheConfig) (*RedisStore, error) {
 	redis := redis.NewClient(&redis.Options{
 		Addr:     fmt.Sprintf("%s:%d", config.Host, config.Port),

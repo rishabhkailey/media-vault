@@ -6,6 +6,11 @@ import (
 	"strings"
 )
 
+// if range end not provided
+const defaultRangeSize int64 = 1000000 // 1mb
+
+// todo move to models directory?
+
 // range is inclusive
 type Range struct {
 	Start int64 // start will always be provided
@@ -62,7 +67,7 @@ func parseRange(r string) (*Range, error) {
 		if len(endStr) != 0 {
 			return nil, fmt.Errorf("invalid range: %w", err)
 		}
-		end = -1
+		end = start + defaultRangeSize
 	}
 	return &Range{
 		Start: int64(start),

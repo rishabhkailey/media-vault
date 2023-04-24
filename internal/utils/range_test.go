@@ -57,7 +57,7 @@ func TestParseRangeHeader(t *testing.T) {
 				Ranges: []Range{
 					{
 						Start: 0,
-						End:   -1,
+						End:   defaultRangeSize,
 					},
 				},
 			},
