@@ -50,14 +50,15 @@ func (s *Service) HttpGetRangeHandler(ctx context.Context, query mediastorage.Wr
 	if err != nil {
 		return 0, err
 	}
-	if query.Range.End > stat.Size()-1 {
-		query.Range.End = stat.Size() - 1
+	if query.Range.End > stat.Size() {
+		query.Range.End = stat.Size()
 	}
 	_, err = file.Seek(query.Range.Start, 0)
 	if err != nil {
 		return 0, err
 	}
-	contentLength := query.Range.End - query.Range.Start + 1
+	// range end exclusive
+	contentLength := query.Range.End - query.Range.Start
 	query.ResponseWriter.Header().Add("Content-Range", fmt.Sprintf("bytes %d-%d/%d", query.Range.Start, query.Range.End, stat.Size()))
 	return io.CopyN(query.ResponseWriter, file, contentLength)
 }

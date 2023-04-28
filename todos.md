@@ -151,3 +151,6 @@ Stack:
 curl -X GET 'http://localhost:8090/v1/mediaList?perPage=5&sort=desc&page=1' -H "Authorization: Bearer <token>" | tee test.json
 curl -v -X GET 'http://localhost:8090/v1/media?file=8379ada2-e309-4d3a-b4b8-18d49211748e' -H "Authorization: Bearer <token>" | tee test.json
 ```
+## next
+* cache integration in all stores
+* album and 1 default album (favourite)

@@ -113,6 +113,14 @@ func (server *Server) InitChunkUpload(c *gin.Context) {
 // todo check for multipart request
 // todo request size limit
 func (server *Server) UploadChunk(c *gin.Context) {
+	if c.Request.MultipartForm == nil {
+		err := c.Request.ParseMultipartForm(32 << 20)
+		if err != nil {
+			logrus.Error("[Server.uploadChunk] parse multpart form failed: %w", err)
+			c.AbortWithStatus(http.StatusBadRequest)
+			return
+		}
+	}
 	requestID := c.Request.PostFormValue("requestID")
 	if len(requestID) == 0 {
 		logrus.Error("[Server.uploadChunk] bad request: requestID param missing")
@@ -183,9 +191,17 @@ func (server *Server) UploadChunk(c *gin.Context) {
 
 // thumbnail is required to be of jpeg type only
 func (server *Server) UploadThumbnail(c *gin.Context) {
+	if c.Request.MultipartForm == nil {
+		err := c.Request.ParseMultipartForm(32 << 20)
+		if err != nil {
+			logrus.Error("[Server.uploadChunk] parse multpart form failed: %w", err)
+			c.AbortWithStatus(http.StatusBadRequest)
+			return
+		}
+	}
 	requestID := c.Request.PostFormValue("requestID")
 	if len(requestID) == 0 {
-		logrus.Error("[Server.uploadChunk] bad request: requestID param missing")
+		logrus.Error("[Server.UploadThumbnail] bad request: requestID param missing")
 		c.AbortWithStatus(http.StatusBadRequest)
 		return
 	}
@@ -194,26 +210,27 @@ func (server *Server) UploadThumbnail(c *gin.Context) {
 	{
 		value := c.Request.PostFormValue("size")
 		if len(value) == 0 {
-			logrus.Error("[Server.uploadChunk] bad request: size param missing")
+			logrus.Error("[Server.UploadThumbnail] bad request: size param missing")
 			c.AbortWithStatus(http.StatusBadRequest)
 			return
 		}
 		size, err = strconv.ParseInt(value, 10, 64)
 		if err != nil {
-			logrus.Error("[Server.uploadChunk] bad request: invalid size %v", value)
+			logrus.Error("[Server.UploadThumbnail] bad request: invalid size %v", value)
 			c.AbortWithStatus(http.StatusBadRequest)
 			return
 		}
 	}
+	// todo change the param to thumbnailData? consistency
 	thumbnail, _, err := c.Request.FormFile("thumbnail")
 	if err != nil {
-		logrus.Error("[Server.uploadChunk] bad request: chunkData param missing")
+		logrus.Error("[Server.UploadThumbnail] bad request: chunkData param missing")
 		c.AbortWithStatus(http.StatusBadRequest)
 		return
 	}
 	userID, ok := c.Keys["userID"].(string)
 	if !ok || len(userID) == 0 {
-		logrus.Error("[InitChunkUpload]: empty userID")
+		logrus.Error("[UploadThumbnail]: empty userID")
 		c.AbortWithStatus(http.StatusInternalServerError)
 		return
 	}
