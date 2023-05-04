@@ -68,11 +68,14 @@ export const mediaModule: Module<MediaModuleState, any> = {
           return;
         }
         axios
-          .get<Array<Media>>(`/v1/mediaList?page=${getters.nextPageNumber}`, {
-            headers: {
-              Authorization: `Bearer ${accessToken}`,
-            },
-          })
+          .get<Array<Media>>(
+            `/v1/mediaList?page=${getters.nextPageNumber}&perPage=30&order=date&sort=desc`,
+            {
+              headers: {
+                Authorization: `Bearer ${accessToken}`,
+              },
+            }
+          )
           .then((response) => {
             console.log(response);
             if (response.status == 200) {

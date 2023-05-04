@@ -11,7 +11,7 @@ import (
 )
 
 // copy it from the UI
-const AUTH_TOKEN = "eyJhbGciOiJSUzI1NiIsImtpZCI6IjAiLCJ0eXAiOiJKV1QifQ.eyJhdWQiOiJzcGEtdGVzdCIsImV4cCI6MTY4MjY1ODg1Nywic3ViIjoiMSJ9.CuUUPVXCL3iKjyARrMP8gremnjtZ5kKm1ma_gmZ9S06ItYuuiQJ-18H5fCAFrPc9gHd2Q2LOx_6dh03qXK76Ykkd7siGpQgiBATmP9ksL7hg4KFtGBpFkMMs_qJUnLkRiPsOwOw68lzEqWcxW42WVzSZ_-Gv1351kb6jiAWjLqduxjuEWztxnefRsPXUf8mN-CvzwvL3mv2FoVlLDBcFCuZvzzrz27rqvPYORgVu3QvEBRCiB-SGIog04rUMPYxJigp8v1YNAlYmYQlr6Jksz4wCU3a8boGo832VpzkqWLIB_s0XewKEM_Pf_KkrexjtxyqwjOKRsr_l5Mg3Ac6pcw"
+const AUTH_TOKEN = "eyJhbGciOiJSUzI1NiIsImtpZCI6IjAiLCJ0eXAiOiJKV1QifQ.eyJhdWQiOiJzcGEtdGVzdCIsImV4cCI6MTY4MzA4OTg1Miwic3ViIjoiMSJ9.lLrrCoP9IDIPNKK6GdcbipEC5p3-vMFHvar1_2CYKKGgVJhKRsmlwDtUvXCp1k2oWMPYM_NAEXjRa7NpRGVwWiPpNeB9JOAts_ODMg5nS_YmdF4Sb5RLqjjY-_8Os41wg30xxCwjmuLNvcMy-BeOnXm4Mi9JYDk1AjzXn0pojKc0WpsjnP5seajbIJ0_jRN5SvY2XsMetzFOMCUG-xAQf2KkYlmZOC9DWQH6u_-dowuybUq1-6yGk4cRyHKp71VAJNc7BlTlci8aG8U8nMvuv67LtgnDMoIlx6EICrofeWYpmjb8vgYrS_Be6NSzU-n7d5u-c4SKQLdBa5ibIGdMFQ"
 const BASE_URL = "http://localhost:8090"
 
 func TestCorrectFlow(t *testing.T) {
@@ -66,43 +66,46 @@ func TestCorrectFlow(t *testing.T) {
 		},
 	}
 	for _, testCase := range testCases {
-		// different client and session for different tests
-		testClient, err := newTestHttpClient()
-		if err != nil {
-			t.Errorf("newTestHttpClient failed: %v", err)
-			continue
-		}
-		resp, err := testClient.UploadTest(t, testCase.file, int64(testCase.uploadChunkSize), testCase.bearerToken)
-		if err != nil {
-			t.Errorf("upload failed: %v", err)
-			continue
-		}
-		var mediaUrl string
-		{
-			body := resp.body.(map[string]any)
-			value := body["url"]
-			mediaUrl = value.(string)
-		}
-		var thumbnailUrl string
-		{
-			body := resp.body.(map[string]any)
-			value := body["thumbnail_url"]
-			thumbnailUrl = value.(string)
-		}
-		resp, err = testClient.DownloadTest(t, mediaUrl, testCase.bearerToken, testCase.file)
-		if err != nil {
-			t.Errorf("DownloadTest failed: %v", err)
-			continue
-		}
-		resp, err = testClient.DownloadThumbnailTest(t, thumbnailUrl, testCase.bearerToken, testCase.file)
-		if err != nil {
-			t.Errorf("DownloadThumbnailTest failed: %v", err)
-		}
-		resp, err = testClient.GetMediaRangeTest(t, mediaUrl, testCase.bearerToken, testCase.getRangeSize, testCase.file)
-		if err != nil {
-			t.Errorf("GetMediaRangeTest failed: %v", err)
-			continue
-		}
+		t.Run(testCase.name, func(t *testing.T) {
+
+			// different client and session for different tests
+			testClient, err := newTestHttpClient()
+			if err != nil {
+				t.Errorf("newTestHttpClient failed: %v", err)
+				return
+			}
+			resp, err := testClient.UploadTest(t, testCase.file, int64(testCase.uploadChunkSize), testCase.bearerToken)
+			if err != nil {
+				t.Errorf("upload failed: %v", err)
+				return
+			}
+			var mediaUrl string
+			{
+				body := resp.body.(map[string]any)
+				value := body["url"]
+				mediaUrl = value.(string)
+			}
+			var thumbnailUrl string
+			{
+				body := resp.body.(map[string]any)
+				value := body["thumbnail_url"]
+				thumbnailUrl = value.(string)
+			}
+			resp, err = testClient.DownloadTest(t, mediaUrl, testCase.bearerToken, testCase.file)
+			if err != nil {
+				t.Errorf("DownloadTest failed: %v", err)
+				return
+			}
+			resp, err = testClient.DownloadThumbnailTest(t, thumbnailUrl, testCase.bearerToken, testCase.file)
+			if err != nil {
+				t.Errorf("DownloadThumbnailTest failed: %v", err)
+			}
+			resp, err = testClient.GetMediaRangeTest(t, mediaUrl, testCase.bearerToken, testCase.getRangeSize, testCase.file)
+			if err != nil {
+				t.Errorf("GetMediaRangeTest failed: %v", err)
+				return
+			}
+		})
 	}
 }
 

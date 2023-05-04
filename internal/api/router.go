@@ -1,4 +1,4 @@
-package server
+package api
 
 import (
 	"fmt"
@@ -16,6 +16,7 @@ import (
 
 func NewRouter(v1ApiServer *v1Api.Server, config config.Config) (*gin.Engine, error) {
 	router := gin.Default()
+	router.Use(v1Api.ErrorHandler)
 	store := cookie.NewStore([]byte(v1ApiServer.Config.Session.Secret))
 	router.Use(sessions.Sessions("mysession", store))
 
@@ -69,6 +70,7 @@ func NewRouter(v1ApiServer *v1Api.Server, config config.Config) (*gin.Engine, er
 			handler.ServeHTTP(c.Writer, c.Request)
 		})
 	}
+
 	return router, nil
 }
 

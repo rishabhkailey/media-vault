@@ -6,15 +6,24 @@ import (
 	"gorm.io/gorm"
 )
 
-const (
-	ORDER_BY_UPLOAD_TIME         = "created_at"
-	ORDER_BY_MEDIA_CREATION_TIME = "date"
-	SORT_ASCENDING               = "asc"
-	SORT_DESCENDING              = "desc"
-	TABLE_NAME                   = "media"
+type (
+	Order string
+	Sort  string
 )
 
-var SUPPORTED_ORDER_BY = []string{ORDER_BY_UPLOAD_TIME, ORDER_BY_MEDIA_CREATION_TIME}
+const (
+	ORDER_BY_UPLOAD_TIME         Order = "created_at"
+	ORDER_BY_MEDIA_CREATION_TIME Order = "date"
+	SORT_ASCENDING               Sort  = "asc"
+	SORT_DESCENDING              Sort  = "desc"
+	TABLE_NAME                         = "media"
+	MAX_PER_PAGE_VALUE           int64 = 100
+)
+
+var (
+	SUPPORTED_ORDER_BY = []Order{ORDER_BY_UPLOAD_TIME, ORDER_BY_MEDIA_CREATION_TIME}
+	SUPPORTED_SORT_BY  = []Sort{SORT_ASCENDING, SORT_DESCENDING}
+)
 
 type Model struct {
 	gorm.Model
@@ -43,14 +52,20 @@ type GetByFileNameQuery struct {
 	FileName string
 }
 
-type GetByUserIDQuery struct {
-	UserID  string
-	OrderBy string
-	Sort    string
-	Offset  int
-	Limit   int
-}
-
 type GetTypeByFileNameQuery struct {
 	FileName string
+}
+
+type GetByUserIDQuery struct {
+	UserID  string
+	OrderBy Order `form:"order" json:"order,omitempty" binding:"required"`
+	Sort    Sort  `form:"sort" json:"sort,omitempty" binding:"required"`
+	Page    int64 `form:"page" json:"page,omitempty" binding:"required"`
+	PerPage int64 `form:"perPage" json:"perPage,omitempty" binding:"required"`
+}
+
+type GetMediaQueryResultItem struct {
+	MediaUrl     string `json:"url"`
+	ThumbnailUrl string `json:"thumbnail_url"`
+	mediametadata.Metadata
 }

@@ -20,10 +20,12 @@ const RESET_SEARCH_RESULTS = "resetMediaList";
 // actions
 const _LOAD_MORE_SEARCH_RESULTS_ACTION = "loadMoreMedia";
 const _RESET_SEARCH_RESULTS_ACTION = "resetMediaList";
+const _UPDATE_SEARCH_QUERY = "resetMediaList";
 
 // external actions
 export const LOAD_MORE_SEARCH_RESULTS_ACTION = `${MODULE_NAME}/${_LOAD_MORE_SEARCH_RESULTS_ACTION}`;
 export const RESET_SEARCH_RESULTS_ACTION = `${MODULE_NAME}/${_RESET_SEARCH_RESULTS_ACTION}`;
+export const UPDATE_SEARCH_QUERY = `${MODULE_NAME}/${_UPDATE_SEARCH_QUERY}`;
 
 // external getters
 export const NEXT_PAGE_NUMBER_GETTER = `${MODULE_NAME}/${NEXT_PAGE_NUMBER}`;
@@ -118,7 +120,7 @@ export const searchModule: Module<MediaModuleState, any> = {
         }
         axios
           .get<Array<Media>>(
-            `/v1/search?query=${payload.query}&page=${getters.nextPageNumber}`,
+            `/v1/search?query=${payload.query}&page=${getters.nextPageNumber}&perPage=30&order=date&sort=desc`,
             {
               headers: {
                 Authorization: `Bearer ${accessToken}`,
@@ -142,6 +144,15 @@ export const searchModule: Module<MediaModuleState, any> = {
             reject(err);
           });
       });
+    },
+    [_UPDATE_SEARCH_QUERY](
+      { commit, state },
+      payload: LoadSearchResultsPayload
+    ) {
+      if (state.query !== payload.query) {
+        console.log("query changed resetting media list");
+        commit(RESET_SEARCH_RESULTS);
+      }
     },
   },
   // type of this?

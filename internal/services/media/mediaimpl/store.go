@@ -66,7 +66,9 @@ func (s *sqlStore) GetByUserID(ctx context.Context, query media.GetByUserIDQuery
 	if query.Sort == media.SORT_DESCENDING {
 		orderBy = fmt.Sprintf("%s desc", orderBy)
 	}
-	err = db.Joins("Metadata").Model(&media.Model{}).Where("media.id IN (?)", mediaByUserIDQuery).Limit(query.Limit).Order(orderBy).Offset(query.Offset).Find(&mediaList).Error
+	limit := int(query.PerPage)
+	offset := int((query.Page - 1) * query.PerPage)
+	err = db.Joins("Metadata").Model(&media.Model{}).Where("media.id IN (?)", mediaByUserIDQuery).Limit(limit).Order(orderBy).Offset(offset).Find(&mediaList).Error
 	return
 }
 

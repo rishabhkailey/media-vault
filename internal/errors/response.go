@@ -2,61 +2,47 @@ package errors
 
 import (
 	"errors"
-
-	oerrors "github.com/go-oauth2/oauth2/v4/errors"
+	"net/http"
 )
 
-// todo
+type CustomError struct {
+	Err           error // private message
+	Status        int
+	PublicMessage string
+}
+
+func (e CustomError) Error() string {
+	return e.Err.Error()
+}
+
+var _ error = (*CustomError)(nil)
+
+func New(status int, privateMessage string, publicMessage string) CustomError {
+	return CustomError{
+		Err:           errors.New(privateMessage),
+		PublicMessage: publicMessage,
+		Status:        status,
+	}
+}
+
+func NewInternalServerError(err error) CustomError {
+	return CustomError{
+		Err:           err,
+		PublicMessage: "Internal server error",
+		Status:        http.StatusInternalServerError,
+	}
+}
+
+func NewBadRequestError(err error, publicMessage string) CustomError {
+	return CustomError{
+		Err:           err,
+		PublicMessage: publicMessage,
+		Status:        http.StatusInternalServerError,
+	}
+}
+
+// predefined errors
 var (
-	ErrInvalidRequest                 = errors.New("invalid_request")
-	ErrUnauthorizedClient             = errors.New("unauthorized_client")
-	ErrAccessDenied                   = errors.New("access_denied")
-	ErrUnsupportedResponseType        = errors.New("unsupported_response_type")
-	ErrInvalidScope                   = errors.New("invalid_scope")
-	ErrServerError                    = errors.New("server_error")
-	ErrTemporarilyUnavailable         = errors.New("temporarily_unavailable")
-	ErrInvalidClient                  = errors.New("invalid_client")
-	ErrInvalidGrant                   = errors.New("invalid_grant")
-	ErrUnsupportedGrantType           = errors.New("unsupported_grant_type")
-	ErrCodeChallengeRquired           = errors.New("invalid_request")
-	ErrUnsupportedCodeChallengeMethod = errors.New("invalid_request")
-	ErrInvalidCodeChallengeLen        = errors.New("invalid_request")
+	ErrUnauthorized       CustomError = New(http.StatusUnauthorized, "unathurized", "Access to the requested resource is unauthorized")
+	ErrMissingBearerToken CustomError = New(http.StatusUnauthorized, "missing bearer token", "Bearer token is required to access the requested resource")
 )
-
-// Descriptions error description
-var Descriptions = map[error]string{
-	ErrInvalidRequest:                 "The request is missing a required parameter, includes an invalid parameter value, includes a parameter more than once, or is otherwise malformed",
-	ErrUnauthorizedClient:             "The client is not authorized to request an authorization code using this method",
-	ErrAccessDenied:                   "The resource owner or authorization server denied the request",
-	ErrUnsupportedResponseType:        "The authorization server does not support obtaining an authorization code using this method",
-	ErrInvalidScope:                   "The requested scope is invalid, unknown, or malformed",
-	ErrServerError:                    "The authorization server encountered an unexpected condition that prevented it from fulfilling the request",
-	ErrTemporarilyUnavailable:         "The authorization server is currently unable to handle the request due to a temporary overloading or maintenance of the server",
-	ErrInvalidClient:                  "Client authentication failed",
-	ErrInvalidGrant:                   "The provided authorization grant (e.g., authorization code, resource owner credentials) or refresh token is invalid, expired, revoked, does not match the redirection URI used in the authorization request, or was issued to another client",
-	ErrUnsupportedGrantType:           "The authorization grant type is not supported by the authorization server",
-	ErrCodeChallengeRquired:           "PKCE is required. code_challenge is missing",
-	ErrUnsupportedCodeChallengeMethod: "Selected code_challenge_method not supported",
-	ErrInvalidCodeChallengeLen:        "Code challenge length must be between 43 and 128 charachters long",
-}
-
-// StatusCodes response error HTTP status code
-var StatusCodes = map[error]int{
-	ErrInvalidRequest:                 400,
-	ErrUnauthorizedClient:             401,
-	ErrAccessDenied:                   403,
-	ErrUnsupportedResponseType:        401,
-	ErrInvalidScope:                   400,
-	ErrServerError:                    500,
-	ErrTemporarilyUnavailable:         503,
-	ErrInvalidClient:                  401,
-	ErrInvalidGrant:                   401,
-	ErrUnsupportedGrantType:           401,
-	ErrCodeChallengeRquired:           400,
-	ErrUnsupportedCodeChallengeMethod: 400,
-	ErrInvalidCodeChallengeLen:        400,
-}
-
-func CustomResponseErrorHandler(err oerrors.Response) {
-
-}

@@ -2,57 +2,61 @@ package v1
 
 import (
 	"errors"
+	"fmt"
 	"net/http"
-	"strconv"
 	"time"
 
 	"github.com/gin-gonic/gin"
+	v1models "github.com/rishabhkailey/media-service/internal/api/v1/models"
+	internalErrors "github.com/rishabhkailey/media-service/internal/errors"
 	"github.com/rishabhkailey/media-service/internal/services/media"
+	"github.com/rishabhkailey/media-service/internal/services/media/mediaimpl"
 	mediametadata "github.com/rishabhkailey/media-service/internal/services/mediaMetadata"
 	mediastorage "github.com/rishabhkailey/media-service/internal/services/mediaStorage"
 	uploadrequests "github.com/rishabhkailey/media-service/internal/services/uploadRequests"
 	usermediabindings "github.com/rishabhkailey/media-service/internal/services/userMediaBindings"
-	"github.com/sirupsen/logrus"
 	"gorm.io/gorm"
 )
-
-type initRequestBody struct {
-	FileName  string `json:"fileName"`
-	Size      int64  `json:"size"`
-	MediaType string `json:"mediaType,omitempty"`
-	Date      int64  `json:"date,omitempty"`
-}
 
 func (server *Server) InitChunkUpload(c *gin.Context) {
 	userID, ok := c.Keys["userID"].(string)
 	if !ok || len(userID) == 0 {
-		logrus.Error("[InitChunkUpload]: empty userID")
-		c.AbortWithStatus(http.StatusInternalServerError)
+		c.Error(
+			internalErrors.NewInternalServerError(
+				fmt.Errorf("[InitChunkUpload]: empty userID"),
+			),
+		)
 		return
 	}
-	var requestBody initRequestBody
+	var requestBody v1models.InitChunkUploadRequest
 	if err := c.ShouldBindJSON(&requestBody); err != nil {
-		logrus.Infof("[InitChunkUpload] invalid request: %v", err)
-		c.Status(http.StatusBadRequest)
+		c.Error(
+			internalErrors.NewBadRequestError(
+				fmt.Errorf("[InitChunkUpload] invalid request: %v", err),
+				"bad request",
+			),
+		)
 		return
 	}
-	if len(requestBody.FileName) == 0 || requestBody.Size == 0 {
-		logrus.Infof("[InitChunkUpload] invalid request")
-		c.Status(http.StatusBadRequest)
+	requestBody, err := v1models.ValidateInitChunkUploadRequest(requestBody)
+	if err != nil {
+		c.Error(
+			internalErrors.NewBadRequestError(
+				fmt.Errorf("[InitChunkUpload] invalid request: %w", err),
+				"bad request",
+			),
+		)
 		return
-	}
-	if len(requestBody.MediaType) == 0 {
-		requestBody.MediaType = string(mediametadata.TYPE_UNKNOWN)
-	}
-	if requestBody.Date == 0 {
-		requestBody.Date = time.Now().Unix()
 	}
 	uploadRequest, err := server.UploadRequests.Create(c.Request.Context(), uploadrequests.CreateUploadRequestCommand{
 		UserID: userID,
 	})
 	if err != nil {
-		logrus.Errorf("[InitChunkUpload] uploadRequest creation failed: %w", err)
-		c.AbortWithStatus(http.StatusInternalServerError)
+		c.Error(
+			internalErrors.NewInternalServerError(
+				fmt.Errorf("[InitChunkUpload] uploadRequest creation failed: %w", err),
+			),
+		)
 		return
 	}
 	mediaMetadata, err := server.MediaMetadata.Create(c.Request.Context(), mediametadata.CreateCommand{
@@ -64,8 +68,11 @@ func (server *Server) InitChunkUpload(c *gin.Context) {
 		},
 	})
 	if err != nil {
-		logrus.Errorf("[InitUpload] media metadata creation failed: %w", err)
-		c.AbortWithStatus(http.StatusInternalServerError)
+		c.Error(
+			internalErrors.NewInternalServerError(
+				fmt.Errorf("[InitUpload] media metadata creation failed: %w", err),
+			),
+		)
 		return
 	}
 	media, err := server.Media.Create(c.Request.Context(), media.CreateMediaCommand{
@@ -73,8 +80,11 @@ func (server *Server) InitChunkUpload(c *gin.Context) {
 		MetadataID:      mediaMetadata.ID,
 	})
 	if err != nil {
-		logrus.Errorf("[InitUpload] media creation failed: %w", err)
-		c.AbortWithStatus(http.StatusInternalServerError)
+		c.Error(
+			internalErrors.NewInternalServerError(
+				fmt.Errorf("[InitUpload] media creation failed: %w", err),
+			),
+		)
 		return
 	}
 	_, err = server.UserMediaBindings.Create(c.Request.Context(), usermediabindings.CreateCommand{
@@ -82,8 +92,11 @@ func (server *Server) InitChunkUpload(c *gin.Context) {
 		MediaID: media.ID,
 	})
 	if err != nil {
-		logrus.Errorf("[InitUpload] UserMediaBindings creation failed: %w", err)
-		c.AbortWithStatus(http.StatusInternalServerError)
+		c.Error(
+			internalErrors.NewInternalServerError(
+				fmt.Errorf("[InitUpload] UserMediaBindings creation failed: %w", err),
+			),
+		)
 		return
 	}
 	err = server.MediaStorage.InitChunkUpload(c.Request.Context(), mediastorage.InitChunkUploadCmd{
@@ -93,169 +106,127 @@ func (server *Server) InitChunkUpload(c *gin.Context) {
 		FileSize:  requestBody.Size,
 	})
 	if err != nil {
-		logrus.WithFields(logrus.Fields{"error": err, "function": "server.InitUpload"}).Errorf("saveUserUploadRequest failed")
-		c.Status(http.StatusInternalServerError)
+		c.Error(
+			internalErrors.NewInternalServerError(
+				fmt.Errorf("[InitUpload] InitChunkUpload failed: %w", err),
+			),
+		)
 		return
 	}
-	c.JSON(http.StatusOK, gin.H{
-		"requestID": uploadRequest.ID,
+	c.JSON(http.StatusOK, &v1models.InitChunkUploadResponse{
+		RequestID: uploadRequest.ID,
 	})
 }
 
-// type uploadChunkRequestBody struct {
-// 	RequestID string `json:"requestID"`
-// 	ChunkSize int64  `json:"chunkSize"`
-// 	// type?
-// 	ChunkData io.Reader `json:"chunkData"`
-// 	Index     int64     `json:"index"`
-// }
-
-// todo check for multipart request
-// todo request size limit
 func (server *Server) UploadChunk(c *gin.Context) {
-	if c.Request.MultipartForm == nil {
-		err := c.Request.ParseMultipartForm(32 << 20)
-		if err != nil {
-			logrus.Error("[Server.uploadChunk] parse multpart form failed: %w", err)
-			c.AbortWithStatus(http.StatusBadRequest)
-			return
-		}
-	}
-	requestID := c.Request.PostFormValue("requestID")
-	if len(requestID) == 0 {
-		logrus.Error("[Server.uploadChunk] bad request: requestID param missing")
-		c.AbortWithStatus(http.StatusBadRequest)
-		return
-	}
 	userID, ok := c.Keys["userID"].(string)
 	if !ok || len(userID) == 0 {
-		logrus.Error("[InitChunkUpload]: empty userID")
-		c.AbortWithStatus(http.StatusInternalServerError)
+		c.Error(
+			internalErrors.NewInternalServerError(
+				fmt.Errorf("[InitChunkUpload]: empty userID"),
+			),
+		)
 		return
 	}
-	var err error
-	var index int64
-	{
-		value := c.Request.PostFormValue("index")
-		if len(value) == 0 {
-			logrus.Error("[Server.uploadChunk] bad request: index param missing")
-			c.AbortWithStatus(http.StatusBadRequest)
-			return
-		}
-		index, err = strconv.ParseInt(value, 10, 64)
-		if err != nil {
-			logrus.Error("[Server.uploadChunk] bad request: invalid index %v", value)
-			c.AbortWithStatus(http.StatusBadRequest)
-			return
-		}
+	var requestBody v1models.UploadChunkRequest
+	if err := c.Bind(&requestBody); err != nil {
+		c.Error(
+			internalErrors.NewBadRequestError(
+				fmt.Errorf("[Server.uploadChunk] bad request: %w", err),
+				"bad request",
+			),
+		)
+		return
 	}
-	var chunkSize int64
-	{
-		value := c.Request.PostFormValue("chunkSize")
-		if len(value) == 0 {
-			logrus.Error("[Server.uploadChunk] bad request: chunkSize param missing")
-			c.AbortWithStatus(http.StatusBadRequest)
-			return
-		}
-		chunkSize, err = strconv.ParseInt(value, 10, 64)
-		if err != nil {
-			logrus.Error("[Server.uploadChunk] bad request: invalid chunkSize %v", value)
-			c.AbortWithStatus(http.StatusBadRequest)
-			return
-		}
+	chunkFile, err := requestBody.ChunkData.Open()
+	if err != nil {
+		c.Error(
+			internalErrors.NewInternalServerError(
+				fmt.Errorf("[Server.uploadChunk] chunk data file open failed: %w", err),
+			),
+		)
+		return
 	}
 
-	chunkData, _, err := c.Request.FormFile("chunkData")
-	if err != nil {
-		logrus.Error("[Server.uploadChunk] bad request: chunkData param missing")
-		c.AbortWithStatus(http.StatusBadRequest)
-		return
-	}
 	n, err := server.MediaStorage.UploadChunk(c.Request.Context(), mediastorage.UploadChunkCmd{
 		UserID:          userID,
-		UploadRequestID: requestID,
-		Index:           index,
-		ChunkSize:       chunkSize,
-		Chunk:           chunkData,
+		UploadRequestID: requestBody.RequestID,
+		Index:           *requestBody.Index,
+		ChunkSize:       requestBody.ChunkSize,
+		Chunk:           chunkFile,
 	})
 	if err != nil {
-		logrus.Errorf("[Server.uploadChunk] io.CopyN failed: %v", err)
-		c.AbortWithStatus(http.StatusInternalServerError)
+		c.Error(
+			internalErrors.NewInternalServerError(
+				fmt.Errorf("[Server.uploadChunk] io.CopyN failed: %v", err),
+			),
+		)
 		return
 	}
-	c.JSON(http.StatusOK, gin.H{
-		"requestID": requestID,
-		"uploaded":  n,
+	c.JSON(http.StatusOK, &v1models.UploadChunkResponse{
+		RequestID: requestBody.RequestID,
+		Uploaded:  n,
 	})
 }
 
 // thumbnail is required to be of jpeg type only
 func (server *Server) UploadThumbnail(c *gin.Context) {
-	if c.Request.MultipartForm == nil {
-		err := c.Request.ParseMultipartForm(32 << 20)
-		if err != nil {
-			logrus.Error("[Server.uploadChunk] parse multpart form failed: %w", err)
-			c.AbortWithStatus(http.StatusBadRequest)
-			return
-		}
-	}
-	requestID := c.Request.PostFormValue("requestID")
-	if len(requestID) == 0 {
-		logrus.Error("[Server.UploadThumbnail] bad request: requestID param missing")
-		c.AbortWithStatus(http.StatusBadRequest)
+	var requestBody v1models.UploadThumbnailRequest
+	if err := c.Bind(&requestBody); err != nil {
+		c.Error(
+			internalErrors.NewBadRequestError(
+				fmt.Errorf("[Server.UploadThumbnail] bad request: %w", err),
+				"bad request",
+			),
+		)
 		return
 	}
-	var err error
-	var size int64
-	{
-		value := c.Request.PostFormValue("size")
-		if len(value) == 0 {
-			logrus.Error("[Server.UploadThumbnail] bad request: size param missing")
-			c.AbortWithStatus(http.StatusBadRequest)
-			return
-		}
-		size, err = strconv.ParseInt(value, 10, 64)
-		if err != nil {
-			logrus.Error("[Server.UploadThumbnail] bad request: invalid size %v", value)
-			c.AbortWithStatus(http.StatusBadRequest)
-			return
-		}
-	}
-	// todo change the param to thumbnailData? consistency
-	thumbnail, _, err := c.Request.FormFile("thumbnail")
+	thumbnailFile, err := requestBody.Thumbnail.Open()
 	if err != nil {
-		logrus.Error("[Server.UploadThumbnail] bad request: chunkData param missing")
-		c.AbortWithStatus(http.StatusBadRequest)
+		c.Error(
+			internalErrors.NewInternalServerError(
+				fmt.Errorf("[Server.UploadThumbnail] thumbnail file open failed: %w", err),
+			),
+		)
 		return
 	}
 	userID, ok := c.Keys["userID"].(string)
 	if !ok || len(userID) == 0 {
-		logrus.Error("[UploadThumbnail]: empty userID")
-		c.AbortWithStatus(http.StatusInternalServerError)
+		c.Error(
+			internalErrors.NewInternalServerError(
+				fmt.Errorf("[UploadThumbnail]: empty userID"),
+			),
+		)
 		return
 	}
 	media, err := server.Media.GetByUploadRequestID(c.Request.Context(), media.GetByUploadRequestQuery{
-		UploadRequestID: requestID,
+		UploadRequestID: requestBody.RequestID,
 	})
 	if errors.Is(err, gorm.ErrRecordNotFound) {
-		c.AbortWithStatus(http.StatusNotFound)
+		c.Error(internalErrors.ErrUnauthorized)
 		return
 	}
 	if err != nil {
-		logrus.Errorf("[UploadThumbnail]: %w", err)
-		c.AbortWithStatus(http.StatusInternalServerError)
+		c.Error(
+			internalErrors.NewInternalServerError(
+				fmt.Errorf("[UploadThumbnail] get media by upload request id failed: %w", err),
+			),
+		)
 		return
 	}
 	err = server.MediaStorage.ThumbnailUpload(c.Request.Context(), mediastorage.UploadThumbnailCmd{
-		RequestID:  requestID,
+		RequestID:  requestBody.RequestID,
 		UserID:     userID,
 		FileName:   media.FileName,
-		FileSize:   size,
-		FileReader: thumbnail,
+		FileSize:   requestBody.Size,
+		FileReader: thumbnailFile,
 	})
 	if err != nil {
-		logrus.Errorf("[server.UploadThumbnail] failed to upload file to minio: %w", err)
-		c.AbortWithStatus(http.StatusInternalServerError)
+		c.Error(
+			internalErrors.NewInternalServerError(
+				fmt.Errorf("[server.UploadThumbnail] failed to upload file to minio: %w", err),
+			),
+		)
 		return
 	}
 	err = server.MediaMetadata.UpdateThumbnail(c.Request.Context(), mediametadata.UpdateThumbnailCommand{
@@ -263,32 +234,36 @@ func (server *Server) UploadThumbnail(c *gin.Context) {
 		ID:        media.MetadataID,
 	})
 	if err != nil {
-		logrus.Errorf("[server.UploadThumbnail] failed to update media metadata: %w", err)
-		c.AbortWithStatus(http.StatusInternalServerError)
+		c.Error(
+			internalErrors.NewInternalServerError(
+				fmt.Errorf("[server.UploadThumbnail] failed to update media metadata: %w", err),
+			),
+		)
 		return
 	}
 	c.Status(http.StatusOK)
 }
 
-type finishUploadRequestBody struct {
-	RequestID string `json:"requestID"`
-	Checksum  string `json:"checksum"`
-}
-
 // this is for client to confirm if the upload has finished or not
 func (server *Server) FinishChunkUpload(c *gin.Context) {
-	var requestBody finishUploadRequestBody
-	c.Request.ParseForm()
-	err := c.ShouldBindJSON(&requestBody)
+	var requestBody v1models.FinishUploadRequest
+	err := c.Bind(&requestBody)
 	if err != nil {
-		logrus.Errorf("[server.FinishUpload] bad request: %v", err)
-		c.AbortWithStatus(http.StatusBadRequest)
+		c.Error(
+			internalErrors.NewBadRequestError(
+				fmt.Errorf("[server.FinishUpload] bad request: %w", err),
+				"bad request",
+			),
+		)
 		return
 	}
 	userID, ok := c.Keys["userID"].(string)
 	if !ok || len(userID) == 0 {
-		logrus.Error("[FinishChunkUpload]: empty userID")
-		c.AbortWithStatus(http.StatusInternalServerError)
+		c.Error(
+			internalErrors.NewInternalServerError(
+				fmt.Errorf("[FinishChunkUpload]: empty userID"),
+			),
+		)
 		return
 	}
 	err = server.MediaStorage.FinishChunkUpload(c.Request.Context(), mediastorage.FinishChunkUpload{
@@ -297,23 +272,34 @@ func (server *Server) FinishChunkUpload(c *gin.Context) {
 		CheckSum:  requestBody.Checksum,
 	})
 	if err != nil {
-		logrus.Errorf("[server.FinishUpload] upload failed: %v", err)
-		c.AbortWithStatus(http.StatusInternalServerError)
+		c.Error(
+			internalErrors.NewInternalServerError(
+				fmt.Errorf("[server.FinishUpload] upload failed: %v", err),
+			),
+		)
 		return
 	}
 	media, err := server.Media.GetMediaWithMetadataByUploadRequestID(c.Request.Context(), media.GetByUploadRequestQuery{
 		UploadRequestID: requestBody.RequestID,
 	})
 	if err != nil {
-		logrus.Errorf("[UploadThumbnail]: %w", err)
-		c.AbortWithStatus(http.StatusInternalServerError)
+		c.Error(
+			internalErrors.NewInternalServerError(
+				fmt.Errorf("[UploadThumbnail]: %w", err),
+			),
+		)
 		return
 	}
-	mediaApiData, err := NewMediaApiData(media)
+	mediaApiData, err := mediaimpl.NewGetMediaQueryResultItem(media)
 	if err != nil {
-		logrus.Errorf("[UploadThumbnail] NewMediaApiData failed: %w", err)
-		c.AbortWithStatus(http.StatusInternalServerError)
+		c.Error(
+			internalErrors.NewInternalServerError(
+				fmt.Errorf("[UploadThumbnail] NewMediaApiData failed: %w", err),
+			),
+		)
 		return
 	}
-	c.JSON(http.StatusOK, mediaApiData)
+	c.JSON(http.StatusOK, &v1models.FinishUploadResponse{
+		GetMediaQueryResultItem: mediaApiData,
+	})
 }

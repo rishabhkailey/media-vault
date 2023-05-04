@@ -4,8 +4,9 @@ import {
   LOAD_MORE_SEARCH_RESULTS_ACTION,
   SEARCH_RESULTS_GETTER,
   ALL_SEARCH_RESULTS_LOADED_GETTER,
+  UPDATE_SEARCH_QUERY,
 } from "@/store/modules/search";
-import { computed, onMounted } from "vue";
+import { computed, onMounted, onBeforeMount } from "vue";
 import { useRoute } from "vue-router";
 import { useStore } from "vuex";
 import type { LoadSearchResults } from "@/store/modules/search";
@@ -29,11 +30,16 @@ const payload: LoadSearchResults = {
 const loadMoreMedia = () =>
   store.dispatch(LOAD_MORE_SEARCH_RESULTS_ACTION, payload);
 
-onMounted(() => {
+onBeforeMount(() => {
   // as we are using global store for search results, it can still have results of old media search
   // this will ensure to update search query and results in store
-  store.dispatch(LOAD_MORE_SEARCH_RESULTS_ACTION, payload);
+  store.dispatch(UPDATE_SEARCH_QUERY, payload);
 });
+// onMounted(() => {
+//   // as we are using global store for search results, it can still have results of old media search
+//   // this will ensure to update search query and results in store
+//   store.dispatch(UPDATE_SEARCH_QUERY, payload);
+// });
 </script>
 
 <template>

@@ -60,14 +60,10 @@ func (c *testHttpClient) sendHttpRequest(req httpRequest, jsonResponse bool) (re
 		}
 		req.bodyReader = bytes.NewReader(bodyBytes)
 	}
-	reqBodyBytes, _ := io.ReadAll(req.bodyReader)
-	reqBody := string(reqBodyBytes)
-	req.bodyReader = bytes.NewReader(reqBodyBytes)
 	r, err := http.NewRequest(req.method, url, req.bodyReader)
 	if err != nil {
 		return
 	}
-	_ = reqBody
 	if req.headers != nil {
 		r.Header = req.headers
 	}
@@ -163,6 +159,8 @@ func (c *testHttpClient) sendUploadThumbnailRequest(requestID string, thumbnailD
 }
 
 func (c *testHttpClient) sendFinishUploadRequest(requestID string, bearerToken string) (resp httpResponse, err error) {
+	headers := http.Header{}
+	headers.Add("content-type", "application/json")
 	return c.sendHttpRequest(httpRequest{
 		method: "POST",
 		url:    "/v1/finishChunkUpload",
@@ -171,6 +169,7 @@ func (c *testHttpClient) sendFinishUploadRequest(requestID string, bearerToken s
 			"checksum":  "",
 		},
 		bearerToken: bearerToken,
+		headers:     headers,
 	}, true)
 }
 

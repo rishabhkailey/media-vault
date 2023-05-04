@@ -1,4 +1,4 @@
-package utils
+package cmd
 
 import (
 	"context"
@@ -86,7 +86,7 @@ func toMeiliSearchMediaIndex(userMediaBindingList []usermediabindings.Model) (me
 			MediaID:    userMediaBinding.Media.ID,
 			UserID:     userMediaBinding.UserID,
 			UploadedAt: userMediaBinding.CreatedAt.Unix(),
-			Metadata: mediasearch.MeiliSearchMediaMetadata{
+			Metadata: mediasearch.MediaSearchMetadata{
 				Name:      userMediaBinding.Media.Metadata.Name,
 				Type:      userMediaBinding.Media.Metadata.Type,
 				Timestamp: userMediaBinding.Media.Metadata.Date.Unix(),

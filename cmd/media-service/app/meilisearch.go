@@ -1,9 +1,9 @@
 package app
 
 import (
+	cmdPackage "github.com/rishabhkailey/media-service/internal/cmd"
 	"github.com/rishabhkailey/media-service/internal/config"
 	"github.com/rishabhkailey/media-service/internal/db"
-	"github.com/rishabhkailey/media-service/internal/utils"
 	"github.com/spf13/cobra"
 )
 
@@ -44,7 +44,7 @@ func executeMelieSearchMigrate(cmd *cobra.Command, args []string) error {
 	if err != nil {
 		return err
 	}
-	return utils.MeiliSearchMigrate(gormDb, meiliesearch, meiliSearchmigrateOptions.batchSize)
+	return cmdPackage.MeiliSearchMigrate(gormDb, meiliesearch, meiliSearchmigrateOptions.batchSize)
 }
 
 func init() {

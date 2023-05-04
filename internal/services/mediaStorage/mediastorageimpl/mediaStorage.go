@@ -41,7 +41,7 @@ func (s *Service) GetThumbnailByFileName(ctx context.Context, query mediastorage
 	return s.store.GetByFileName(ctx, s.GetThumbnailFileName(query.FileName))
 }
 
-func (s *Service) HttpGetRangeHandler(ctx context.Context, query mediastorage.WriteRangeByFileNameQuery) (int64, error) {
+func (s *Service) HttpGetRangeHandler(ctx context.Context, query mediastorage.HttpGetRangeHandlerQuery) (int64, error) {
 	file, err := s.store.GetByFileName(ctx, query.FileName)
 	if err != nil {
 		return 0, err

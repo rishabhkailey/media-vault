@@ -154,3 +154,10 @@ curl -v -X GET 'http://localhost:8090/v1/media?file=8379ada2-e309-4d3a-b4b8-18d4
 ## next
 * cache integration in all stores
 * album and 1 default album (favourite)
+* GIN validators
+    * https://github.com/gin-gonic/examples/blob/master/struct-lvl-validations/server.go
+    * https://gin-gonic.com/docs/examples/custom-validators/
+    * can we combine multiple input types in struct? e.g. form, uri, json
+* api tests https://gin-gonic.com/docs/testing/
+* services and store tests
+* health endpoint

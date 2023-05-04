@@ -16,7 +16,7 @@ type GetThumbnailByFileNameQuery struct {
 	FileName string
 }
 
-type WriteRangeByFileNameQuery struct {
+type HttpGetRangeHandlerQuery struct {
 	FileName       string
 	Range          utils.Range
 	ResponseWriter http.ResponseWriter
