@@ -4,15 +4,14 @@ import (
 	"context"
 	"encoding/base64"
 	"encoding/json"
-	"errors"
 	"fmt"
-	"io/ioutil"
+	"io"
 	"net/http"
 	"net/url"
 	"strings"
 
 	"github.com/coreos/go-oidc/v3/oidc"
-	"github.com/rishabhkailey/media-service/internal/utils"
+	authservice "github.com/rishabhkailey/media-service/internal/services/authService"
 	"github.com/sirupsen/logrus"
 	"golang.org/x/oauth2"
 )
@@ -54,7 +53,7 @@ func NewOidcClient(issuerUrl, clientID, clientSecret, redirectURI string) (*Oidc
 		return nil, fmt.Errorf("http request to %s failed", wellknownUrl)
 	}
 	defer resp.Body.Close()
-	body, err := ioutil.ReadAll(resp.Body)
+	body, err := io.ReadAll(resp.Body)
 	if err != nil {
 		return nil, fmt.Errorf("unable to read response body: %w", err)
 	}
@@ -97,8 +96,6 @@ type TokenInfo struct {
 	RealName   string `json:"realName"`
 }
 
-var ErrUnauthorized = errors.New("unauthorized")
-
 func (client *OidcClient) IntrospectToken(token string) (*TokenInfo, error) {
 	// todo set basic auth header? not sure if it is required
 	data := url.Values{
@@ -118,9 +115,9 @@ func (client *OidcClient) IntrospectToken(token string) (*TokenInfo, error) {
 		return nil, fmt.Errorf("introspect token request failed: %w", err)
 	}
 	if resp.StatusCode == http.StatusUnauthorized {
-		return nil, ErrUnauthorized
+		return nil, authservice.ErrUnauthorized
 	}
-	body, err := ioutil.ReadAll(resp.Body)
+	body, err := io.ReadAll(resp.Body)
 	if err != nil {
 		return nil, fmt.Errorf("unable to read response body: %v", err)
 	}
@@ -129,25 +126,4 @@ func (client *OidcClient) IntrospectToken(token string) (*TokenInfo, error) {
 		return nil, fmt.Errorf("could not unmarshal json response: %w", err)
 	}
 	return &responseBody, nil
-}
-
-func GetBearerToken(r *http.Request) (string, bool) {
-	auth := r.Header.Get("Authorization")
-	prefix := "Bearer "
-	token := ""
-
-	if auth != "" && strings.HasPrefix(auth, prefix) {
-		token = auth[len(prefix):]
-	}
-	return token, token != ""
-}
-
-func (ti *TokenInfo) ValidateScope(scopes ...string) bool {
-	if len(scopes) == 0 {
-		return true
-	}
-	if len(ti.Scope) == 0 {
-		return false
-	}
-	return utils.ContainsSlice(strings.Split(ti.Scope, " "), scopes)
 }

@@ -59,6 +59,8 @@ func (s *Service) HttpGetRangeHandler(ctx context.Context, query mediastorage.Ht
 	}
 	// range end exclusive
 	contentLength := query.Range.End - query.Range.Start
+	// todo why can't we move the header logic to router and here we only copy the data
+	// change the function names accordingly
 	query.ResponseWriter.Header().Add("Content-Range", fmt.Sprintf("bytes %d-%d/%d", query.Range.Start, query.Range.End, stat.Size()))
 	return io.CopyN(query.ResponseWriter, file, contentLength)
 }

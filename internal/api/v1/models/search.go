@@ -5,6 +5,7 @@ import (
 
 	"github.com/rishabhkailey/media-service/internal/services/media"
 	mediasearch "github.com/rishabhkailey/media-service/internal/services/mediaSearch"
+	"github.com/rishabhkailey/media-service/internal/utils"
 	"github.com/sirupsen/logrus"
 )
 
@@ -17,6 +18,12 @@ type SearchRequest struct {
 }
 
 func (request *SearchRequest) Validate() error {
+	if !utils.Contains(mediasearch.SUPPORTED_ORDER_BY, request.OrderBy) {
+		return fmt.Errorf("[MediaSearchQueryValidator] invalid param: OrderBy")
+	}
+	if !utils.Contains(mediasearch.SUPPORTED_SORT, request.Sort) {
+		return fmt.Errorf("[MediaSearchQueryValidator] invalid param: sort")
+	}
 	if request.Page < 0 || request.PerPage < 0 {
 		return fmt.Errorf("[MediaSearchQueryValidator] invalid param: Page or PerPage")
 	}

@@ -1,9 +1,14 @@
 package services
 
 import (
+	"time"
+
 	"github.com/go-redis/redis/v8"
 	"github.com/meilisearch/meilisearch-go"
 	"github.com/minio/minio-go/v7"
+	"github.com/rishabhkailey/media-service/internal/auth"
+	authservice "github.com/rishabhkailey/media-service/internal/services/authService"
+	authserviceimpl "github.com/rishabhkailey/media-service/internal/services/authService/authServiceImpl"
 	"github.com/rishabhkailey/media-service/internal/services/media"
 	"github.com/rishabhkailey/media-service/internal/services/media/mediaimpl"
 	mediametadata "github.com/rishabhkailey/media-service/internal/services/mediaMetadata"
@@ -26,9 +31,16 @@ type Services struct {
 	UploadRequests    uploadrequests.Service
 	MediaSearch       mediasearch.Service
 	MediaStorage      mediastorage.Service
+	AuthService       authservice.Service
 }
 
-func NewServices(db *gorm.DB, ms *meilisearch.Client, minio *minio.Client, redis *redis.Client) (*Services, error) {
+func NewServices(
+	db *gorm.DB,
+	ms *meilisearch.Client,
+	minio *minio.Client,
+	redis *redis.Client,
+	oidcClient *auth.OidcClient,
+) (*Services, error) {
 	// order matters, order of table creation
 	uploadRequestsService, err := uploadrequestsimpl.NewService(db)
 	if err != nil {
@@ -50,6 +62,11 @@ func NewServices(db *gorm.DB, ms *meilisearch.Client, minio *minio.Client, redis
 	if err != nil {
 		return nil, err
 	}
+	authService, err := authserviceimpl.NewService(*oidcClient, userMediaBindingsService, time.Hour*12)
+	if err != nil {
+		return nil, err
+	}
+
 	// todo move bucket name to config
 	mediaStorageService, err := mediastorageimpl.NewMinioService(minio, "test", uploadRequestsService)
 	if err != nil {
@@ -62,5 +79,6 @@ func NewServices(db *gorm.DB, ms *meilisearch.Client, minio *minio.Client, redis
 		UploadRequests:    uploadRequestsService,
 		MediaSearch:       mediaSearchService,
 		MediaStorage:      mediaStorageService,
+		AuthService:       authService,
 	}, nil
 }

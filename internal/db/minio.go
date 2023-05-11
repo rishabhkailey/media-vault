@@ -1,14 +1,12 @@
 package db
 
 import (
-	"context"
 	"crypto/tls"
 	"crypto/x509"
 	"fmt"
 	"net"
 	"net/http"
 	"os"
-	"sync"
 	"time"
 
 	"github.com/minio/minio-go/v7"
@@ -64,35 +62,4 @@ func NewMinioConnection(config config.MinioConfig) (*minio.Client, error) {
 	}
 
 	return client, err
-}
-
-// todo lfu
-type MinioObjectCache struct {
-	cached map[string]*minio.Object
-	mu     sync.Mutex
-	cli    *minio.Client
-}
-
-func NewMinioObjectCache(cli *minio.Client) *MinioObjectCache {
-	return &MinioObjectCache{
-		cached: make(map[string]*minio.Object),
-		cli:    cli,
-		mu:     sync.Mutex{},
-	}
-}
-
-func (cache *MinioObjectCache) Get(ctx context.Context, bucket, objectName string) (object *minio.Object, err error) {
-	cache.mu.Lock()
-	defer cache.mu.Unlock()
-	cacheKey := fmt.Sprintf("%s:%s", bucket, objectName)
-	object, ok := cache.cached[cacheKey]
-	if !ok || object == nil {
-		logrus.Warnf("cache miss bucket=%s object=%s", bucket, object)
-		object, err = cache.cli.GetObject(context.Background(), bucket, objectName, minio.GetObjectOptions{})
-		if err != nil {
-			return nil, err
-		}
-		cache.cached[cacheKey] = object
-	}
-	return object, nil
 }

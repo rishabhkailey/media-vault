@@ -3,7 +3,6 @@ package db
 import (
 	"context"
 	"fmt"
-	"time"
 
 	gsredis "github.com/go-session/redis/v3"
 	"github.com/go-session/session/v3"
@@ -47,28 +46,4 @@ func NewRedisSessionStore(config config.RedisCacheConfig) session.ManagerStore {
 		DB:       config.Db,
 		Password: config.Password,
 	})
-}
-
-func mediaTypeKey(fileName string) string {
-	return fmt.Sprintf("mediaType:%s", fileName)
-}
-
-func (store *RedisStore) GetMediaType(ctx context.Context, fileName string) (mediaType string, err error) {
-	mediaType, err = store.Client.Get(ctx, mediaTypeKey(fileName)).Result()
-	if err != nil {
-		if err == redis.Nil {
-			return mediaType, fmt.Errorf("[GetMediaType]: key doesn't exist: %w", err)
-		}
-		return mediaType, fmt.Errorf("[GetMediaType]: failed to get nonce: %w", err)
-	}
-	return mediaType, err
-}
-
-func (store *RedisStore) SetMediaType(ctx context.Context, fileName string, mediaType string) error {
-	expire := 1 * time.Hour
-	err := store.Client.Set(ctx, mediaTypeKey(fileName), mediaType, expire).Err()
-	if err != nil {
-		return fmt.Errorf("[SetMediaType]: failed to save nonce: %w", err)
-	}
-	return nil
 }

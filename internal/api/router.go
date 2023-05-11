@@ -17,7 +17,7 @@ import (
 func NewRouter(v1ApiServer *v1Api.Server, config config.Config) (*gin.Engine, error) {
 	router := gin.Default()
 	router.Use(v1Api.ErrorHandler)
-	store := cookie.NewStore([]byte(v1ApiServer.Config.Session.Secret))
+	store := cookie.NewStore([]byte(config.Session.Secret))
 	router.Use(sessions.Sessions("mysession", store))
 
 	// todo - check if there is any security risk of doing this
@@ -52,7 +52,7 @@ func NewRouter(v1ApiServer *v1Api.Server, config config.Config) (*gin.Engine, er
 
 	// bearer token only
 	v1ProtectedBearerOnly := router.Group("/v1")
-	v1ProtectedBearerOnly.Use(v1ApiServer.UserTokenAuthMiddleWare)
+	v1ProtectedBearerOnly.Use(v1ApiServer.UserAuthMiddleware)
 	{
 		v1ProtectedBearerOnly.POST("/refreshSession", v1ApiServer.RefreshSession)
 		v1ProtectedBearerOnly.POST("/terminateSession", v1ApiServer.TerminateSession)

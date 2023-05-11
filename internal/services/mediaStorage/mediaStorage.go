@@ -5,8 +5,8 @@ import (
 )
 
 type Service interface {
-	GetMediaByFileName(context.Context, GetMediaByFileNameQuery) (File, error)
-	GetThumbnailByFileName(context.Context, GetThumbnailByFileNameQuery) (File, error)
+	// GetMediaByFileName(context.Context, GetMediaByFileNameQuery) (File, error)
+	// GetThumbnailByFileName(context.Context, GetThumbnailByFileNameQuery) (File, error)
 	HttpGetRangeHandler(context.Context, HttpGetRangeHandlerQuery) (int64, error)
 	HttpGetMediaHandler(context.Context, HttpGetMediaHandlerQuery) (int64, error)
 	HttpGetThumbnailHandler(context.Context, HttpGetThumbnailHandlerQuery) (int64, error)

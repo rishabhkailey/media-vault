@@ -37,7 +37,7 @@ func NewBadRequestError(err error, publicMessage string) CustomError {
 	return CustomError{
 		Err:           err,
 		PublicMessage: publicMessage,
-		Status:        http.StatusInternalServerError,
+		Status:        http.StatusBadRequest,
 	}
 }
 
