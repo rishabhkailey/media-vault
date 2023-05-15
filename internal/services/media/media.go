@@ -8,6 +8,6 @@ type Service interface {
 	GetMediaWithMetadataByUploadRequestID(context.Context, GetByUploadRequestQuery) (Model, error)
 	GetByFileName(context.Context, GetByFileNameQuery) (Model, error)
 	GetByUserID(context.Context, GetByUserIDQuery) ([]GetMediaQueryResultItem, error)
-	GetByMediaIDs(context.Context, []uint) ([]GetMediaQueryResultItem, error)
+	GetByMediaIDs(context.Context, GetByMediaIDsQuery) ([]GetMediaQueryResultItem, error)
 	GetTypeByFileName(context.Context, GetTypeByFileNameQuery) (string, error)
 }

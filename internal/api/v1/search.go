@@ -7,6 +7,7 @@ import (
 	"github.com/gin-gonic/gin"
 	v1models "github.com/rishabhkailey/media-service/internal/api/v1/models"
 	internalErrors "github.com/rishabhkailey/media-service/internal/errors"
+	"github.com/rishabhkailey/media-service/internal/services/media"
 	mediasearch "github.com/rishabhkailey/media-service/internal/services/mediaSearch"
 )
 
@@ -57,7 +58,11 @@ func (server *Server) Search(c *gin.Context) {
 		return
 	}
 	var response v1models.SearchResponse
-	response, err = server.Media.GetByMediaIDs(c.Request.Context(), mediaIDs)
+	response, err = server.Media.GetByMediaIDs(c.Request.Context(), media.GetByMediaIDsQuery{
+		MediaIDs: mediaIDs,
+		OrderBy:  requestBody.OrderBy,
+		Sort:     requestBody.Sort,
+	})
 	if err != nil {
 		c.Error(
 			internalErrors.NewInternalServerError(

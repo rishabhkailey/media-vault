@@ -18,7 +18,7 @@ type store interface {
 	GetByFileName(context.Context, string) (media.Model, error)
 	GetMediaWithMetadataByUploadRequestID(context.Context, string) (media.Model, error)
 	GetByUserID(context.Context, media.GetByUserIDQuery) ([]media.Model, error)
-	GetByMediaIDs(context.Context, []uint) ([]media.Model, error)
+	GetByMediaIDs(context.Context, media.GetByMediaIDsQuery) ([]media.Model, error)
 	GetTypeByFileName(context.Context, string) (string, error)
 }
 
@@ -62,10 +62,7 @@ func (s *sqlStore) GetByFileName(ctx context.Context, fileName string) (media me
 func (s *sqlStore) GetByUserID(ctx context.Context, query media.GetByUserIDQuery) (mediaList []media.Model, err error) {
 	db := s.db.WithContext(ctx)
 	mediaByUserIDQuery := db.Model(&usermediabindings.Model{}).Select("media_id").Where("user_id = ?", query.UserID)
-	orderBy := fmt.Sprintf(`"Metadata"."%s"`, query.OrderBy)
-	if query.Sort == media.SORT_DESCENDING {
-		orderBy = fmt.Sprintf("%s desc", orderBy)
-	}
+	orderBy := fmt.Sprintf(`"Metadata"."%s" %s`, media.OrderAttributesMapping[query.OrderBy], media.SortKeywordMapping[query.Sort])
 	limit := int(query.PerPage)
 	offset := int((query.Page - 1) * query.PerPage)
 	err = db.Joins("Metadata").Model(&media.Model{}).Where("media.id IN (?)", mediaByUserIDQuery).Limit(limit).Order(orderBy).Offset(offset).Find(&mediaList).Error
@@ -89,7 +86,8 @@ func (s *sqlStore) GetTypeByFileName(ctx context.Context, fileName string) (medi
 	return
 }
 
-func (s *sqlStore) GetByMediaIDs(ctx context.Context, mediaIDs []uint) (mediaList []media.Model, err error) {
-	err = s.db.WithContext(ctx).Joins("Metadata").Model(&media.Model{}).Where("media.id IN (?)", mediaIDs).Find(&mediaList).Error
+func (s *sqlStore) GetByMediaIDs(ctx context.Context, query media.GetByMediaIDsQuery) (mediaList []media.Model, err error) {
+	orderBy := fmt.Sprintf(`"Metadata"."%s" %s`, media.OrderAttributesMapping[query.OrderBy], media.SortKeywordMapping[query.Sort])
+	err = s.db.WithContext(ctx).Joins("Metadata").Model(&media.Model{}).Where("media.id IN (?)", query.MediaIDs).Order(orderBy).Find(&mediaList).Error
 	return
 }

@@ -1,0 +1,35 @@
+[
+  {
+    "_id": "9e9b9a4c-0712-4139-b592-f23daa0a0a71",
+    "colId": "history",
+    "containerId": "",
+    "name": "https://www.thunderclient.com/welcome",
+    "url": "https://www.thunderclient.com/welcome",
+    "method": "GET",
+    "sortNum": 0,
+    "created": "2023-05-15T08:39:28.342Z",
+    "modified": "2023-05-15T08:39:28.342Z",
+    "headers": [],
+    "params": [],
+    "tests": []
+  },
+  {
+    "_id": "697b3339-a277-41e9-9c14-90a60452824d",
+    "colId": "history",
+    "containerId": "",
+    "name": "http://localhost:7700/indexes/media/search",
+    "url": "http://localhost:7700/indexes/media/search",
+    "method": "POST",
+    "sortNum": 0,
+    "created": "2023-05-15T08:41:20.232Z",
+    "modified": "2023-05-15T08:44:16.037Z",
+    "headers": [],
+    "params": [],
+    "body": {
+      "type": "json",
+      "raw": "{\n  \"attributesToHighlight\": [\"*\"],\n  \"facets\": [],\n  \"limit\": 10,\n  \"offset\": 0,\n  \"q\": \"562e8ba1-4d2f-453a-821a-2ad0b575ae0a\",\n  \"sort\": [\"metadata.timestamp:desc\"]\n}",
+      "form": []
+    },
+    "tests": []
+  }
+]

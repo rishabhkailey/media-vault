@@ -38,7 +38,7 @@ func (s *FakeService) GetByUserID(ctx context.Context, cmd media.GetByUserIDQuer
 	return s.ExpectedMediaList, s.ExpectedError
 }
 
-func (s *FakeService) GetByMediaIDs(ctx context.Context, ids []uint) ([]media.GetMediaQueryResultItem, error) {
+func (s *FakeService) GetByMediaIDs(ctx context.Context, query media.GetByMediaIDsQuery) ([]media.GetMediaQueryResultItem, error) {
 	return s.ExpectedMediaList, s.ExpectedError
 }
 

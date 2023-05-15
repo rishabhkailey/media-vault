@@ -12,7 +12,15 @@ import (
 	"net/http"
 	"net/http/cookiejar"
 	"net/url"
+	"sort"
+	"time"
+
+	"github.com/stretchr/testify/assert"
 )
+
+// copy it from the UI
+const AUTH_TOKEN = "eyJhbGciOiJSUzI1NiIsImtpZCI6IjAiLCJ0eXAiOiJKV1QifQ.eyJhdWQiOiJzcGEtdGVzdCIsImV4cCI6MTY4NDE0ODI3Miwic3ViIjoiMSJ9.iBuwwFCn6tl0bCvYtbEREr1cOB4T0x8ek_UT-A7-PDeupiurbGPWJh0CYGMhiULb8aomsz3EczyqN_p3TCRE4Od0-TDvrEHSCYXkPuZ7n97a31fH286PfOM_V_fUdaxQBk6xrn4qchZoyo1GUOwDjx4x2Rdg0xpI-_vzEmVOa5VkF1XPb4H0IHlC2gMSiOIBBNA9khSYeB72dkz2mCPnCZ0cyf06yE_vdSFQlHX_T16mKP0o59ohZQwxeuYPb5LX1Cb00SLGVBI-drkoarwi7t-zpQ9u0VVEvaQW5rP3zcgC2wAXZ3kLY4c-Z72VKKV7D63x8JSONGq8q7COq7Rkhg"
+const BASE_URL = "http://localhost:8090"
 
 type testHttpClient struct {
 	http.Client
@@ -35,7 +43,8 @@ func newTestHttpClient() (*testHttpClient, error) {
 type httpRequest struct {
 	method      string
 	url         string
-	body        map[string]any
+	body        any
+	query       url.Values
 	bodyReader  io.Reader // either bodyReader or body. bodyReader take precedence over body
 	bearerToken string
 	headers     http.Header
@@ -48,7 +57,15 @@ type httpResponse struct {
 }
 
 func (c *testHttpClient) sendHttpRequest(req httpRequest, jsonResponse bool) (resp httpResponse, err error) {
-	url, err := url.JoinPath(BASE_URL, req.url)
+	requestUrl, err := url.JoinPath(BASE_URL, req.url)
+	if req.query != nil {
+		parsedUrl, err := url.Parse(requestUrl)
+		if err != nil {
+			return resp, err
+		}
+		parsedUrl.RawQuery = req.query.Encode()
+		requestUrl = parsedUrl.String()
+	}
 	if err != nil {
 		return
 	}
@@ -60,7 +77,7 @@ func (c *testHttpClient) sendHttpRequest(req httpRequest, jsonResponse bool) (re
 		}
 		req.bodyReader = bytes.NewReader(bodyBytes)
 	}
-	r, err := http.NewRequest(req.method, url, req.bodyReader)
+	r, err := http.NewRequest(req.method, requestUrl, req.bodyReader)
 	if err != nil {
 		return
 	}
@@ -219,4 +236,212 @@ func randomString(n int64) string {
 	bytes := make([]byte, n)
 	rand.Read(bytes)
 	return string(bytes)
+}
+
+type testFile struct {
+	name          string
+	size          int64
+	date          int64
+	data          string
+	mediaType     string
+	thumbnialData string
+}
+type ByDate []testFile
+
+func (a ByDate) Len() int           { return len(a) }
+func (a ByDate) Swap(i, j int)      { a[i], a[j] = a[j], a[i] }
+func (a ByDate) Less(i, j int) bool { return a[i].date < a[j].date }
+
+var _ sort.Interface = (ByDate)(nil)
+
+func (c *testHttpClient) UploadTest(t assert.TestingT, file testFile, chunkSize int64, bearerToken string) (httpResponse, error) {
+	if chunkSize == 0 {
+		return httpResponse{}, fmt.Errorf("chunkSize should be greater than 0")
+	}
+	// initchunkupload
+	resp, err := c.sendInitChunkUploadRequest(
+		file.name,
+		file.size,
+		file.mediaType,
+		file.date,
+		bearerToken,
+	)
+	if err != nil {
+		return resp, fmt.Errorf("init chunkupload failed: %v", err)
+	}
+	if ok := assert.Equal(t, 200, resp.status, "status"); !ok {
+		return resp, fmt.Errorf("init chunkupload failed: expected 200 status code but got %v", resp.status)
+	}
+
+	var requestID string
+	{
+		body := resp.body.(map[string]any)
+		value := body["requestID"]
+		requestID = value.(string)
+	}
+	if ok := assert.True(t, len(requestID) > 0, "requestID doesn't exist in reponse"); !ok {
+		return resp, fmt.Errorf("init chunkupload invalid response: requestID param is missing in response")
+	}
+
+	// uploadChunk
+	{
+		index := int64(0)
+		for index < file.size {
+			endIndex := index + chunkSize
+			if endIndex > file.size {
+				endIndex = file.size
+				chunkSize = endIndex - index
+			}
+			chunkData := file.data[index:endIndex]
+			resp, err := c.sendUploadChunkRequest(requestID, index, chunkSize, chunkData, file.name, bearerToken)
+			if !assert.NoError(t, err, "uploadChunk request") {
+				return resp, fmt.Errorf("uploadChunk request failed: %w", err)
+			}
+			if !assert.Equal(t, 200, resp.status, "status") {
+				return resp, fmt.Errorf("uploadChunk request failed: expected 200 status code but got %v", resp.status)
+			}
+			index = endIndex
+		}
+	}
+
+	// upload thumbnail
+	{
+		resp, err := c.sendUploadThumbnailRequest(requestID, file.thumbnialData, file.name, bearerToken)
+		if !assert.NoError(t, err, "uploadThumbnail request") {
+			return resp, fmt.Errorf("uploadChunk request failed: %w", err)
+		}
+		if !assert.Equal(t, 200, resp.status, "uploadThumbnail status") {
+			return resp, fmt.Errorf("uploadThumbnail request failed: expected 200 status code but got %v", resp.status)
+		}
+	}
+	// finish upload
+	{
+		resp, err = c.sendFinishUploadRequest(requestID, AUTH_TOKEN)
+		if !assert.NoError(t, err, "finishChunkUpload request") {
+			return resp, fmt.Errorf("finishChunkUpload request failed: %w", err)
+		}
+		if !assert.Equal(t, 200, resp.status, "finishChunkUpload status") {
+			return resp, fmt.Errorf("finishChunkUpload request failed: expected 200 status code but got %v", resp.status)
+		}
+	}
+	return resp, nil
+}
+
+// do not use this for big test files it will use memory = file size
+func (c *testHttpClient) DownloadTest(t assert.TestingT, url string, bearerToken string, expectedFile testFile) (httpResponse, error) {
+	resp, err := c.sendRefreshSessionRequest(bearerToken)
+	if !assert.NoError(t, err, "sendRefreshSessionRequest request") {
+		return resp, fmt.Errorf("sendRefreshSessionRequest request failed: %w", err)
+	}
+	if !assert.Equal(t, 200, resp.status, "sendRefreshSessionRequest status") {
+		return resp, fmt.Errorf("sendRefreshSessionRequest request failed: expected 200 status code but got %v", resp.status)
+	}
+	resp, err = c.sendGetMediaRequest(url)
+	if !assert.NoError(t, err, "GetMediaRequest request") {
+		return resp, fmt.Errorf("GetMediaRequest request failed: %w", err)
+	}
+	if !assert.Equal(t, 200, resp.status, "GetMediaRequest status") {
+		return resp, fmt.Errorf("GetMediaRequest request failed: expected 200 status code but got %v", resp.status)
+	}
+	respData, ok := resp.body.(string)
+	if !assert.True(t, ok, "GetMediaRequest invalid response type") {
+		return resp, fmt.Errorf("GetMediaRequst request failed: string type cast failed")
+	}
+	if !assert.Equal(t, expectedFile.size, int64(len(respData)), "GetMediaRequest file size") {
+		return resp, fmt.Errorf("GetMediaRequest file size: expected %d got %d", expectedFile.size, len(respData))
+	}
+	if !assert.Equal(t, expectedFile.data, respData, "GetMediaRequest file data") {
+		return resp, fmt.Errorf("GetMediaRequest file data did not match")
+	}
+	return resp, err
+}
+
+func (c *testHttpClient) DownloadThumbnailTest(t assert.TestingT, url string, bearerToken string, expectedFile testFile) (httpResponse, error) {
+	resp, err := c.sendRefreshSessionRequest(bearerToken)
+	if !assert.NoError(t, err, "sendRefreshSessionRequest request") {
+		return resp, fmt.Errorf("sendRefreshSessionRequest request failed: %w", err)
+	}
+	if !assert.Equal(t, 200, resp.status, "sendRefreshSessionRequest status") {
+		return resp, fmt.Errorf("sendRefreshSessionRequest request failed: expected 200 status code but got %v", resp.status)
+	}
+	resp, err = c.sendGetMediaRequest(url)
+	if !assert.NoError(t, err, "GetMediaRequest request") {
+		return resp, fmt.Errorf("GetMediaRequest request failed: %w", err)
+	}
+	if !assert.Equal(t, 200, resp.status, "GetMediaRequest status") {
+		return resp, fmt.Errorf("GetMediaRequest request failed: expected 200 status code but got %v", resp.status)
+	}
+	respData, ok := resp.body.(string)
+	if !assert.True(t, ok, "GetMediaRequest invalid response type") {
+		return resp, fmt.Errorf("GetMediaRequst request failed: string type cast failed")
+	}
+	if !assert.Equal(t, len(expectedFile.thumbnialData), len(respData), "GetMediaRequest file size") {
+		return resp, fmt.Errorf("GetMediaRequest file size: expected %d got %d", expectedFile.size, len(respData))
+	}
+	if !assert.Equal(t, expectedFile.thumbnialData, respData, "GetMediaRequest file data") {
+		return resp, fmt.Errorf("GetMediaRequest file data did not match")
+	}
+	return resp, err
+}
+
+func (c *testHttpClient) GetMediaRangeTest(t assert.TestingT, url string, bearerToken string, rangeSize int64, expectedFile testFile) (httpResponse, error) {
+	if rangeSize == 0 {
+		return httpResponse{}, fmt.Errorf("rangeSize should be greater than 0")
+	}
+	resp, err := c.sendRefreshSessionRequest(bearerToken)
+	if !assert.NoError(t, err, "sendRefreshSessionRequest request") {
+		return resp, fmt.Errorf("sendRefreshSessionRequest request failed: %w", err)
+	}
+	if !assert.Equal(t, 200, resp.status, "sendRefreshSessionRequest status") {
+		return resp, fmt.Errorf("sendRefreshSessionRequest request failed: expected 200 status code but got %v", resp.status)
+	}
+
+	var index int64 = 0
+	for index < expectedFile.size-1 {
+		startRange := index
+		// end range inclusive
+		endRange := index + rangeSize
+		if endRange > expectedFile.size-1 {
+			endRange = expectedFile.size - 1
+		}
+		resp, err = c.sendGetMediaRangeRequest(url, startRange, endRange)
+		if !assert.NoError(t, err, "GetMediaRangeRequest request") {
+			return resp, fmt.Errorf("GetMediaRangeRequest request failed: %w", err)
+		}
+		if !assert.Equal(t, 206, resp.status, "GetMediaRangeRequest status") {
+			return resp, fmt.Errorf("GetMediaRangeRequest request failed: expected 200 status code but got %v", resp.status)
+		}
+		respData, ok := resp.body.(string)
+		if !assert.True(t, ok, "GetMediaRangeRequest invalid response type") {
+			return resp, fmt.Errorf("GetMediaRangeRequest request failed: string type cast failed")
+		}
+		if !assert.Equal(t, endRange-startRange+1, int64(len(respData)), "GetMediaRangeRequest file size") {
+			return resp, fmt.Errorf("GetMediaRangeRequest file size: expected %d got %d", endRange-startRange, len(respData))
+		}
+		// end range inclusive
+		if !assert.Equal(t, expectedFile.data[startRange:endRange+1], respData, "GetMediaRangeRequest file data") {
+			return resp, fmt.Errorf("GetMediaRangeRequest file data did not match")
+		}
+		index = endRange
+	}
+	return resp, err
+}
+
+func (c *testHttpClient) GenerateAndUploadTestFiles(t assert.TestingT, n int, fileNamePrefix string, fileType string, fileSize int64, thumbnailSize int64, timeDifference time.Duration) (files []testFile, err error) {
+	for index := 0; index < n; index++ {
+		file := testFile{
+			name:          fmt.Sprintf("%s-%02d", fileNamePrefix, index+1),
+			size:          fileSize,
+			data:          randomString(fileSize),
+			date:          time.Now().Add(timeDifference * time.Duration(-1*index)).UnixMilli(),
+			mediaType:     fileType,
+			thumbnialData: randomString(thumbnailSize),
+		}
+		_, err = c.UploadTest(t, file, 10_000_000, AUTH_TOKEN)
+		if err != nil {
+			return
+		}
+		files = append(files, file)
+	}
+	return
 }

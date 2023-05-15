@@ -1,0 +1,21 @@
+[
+  {
+    "_id": "ec5d6f63-4966-462e-bbaa-97721326633c",
+    "colId": "dbc20b5a-c210-459f-b7a3-f01563b0ade8",
+    "containerId": "",
+    "name": "Search Sort API",
+    "url": "http://localhost:7700/indexes/media/search",
+    "method": "POST",
+    "sortNum": 10000,
+    "created": "2023-05-15T08:45:03.595Z",
+    "modified": "2023-05-15T08:45:03.595Z",
+    "headers": [],
+    "params": [],
+    "body": {
+      "type": "json",
+      "raw": "{\n  \"attributesToHighlight\": [\"*\"],\n  \"facets\": [],\n  \"limit\": 10,\n  \"offset\": 0,\n  \"q\": \"562e8ba1-4d2f-453a-821a-2ad0b575ae0a\",\n  \"sort\": [\"metadata.timestamp:desc\"]\n}",
+      "form": []
+    },
+    "tests": []
+  }
+]

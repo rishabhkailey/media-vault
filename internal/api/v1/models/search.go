@@ -5,23 +5,22 @@ import (
 
 	"github.com/rishabhkailey/media-service/internal/services/media"
 	mediasearch "github.com/rishabhkailey/media-service/internal/services/mediaSearch"
-	"github.com/rishabhkailey/media-service/internal/utils"
 	"github.com/sirupsen/logrus"
 )
 
 type SearchRequest struct {
-	OrderBy mediasearch.Order `form:"order" json:"order,omitempty" binding:"required"`
-	Sort    mediasearch.Sort  `form:"sort" json:"sort,omitempty" binding:"required"`
-	Page    int64             `form:"page" json:"page,omitempty" binding:"required"`
-	PerPage int64             `form:"perPage" json:"perPage,omitempty" binding:"required"`
-	Query   string            `form:"query" json:"query" binding:"required"`
+	OrderBy string `form:"order" json:"order,omitempty" binding:"required"`
+	Sort    string `form:"sort" json:"sort,omitempty" binding:"required"`
+	Page    int64  `form:"page" json:"page,omitempty" binding:"required"`
+	PerPage int64  `form:"perPage" json:"perPage,omitempty" binding:"required"`
+	Query   string `form:"query" json:"query" binding:"required"`
 }
 
 func (request *SearchRequest) Validate() error {
-	if !utils.Contains(mediasearch.SUPPORTED_ORDER_BY, request.OrderBy) {
+	if _, ok := mediasearch.OrderAttributesMapping[request.OrderBy]; !ok {
 		return fmt.Errorf("[MediaSearchQueryValidator] invalid param: OrderBy")
 	}
-	if !utils.Contains(mediasearch.SUPPORTED_SORT, request.Sort) {
+	if _, ok := mediasearch.SortKeywordMapping[request.Sort]; !ok {
 		return fmt.Errorf("[MediaSearchQueryValidator] invalid param: sort")
 	}
 	if request.Page < 0 || request.PerPage < 0 {

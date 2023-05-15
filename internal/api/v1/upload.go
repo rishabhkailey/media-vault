@@ -12,6 +12,7 @@ import (
 	"github.com/rishabhkailey/media-service/internal/services/media"
 	"github.com/rishabhkailey/media-service/internal/services/media/mediaimpl"
 	mediametadata "github.com/rishabhkailey/media-service/internal/services/mediaMetadata"
+	mediasearch "github.com/rishabhkailey/media-service/internal/services/mediaSearch"
 	mediastorage "github.com/rishabhkailey/media-service/internal/services/mediaStorage"
 	uploadrequests "github.com/rishabhkailey/media-service/internal/services/uploadRequests"
 	usermediabindings "github.com/rishabhkailey/media-service/internal/services/userMediaBindings"
@@ -203,7 +204,7 @@ func (server *Server) UploadThumbnail(c *gin.Context) {
 		UploadRequestID: requestBody.RequestID,
 	})
 	if errors.Is(err, gorm.ErrRecordNotFound) {
-		c.Error(internalErrors.ErrUnauthorized)
+		c.Error(internalErrors.ErrForbidden)
 		return
 	}
 	if err != nil {
@@ -279,18 +280,39 @@ func (server *Server) FinishChunkUpload(c *gin.Context) {
 		)
 		return
 	}
-	media, err := server.Media.GetMediaWithMetadataByUploadRequestID(c.Request.Context(), media.GetByUploadRequestQuery{
+	uploadedMedia, err := server.Media.GetMediaWithMetadataByUploadRequestID(c.Request.Context(), media.GetByUploadRequestQuery{
 		UploadRequestID: requestBody.RequestID,
 	})
 	if err != nil {
 		c.Error(
 			internalErrors.NewInternalServerError(
-				fmt.Errorf("[UploadThumbnail]: %w", err),
+				fmt.Errorf("[FinishChunkUpload]: %w", err),
 			),
 		)
 		return
 	}
-	mediaApiData, err := mediaimpl.NewGetMediaQueryResultItem(media)
+	index, err := mediasearch.MediaToMeiliSearchMediaIndex([]media.Model{uploadedMedia}, userID)
+	if err != nil {
+		// todo fail request on search index creation fail?
+		c.Error(
+			internalErrors.NewInternalServerError(
+				fmt.Errorf("[FinishChunkUpload]: %w", err),
+			),
+		)
+		return
+	}
+	_, err = server.MediaSearch.CreateMany(c.Request.Context(), index)
+	if err != nil {
+		// todo fail request on search index creation fail?
+		c.Error(
+			internalErrors.NewInternalServerError(
+				fmt.Errorf("[FinishChunkUpload]: %w", err),
+			),
+		)
+		return
+	}
+
+	mediaApiData, err := mediaimpl.NewGetMediaQueryResultItem(uploadedMedia)
 	if err != nil {
 		c.Error(
 			internalErrors.NewInternalServerError(

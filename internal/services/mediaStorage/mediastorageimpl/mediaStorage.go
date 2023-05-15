@@ -22,7 +22,12 @@ var _ mediastorage.Service = (*Service)(nil)
 
 func NewMinioService(cli *minio.Client, bucketName string, uploadRequestsService uploadrequests.Service,
 ) (*Service, error) {
+	var store store
 	store, err := newMinioStore(cli, bucketName)
+	if err != nil {
+		return nil, err
+	}
+	store, err = NewStoreCacheWrapper(store)
 	if err != nil {
 		return nil, err
 	}
@@ -44,24 +49,26 @@ func (s *Service) GetThumbnailByFileName(ctx context.Context, query mediastorage
 func (s *Service) HttpGetRangeHandler(ctx context.Context, query mediastorage.HttpGetRangeHandlerQuery) (int64, error) {
 	file, err := s.store.GetByFileName(ctx, query.FileName)
 	if err != nil {
-		return 0, err
+		return 0, fmt.Errorf("[mediaService.HttpGetRangeHandler]: get by file name failed: %w", err)
 	}
 	stat, err := file.Stat()
 	if err != nil {
-		return 0, err
+		return 0, fmt.Errorf("[mediaService.HttpGetRangeHandler]: get file stats failed: %w", err)
 	}
-	if query.Range.End > stat.Size() {
-		query.Range.End = stat.Size()
+	// range end inclusive
+	if query.Range.End > stat.Size()-1 {
+		query.Range.End = stat.Size() - 1
 	}
 	_, err = file.Seek(query.Range.Start, 0)
 	if err != nil {
-		return 0, err
+		return 0, fmt.Errorf("[mediaService.HttpGetRangeHandler]: file seek failed: %w", err)
 	}
-	// range end exclusive
-	contentLength := query.Range.End - query.Range.Start
+	// range start and end is inclusive
+	contentLength := query.Range.End - query.Range.Start + 1
 	// todo why can't we move the header logic to router and here we only copy the data
 	// change the function names accordingly
 	query.ResponseWriter.Header().Add("Content-Range", fmt.Sprintf("bytes %d-%d/%d", query.Range.Start, query.Range.End, stat.Size()))
+	// query.ResponseWriter.Header().Add("content-length", strconv.FormatInt(contentLength, 10))
 	return io.CopyN(query.ResponseWriter, file, contentLength)
 }
 
@@ -78,6 +85,7 @@ func (s *Service) HttpGetMediaHandler(ctx context.Context, query mediastorage.Ht
 	if err != nil {
 		return 0, err
 	}
+	// query.ResponseWriter.Header().Add("content-length", strconv.FormatInt(stat.Size(), 10))
 	return io.CopyN(query.ResponseWriter, file, stat.Size())
 }
 

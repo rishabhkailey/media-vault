@@ -32,11 +32,11 @@ func NewService(oidcClient auth.OidcClient, userMediaBindings usermediabindings.
 var _ authservice.Service = (*Service)(nil)
 
 func (s *Service) TerminateSession(cmd authservice.TerminateSessionCmd) error {
-	return session.Destroy(cmd.Ctx, cmd.ResponseWriter, &cmd.Request)
+	return session.Destroy(cmd.Ctx, cmd.ResponseWriter, cmd.Request)
 }
 
 func (s *Service) GetSessionExpireTime(query authservice.GetSessionExpireTimeQuery) (sessionExpireTime int64, err error) {
-	store, err := session.Start(query.Ctx, query.ResponseWriter, &query.Request)
+	store, err := session.Start(query.Ctx, query.ResponseWriter, query.Request)
 	if err != nil {
 		err = fmt.Errorf("[AuthService.GetSessionExpireTime] session start failed: %w", err)
 		return
@@ -49,7 +49,7 @@ func (s *Service) GetSessionExpireTime(query authservice.GetSessionExpireTimeQue
 		}
 	}
 	if sessionExpireTime < time.Now().Unix() {
-		err = fmt.Errorf("[AuthService.GetSessionExpireTime] session not found")
+		err = fmt.Errorf("[AuthService.GetSessionExpireTime] session not found or expired")
 		return
 	}
 	return
@@ -65,12 +65,12 @@ func (s *Service) ValidateUserAccess(query authservice.ValidateUserAccessQuery, 
 		return
 	}
 	if !auth.ValidateScope(userScope, scopes) {
-		err = authservice.ErrUnauthorized
+		err = authservice.ErrForbidden
 	}
 	return
 }
 
-func (s *Service) getUserScope(ctx context.Context, r http.Request, w http.ResponseWriter) (userID, userScope string, err error) {
+func (s *Service) getUserScope(ctx context.Context, r *http.Request, w http.ResponseWriter) (userID, userScope string, err error) {
 	userID, userScope, err = s.getUserScopeFromSession(ctx, r, w)
 	if err == nil {
 		return
@@ -86,8 +86,8 @@ func (s *Service) getUserScope(ctx context.Context, r http.Request, w http.Respo
 	return
 }
 
-func (s *Service) getUserScopeFromSession(ctx context.Context, r http.Request, w http.ResponseWriter) (userID, userScope string, err error) {
-	store, err := session.Start(ctx, w, &r)
+func (s *Service) getUserScopeFromSession(ctx context.Context, r *http.Request, w http.ResponseWriter) (userID, userScope string, err error) {
+	store, err := session.Start(ctx, w, r)
 	if err != nil {
 		err = fmt.Errorf("[AuthService.getUserScopeFromSession] session start failed: %w", err)
 		return
@@ -113,8 +113,8 @@ func (s *Service) getUserScopeFromSession(ctx context.Context, r http.Request, w
 	return
 }
 
-func (s *Service) getUserScopeFromOidcProvider(ctx context.Context, r http.Request, w http.ResponseWriter) (userID, userScope string, tokenExpireTime int64, err error) {
-	token, ok := auth.GetBearerToken(&r)
+func (s *Service) getUserScopeFromOidcProvider(ctx context.Context, r *http.Request, w http.ResponseWriter) (userID, userScope string, tokenExpireTime int64, err error) {
+	token, ok := auth.GetBearerToken(r)
 	if !ok {
 		err = authservice.ErrUnauthorized
 		return
@@ -130,8 +130,8 @@ func (s *Service) getUserScopeFromOidcProvider(ctx context.Context, r http.Reque
 	return
 }
 
-func (s *Service) saveUserScopeInSession(ctx context.Context, r http.Request, w http.ResponseWriter, userID, userScope string, tokenExpireTime int64) (err error) {
-	store, err := session.Start(ctx, w, &r)
+func (s *Service) saveUserScopeInSession(ctx context.Context, r *http.Request, w http.ResponseWriter, userID, userScope string, tokenExpireTime int64) (err error) {
+	store, err := session.Start(ctx, w, r)
 	if err != nil {
 		return fmt.Errorf("[AuthService.saveUserScopeInSession] session start failed: %w", err)
 	}
@@ -161,7 +161,7 @@ func (s *Service) ValidateUserMediaAccess(query authservice.ValidateUserMediaAcc
 		return
 	}
 	err = s.validateUserMediaAccessFromSession(query.Ctx, query.Request, query.ResponseWriter, query.FileName, userID)
-	if err == nil || errors.Is(err, authservice.ErrUnauthorized) {
+	if err == nil || errors.Is(err, authservice.ErrForbidden) {
 		return
 	}
 	fileBelongsTofileBelongsToUser, err := s.userMediaBindings.CheckFileBelongsToUser(query.Ctx, usermediabindings.CheckFileBelongsToUserQuery{
@@ -175,7 +175,7 @@ func (s *Service) ValidateUserMediaAccess(query authservice.ValidateUserMediaAcc
 		logrus.Warnf("[AuthService.ValidateUserMediaAccess]: saving user access to session failed")
 	}
 	if !fileBelongsTofileBelongsToUser {
-		err = authservice.ErrUnauthorized
+		err = authservice.ErrForbidden
 	}
 	return
 }
@@ -184,8 +184,8 @@ func userMediaAccessSessionKey(userID, fileName string) string {
 	return fmt.Sprintf("%s:%s", fileName, userID)
 }
 
-func (s *Service) validateUserMediaAccessFromSession(ctx context.Context, r http.Request, w http.ResponseWriter, fileName string, userID string) (err error) {
-	store, err := session.Start(ctx, w, &r)
+func (s *Service) validateUserMediaAccessFromSession(ctx context.Context, r *http.Request, w http.ResponseWriter, fileName string, userID string) (err error) {
+	store, err := session.Start(ctx, w, r)
 	if err != nil {
 		return err
 	}
@@ -200,17 +200,29 @@ func (s *Service) validateUserMediaAccessFromSession(ctx context.Context, r http
 		return fmt.Errorf("[AuthService.validateUserMediaAccessFromSession]: not found")
 	}
 	if !fileBelongsToUser {
-		err = authservice.ErrUnauthorized
+		err = authservice.ErrForbidden
 	}
 	return
 }
 
-func (s *Service) SaveUserMediaAccessInSession(ctx context.Context, r http.Request, w http.ResponseWriter, fileName string, userID string, value bool) (err error) {
-	store, err := session.Start(ctx, w, &r)
+func (s *Service) SaveUserMediaAccessInSession(ctx context.Context, r *http.Request, w http.ResponseWriter, fileName string, userID string, value bool) (err error) {
+	store, err := session.Start(ctx, w, r)
 	if err != nil {
 		return fmt.Errorf("[AuthService.saveUserScopeInSession] session start failed: %w", err)
 	}
 	key := userMediaAccessSessionKey(fileName, userID)
 	store.Set(key, value)
 	return store.Save()
+}
+
+func (s *Service) RefreshSession(query authservice.RefreshSessionQuery) (expireTime int64, err error) {
+	userID, userScope, expireTime, err := s.getUserScopeFromOidcProvider(query.Request.Context(), query.Request, query.ResponseWriter)
+	if err != nil {
+		return
+	}
+	err = s.saveUserScopeInSession(query.Request.Context(), query.Request, query.ResponseWriter, userID, userScope, expireTime)
+	if err != nil {
+		return
+	}
+	return expireTime, err
 }

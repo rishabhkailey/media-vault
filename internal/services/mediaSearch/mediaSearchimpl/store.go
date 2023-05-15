@@ -133,7 +133,7 @@ type searchGetMediaIDsOnlyResponse struct {
 
 func (s *meiliSearchStore) SearchGetMediaIDsOnly(ctx context.Context, query mediasearch.MediaSearchQuery) (mediaIDs []uint, err error) {
 	orderByAttribute := mediasearch.OrderAttributesMapping[query.OrderBy]
-	sort := fmt.Sprintf("%s:%s", orderByAttribute, query.Sort)
+	sort := fmt.Sprintf("%s:%s", orderByAttribute, mediasearch.SortKeywordMapping[query.Sort])
 	var rawResponse *json.RawMessage
 	rawResponse, err = s.index.SearchRaw(query.Query, &meilisearch.SearchRequest{
 		Sort:                 []string{sort},

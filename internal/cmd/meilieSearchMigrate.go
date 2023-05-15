@@ -29,7 +29,7 @@ func MeiliSearchMigrate(gormDB *gorm.DB, meiliSearch *meilisearch.Client, batchS
 	var offset int64 = 0
 	var batchNumber int = 0
 	var waitGroup sync.WaitGroup
-	mediaSearch, err := mediasearchimpl.NewService(meiliSearch)
+	mediaSearchService, err := mediasearchimpl.NewService(meiliSearch)
 	if err != nil {
 		return err
 	}
@@ -42,14 +42,14 @@ func MeiliSearchMigrate(gormDB *gorm.DB, meiliSearch *meilisearch.Client, batchS
 		if len(mediaList) == 0 {
 			logrus.Warnf("[MeiliSearchMigrate] batch %v with 0 size", batchNumber)
 		}
-		meiliSearchMediaList, err := toMeiliSearchMediaIndex(mediaList)
+		meiliSearchMediaList, err := mediasearch.UserMediaBindingToMeiliSearchMediaIndex(mediaList)
 		if err != nil {
 			return fmt.Errorf("[MeiliSearchMigrate] toMeiliSearchMediaIndex failed for batch %v: %w", batchNumber, err)
 		}
 		if len(meiliSearchMediaList) != len(mediaList) {
 			return fmt.Errorf("[MeiliSearchMigrate] meiliSearchMediaList returned slice of different length for batch %v", batchNumber)
 		}
-		taskID, err := mediaSearch.CreateMany(context.Background(), meiliSearchMediaList)
+		taskID, err := mediaSearchService.CreateMany(context.Background(), meiliSearchMediaList)
 		if err != nil {
 			return fmt.Errorf("[MeiliSearchMigrate] add documents failed for batch %v: %w", batchNumber, err)
 		}
@@ -73,26 +73,4 @@ func MeiliSearchMigrate(gormDB *gorm.DB, meiliSearch *meilisearch.Client, batchS
 	waitGroup.Wait()
 	logrus.Infof("[MeiliSearchMigrate] migration completed")
 	return nil
-}
-
-func toMeiliSearchMediaIndex(userMediaBindingList []usermediabindings.Model) (meiliSearchMediaList []mediasearch.Model, err error) {
-	defer func() {
-		if r := recover(); r != nil {
-			err = fmt.Errorf("[toMeiliSearchMediaIndex] panic :%v", r)
-		}
-	}()
-	for _, userMediaBinding := range userMediaBindingList {
-		meiliSearchMediaList = append(meiliSearchMediaList, mediasearch.Model{
-			MediaID:    userMediaBinding.Media.ID,
-			UserID:     userMediaBinding.UserID,
-			UploadedAt: userMediaBinding.CreatedAt.Unix(),
-			Metadata: mediasearch.MediaSearchMetadata{
-				Name:      userMediaBinding.Media.Metadata.Name,
-				Type:      userMediaBinding.Media.Metadata.Type,
-				Timestamp: userMediaBinding.Media.Metadata.Date.Unix(),
-				Date:      userMediaBinding.Media.Metadata.Date.Format("Monday January 2 2006 UTC"),
-			},
-		})
-	}
-	return
 }

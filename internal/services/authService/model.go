@@ -9,7 +9,7 @@ import (
 type SessionStoreQuery struct {
 	Ctx            context.Context
 	ResponseWriter http.ResponseWriter
-	Request        http.Request
+	Request        *http.Request
 }
 
 type TerminateSessionCmd struct {
@@ -24,12 +24,17 @@ type GetSessionExpireTimeQuery struct {
 	SessionStoreQuery
 }
 
+type RefreshSessionQuery struct {
+	SessionStoreQuery
+}
+
 type ValidateUserMediaAccessQuery struct {
 	SessionStoreQuery
 	FileName string
 }
 
 var ErrUnauthorized = errors.New("unauthorized")
+var ErrForbidden = errors.New("forbidden")
 
 // todo change scope to unique-id/user and unique-id/admin
 // const UserScope = "media-service/user"

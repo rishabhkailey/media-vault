@@ -31,3 +31,7 @@ func (s *FakeService) ValidateUserAccess(query authservice.ValidateUserAccessQue
 func (s *FakeService) ValidateUserMediaAccess(query authservice.ValidateUserMediaAccessQuery) (err error) {
 	return s.ExpectedError
 }
+
+func (s *FakeService) RefreshSession(query authservice.RefreshSessionQuery) (int64, error) {
+	return s.ExpectedSessionExpireTime, s.ExpectedError
+}

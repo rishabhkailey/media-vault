@@ -28,36 +28,41 @@ func NewRouter(v1ApiServer *v1Api.Server, config config.Config) (*gin.Engine, er
 		static.Serve("/consentscreen", static.LocalFile(config.WebUIConfig.Directory, false)),
 	)
 
-	// session based and fallback to bearer token
-	userProtected := router.Group("/")
-	userProtected.Use(v1ApiServer.UserAuthMiddleware)
+	v1 := router.Group("/v1")
 	{
-		v1UserProtected := userProtected.Group("/v1")
+		// refresh session has its own auth validation
+		v1.POST("/refreshSession", v1ApiServer.RefreshSession)
+
+		// session based and fallback to bearer token
+		userProtected := v1.Group("/")
+		userProtected.Use(v1ApiServer.UserAuthMiddleware)
 		{
-			v1UserProtected.POST("/initChunkUpload", v1ApiServer.InitChunkUpload)
-			v1UserProtected.POST("/uploadChunk", v1ApiServer.UploadChunk)
-			v1UserProtected.POST("/finishChunkUpload", v1ApiServer.FinishChunkUpload)
-			v1UserProtected.POST("/uploadThumbnail", v1ApiServer.UploadThumbnail)
-			v1UserProtected.GET("/mediaList", v1ApiServer.MediaList)
-			v1UserProtected.GET("/search", v1ApiServer.Search)
+			v1UserProtected := userProtected.Group("/")
+			{
+				v1UserProtected.POST("/initChunkUpload", v1ApiServer.InitChunkUpload)
+				v1UserProtected.POST("/uploadChunk", v1ApiServer.UploadChunk)
+				v1UserProtected.POST("/finishChunkUpload", v1ApiServer.FinishChunkUpload)
+				v1UserProtected.POST("/uploadThumbnail", v1ApiServer.UploadThumbnail)
+				v1UserProtected.GET("/mediaList", v1ApiServer.MediaList)
+				v1UserProtected.GET("/search", v1ApiServer.Search)
+			}
+		}
+
+		// session based only
+		v1FileAccessProtected := v1.Group("/")
+		v1FileAccessProtected.Use(v1ApiServer.SessionBasedMediaAuthMiddleware)
+		{
+			v1FileAccessProtected.GET("/media/:fileName", v1ApiServer.GetMedia)
+			v1FileAccessProtected.GET("/thumbnail/:fileName", v1ApiServer.GetThumbnail)
+		}
+
+		// bearer token only
+		v1ProtectedBearerOnly := v1.Group("/")
+		v1ProtectedBearerOnly.Use(v1ApiServer.UserAuthMiddleware)
+		{
+			v1ProtectedBearerOnly.POST("/terminateSession", v1ApiServer.TerminateSession)
 		}
 	}
-
-	v1FileAccessProtected := router.Group("/v1")
-	v1FileAccessProtected.Use(v1ApiServer.SessionBasedMediaAuthMiddleware)
-	{
-		v1FileAccessProtected.GET("/media/:fileName", v1ApiServer.GetMedia)
-		v1FileAccessProtected.GET("/thumbnail/:fileName", v1ApiServer.GetThumbnail)
-	}
-
-	// bearer token only
-	v1ProtectedBearerOnly := router.Group("/v1")
-	v1ProtectedBearerOnly.Use(v1ApiServer.UserAuthMiddleware)
-	{
-		v1ProtectedBearerOnly.POST("/refreshSession", v1ApiServer.RefreshSession)
-		v1ProtectedBearerOnly.POST("/terminateSession", v1ApiServer.TerminateSession)
-	}
-
 	debug := router.Group("/debug")
 	{
 		debug.GET("/pprof/:profile", func(c *gin.Context) {

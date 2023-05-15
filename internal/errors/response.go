@@ -41,8 +41,17 @@ func NewBadRequestError(err error, publicMessage string) CustomError {
 	}
 }
 
+func NewForbiddenError(err error) CustomError {
+	return CustomError{
+		Err:           err,
+		PublicMessage: "User is not authorized to access the requested resource",
+		Status:        http.StatusForbidden,
+	}
+}
+
 // predefined errors
 var (
-	ErrUnauthorized       CustomError = New(http.StatusUnauthorized, "unathurized", "Access to the requested resource is unauthorized")
+	ErrUnauthorized       CustomError = New(http.StatusUnauthorized, "unathurized", "Authentication Required - Please provide valid credentials to access this resource")
+	ErrForbidden          CustomError = NewForbiddenError(errors.New("forbidden"))
 	ErrMissingBearerToken CustomError = New(http.StatusUnauthorized, "missing bearer token", "Bearer token is required to access the requested resource")
 )

@@ -15,13 +15,17 @@ func (server *Server) UserAuthMiddleware(c *gin.Context) {
 		SessionStoreQuery: authservice.SessionStoreQuery{
 			Ctx:            c.Request.Context(),
 			ResponseWriter: c.Writer,
-			Request:        *c.Request,
+			Request:        c.Request,
 		},
 	}, []string{authservice.UserScope})
-
 	if errors.Is(err, authservice.ErrUnauthorized) {
 		c.Abort()
 		c.Error(internalErrors.ErrUnauthorized)
+		return
+	}
+	if errors.Is(err, authservice.ErrForbidden) {
+		c.Abort()
+		c.Error(internalErrors.NewForbiddenError(err))
 		return
 	}
 	if err != nil {
@@ -35,13 +39,24 @@ func (server *Server) UserAuthMiddleware(c *gin.Context) {
 
 // refresh session endpoint called on application startup so user can watch media without interuption
 func (server *Server) RefreshSession(c *gin.Context) {
-	expires, err := server.AuthService.GetSessionExpireTime(authservice.GetSessionExpireTimeQuery{
+	expires, err := server.AuthService.RefreshSession(authservice.RefreshSessionQuery{
 		SessionStoreQuery: authservice.SessionStoreQuery{
 			Ctx:            c.Request.Context(),
 			ResponseWriter: c.Writer,
-			Request:        *c.Request,
+			Request:        c.Request,
 		},
 	})
+	// todo instead of this duplicate code, we can use errors from internalErrors package and no need to check error type here
+	if errors.Is(err, authservice.ErrUnauthorized) {
+		c.Abort()
+		c.Error(internalErrors.ErrUnauthorized)
+		return
+	}
+	if errors.Is(err, authservice.ErrForbidden) {
+		c.Abort()
+		c.Error(internalErrors.NewForbiddenError(err))
+		return
+	}
 	if err != nil {
 		c.Abort()
 		c.Error(internalErrors.NewInternalServerError(
@@ -75,13 +90,23 @@ func (server *Server) SessionBasedMediaAuthMiddleware(c *gin.Context) {
 		SessionStoreQuery: authservice.SessionStoreQuery{
 			Ctx:            c.Request.Context(),
 			ResponseWriter: c.Writer,
-			Request:        *c.Request,
+			Request:        c.Request,
 		},
 		FileName: fileName,
 	})
 	if errors.Is(err, authservice.ErrUnauthorized) {
 		c.Abort()
 		c.Error(internalErrors.ErrUnauthorized)
+		return
+	}
+	if errors.Is(err, authservice.ErrForbidden) {
+		c.Abort()
+		c.Error(internalErrors.NewForbiddenError(err))
+		return
+	}
+	if errors.Is(err, authservice.ErrForbidden) {
+		c.Abort()
+		c.Error(internalErrors.NewForbiddenError(err))
 		return
 	}
 	if err != nil {
@@ -97,7 +122,7 @@ func (server *Server) TerminateSession(c *gin.Context) {
 		SessionStoreQuery: authservice.SessionStoreQuery{
 			Ctx:            c.Request.Context(),
 			ResponseWriter: c.Writer,
-			Request:        *c.Request,
+			Request:        c.Request,
 		},
 	})
 	if err != nil {

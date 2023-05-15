@@ -42,11 +42,9 @@ func TestRefreshSession(t *testing.T) {
 			},
 		},
 		{
-			name:           "unathorized",
-			expectedStatus: 401,
-			expectedResponse: map[string]any{
-				"error": "Access to the requested resource is unauthorized",
-			},
+			name:             "unathorized",
+			expectedStatus:   401,
+			expectedResponse: nil,
 			authService: authserviceimpl.FakeService{
 				ExpectedError: authservice.ErrUnauthorized,
 			},
