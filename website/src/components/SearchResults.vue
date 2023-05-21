@@ -1,51 +1,50 @@
 <script setup lang="ts">
 import LazyMediaThumbnailsPreview from "@/components/LazyMediaThumbnailsPreview.vue";
-import {
-  LOAD_MORE_SEARCH_RESULTS_ACTION,
-  SEARCH_RESULTS_GETTER,
-  ALL_SEARCH_RESULTS_LOADED_GETTER,
-  UPDATE_SEARCH_QUERY,
-} from "@/store/modules/search";
-import { computed, onMounted, onBeforeMount } from "vue";
+import { onBeforeMount } from "vue";
 import { useRoute } from "vue-router";
-import { useStore } from "vuex";
-import type { LoadSearchResults } from "@/store/modules/search";
+import { useSearchStore } from "@/piniaStore/search";
+import { useAuthStore } from "@/piniaStore/auth";
+import { storeToRefs } from "pinia";
 const route = useRoute();
 const searchQuery = Array.isArray(route.params.query)
   ? route.params.query[0]
   : route.params.query;
 
-const store = useStore();
-// todo create conts for nested modules searchModule/mediaList
-const mediaList = computed<Array<Media>>(
-  () => store.getters[SEARCH_RESULTS_GETTER]
-);
-const allMediaLoaded = computed<boolean>(
-  () => store.getters[ALL_SEARCH_RESULTS_LOADED_GETTER]
-);
-
-const payload: LoadSearchResults = {
-  query: searchQuery,
-};
-const loadMoreMedia = () =>
-  store.dispatch(LOAD_MORE_SEARCH_RESULTS_ACTION, payload);
-
+const { accessToken } = storeToRefs(useAuthStore());
+const searchStore = useSearchStore();
+const { mediaList, allMediaLoaded } = storeToRefs(searchStore);
+const { loadMoreSearchResults, setQuery } = searchStore;
 onBeforeMount(() => {
   // as we are using global store for search results, it can still have results of old media search
   // this will ensure to update search query and results in store
-  store.dispatch(UPDATE_SEARCH_QUERY, payload);
+  setQuery(searchQuery);
 });
-// onMounted(() => {
-//   // as we are using global store for search results, it can still have results of old media search
-//   // this will ensure to update search query and results in store
-//   store.dispatch(UPDATE_SEARCH_QUERY, payload);
-// });
+
+function loadAllMediaOfDate(date: Date): Promise<boolean> {
+  return new Promise((resolve, reject) => {
+    let lastMedia = mediaList.value[mediaList.value.length - 1];
+    while (date < lastMedia.date && !allMediaLoaded.value) {
+      loadMoreSearchResults(accessToken.value, searchQuery)
+        .then(() => {
+          lastMedia = mediaList.value[mediaList.value.length - 1];
+        })
+        .catch((err) => {
+          reject(err);
+          return;
+        });
+    }
+    resolve(true);
+    return;
+  });
+}
 </script>
 
 <template>
   <LazyMediaThumbnailsPreview
     :media-list="mediaList"
     :all-media-loaded="allMediaLoaded"
-    :load-more-media="loadMoreMedia"
+    :load-more-media="() => loadMoreSearchResults(accessToken, searchQuery)"
+    :load-all-media-of-date="loadAllMediaOfDate"
   />
+  <!-- :load-more-media="() => loadMoreSearchResults(accessToken, searchQuery)" -->
 </template>

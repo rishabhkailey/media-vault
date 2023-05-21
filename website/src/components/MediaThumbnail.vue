@@ -3,6 +3,10 @@ import { ref } from "vue";
 
 const props = defineProps<{
   media: Media;
+  height: number;
+  width: number;
+  padding: number;
+  aspectRatio: number;
 }>();
 const emit = defineEmits<{
   (e: "click"): void;
@@ -29,14 +33,16 @@ const getIcon = (mediaType: string) => {
           emit('click');
         }
       "
+      :style="`padding: ${props.padding}px`"
       v-bind="hoverProps"
       :elevation="isHovering ? 6 : 0"
     >
       <v-img
         v-if="props.media.thumbnail"
         :src="props.media.thumbnail_url"
-        width="150"
-        aspect-ratio="1"
+        :width="props.width - 2 * props.padding"
+        :height="props.height - 2 * props.padding"
+        :aspect-ratio="props.aspectRatio"
         ref="imageElement"
         cover
       >
@@ -53,14 +59,17 @@ const getIcon = (mediaType: string) => {
           <div class="d-flex align-center justify-center fill-height">
             <v-icon
               :icon="getIcon(props.media.type)"
-              style="font-size: 150px"
+              :style="`font-size: ${props.width - 2 * props.padding}px`"
             />
           </div>
         </template>
       </v-img>
       <div v-else>
         <div class="d-flex align-center justify-center fill-height">
-          <v-icon :icon="getIcon(props.media.type)" style="font-size: 150px" />
+          <v-icon
+            :icon="getIcon(props.media.type)"
+            :style="`font-size: ${props.width - 2 * props.padding}px`"
+          />
         </div>
       </div>
     </v-card>

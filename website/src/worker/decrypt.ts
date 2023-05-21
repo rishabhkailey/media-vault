@@ -107,6 +107,7 @@ const decryptChunk: (input: Uint8Array, decryptor: Chacha20) => Uint8Array = (
     if (!decrypted?.length || decrypted.length !== input.length) {
       console.log(decrypted);
     }
+    // console.log(new TextDecoder().decode(decrypted));
     return decrypted;
   } catch (err) {
     console.log(err);
@@ -144,7 +145,7 @@ async function internalFetch(req: Request) {
   if (byteCounter !== 0) {
     decryptor.decrypt(useless.slice(0, byteCounter));
   }
-  console.log(req, self.clients.matchAll());
+  // console.log(req, self.clients.matchAll());
   // await new Promise((r) => {
   //   setTimeout(r, 1000);
   // });
@@ -158,11 +159,11 @@ async function internalFetch(req: Request) {
     const decryptedStream = encryptedStream.pipeThrough(
       newDecryptTransformer(decryptor)
     );
-    console.log(rangeHeader, range);
-    console.log(req);
+    // console.log(rangeHeader, range);
+    // console.log(req);
     // const blob = await new Response(decryptedStream).blob();
     // console.log(await blob.text());
-    console.log(res.headers.get("Content-Type"));
+    // console.log(res.headers.get("Content-Type"));
     return new Response(decryptedStream, {
       headers: res.headers,
       status: res.status,
@@ -223,7 +224,9 @@ self.onfetch = (event) => {
   }
   const hijacke = map.get(url);
 
-  if (!hijacke) return null;
+  if (!hijacke) {
+    return null;
+  }
 
   const [stream, data, port] = hijacke;
 
@@ -243,16 +246,18 @@ self.onfetch = (event) => {
   });
 
   const headers = new Headers(data.headers || {});
-
-  if (headers.has("Content-Length")) {
-    responseHeaders.set("Content-Length", headers.get("Content-Length"));
+  {
+    const contentLength = headers.get("Content-Length");
+    if (contentLength != null) {
+      responseHeaders.set("Content-Length", contentLength);
+    }
   }
 
-  if (headers.has("Content-Disposition")) {
-    responseHeaders.set(
-      "Content-Disposition",
-      headers.get("Content-Disposition")
-    );
+  {
+    const contentDisposition = headers.get("Content-Disposition");
+    if (contentDisposition != null) {
+      responseHeaders.set("Content-Disposition", contentDisposition);
+    }
   }
 
   // data, data.filename and size should not be used anymore

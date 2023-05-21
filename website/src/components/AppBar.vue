@@ -2,8 +2,7 @@
 import SelectFileButton from "@/components/SelectFileButton.vue";
 import UploadFilesDialog from "@/components/UploadFilesDialog.vue";
 import { computed, inject, ref } from "vue";
-import { useStore } from "vuex";
-import { RESET_USERINFO_ACTION } from "@/store/actions-type";
+import { useAuthStore } from "@/piniaStore/auth";
 import { userManagerKey } from "@/symbols/injectionSymbols";
 import type { UserManager } from "oidc-client-ts";
 import { signinUsingUserManager } from "@/utils/auth";
@@ -11,6 +10,7 @@ import axios from "axios";
 import { useDisplay } from "vuetify/lib/framework.mjs";
 import SearchInputField from "./SearchInputField.vue";
 import { useRouter } from "vue-router";
+import { storeToRefs } from "pinia";
 
 const router = useRouter();
 const display = useDisplay();
@@ -27,13 +27,11 @@ const emit = defineEmits<{
 }>();
 
 const search = ref("");
-const store = useStore();
 const loading = ref(false);
 // todo error and error message pop up
 const error = ref(false);
-const authenticated = computed(() => store.getters.authenticated);
-const userName = computed(() => store.getters.userName);
-const email = computed(() => store.getters.email);
+const authStore = useAuthStore();
+const { authenticated, userName, email } = storeToRefs(authStore);
 
 const selectedFiles = ref<Array<File>>([]);
 const uploadFilesDialogModel = ref(false);
@@ -47,7 +45,7 @@ const logOut = async () => {
   loading.value = true;
   try {
     await userManager.revokeTokens(["access_token", "refresh_token"]);
-    await store.dispatch(RESET_USERINFO_ACTION);
+    authStore.reset();
     await userManager.removeUser();
     let response = await axios.post("/v1/terminateSession");
     if (response.status !== 200) {

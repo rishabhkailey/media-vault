@@ -1,6 +1,6 @@
 import * as streamSaver from "streamsaver";
 import { parseResponseRangeHeader, type IResponseRange } from "./request";
-import { Chacha20 } from "ts-chacha20";
+// import { Chacha20 } from "ts-chacha20";
 // const streamSaver = require("streamsaver");
 export function download(url: string, fileName: string) {
   return new Promise<boolean>((resolve, reject) => {
@@ -40,17 +40,18 @@ const whileRangeDownloadWithDecrypt = async function (
   let fileSize = 1; /*fileSize is set to 1 to send atleast 1 request, it will be updated after first response*/
   // 100 mb
   // let writer = fileStream.getWriter();
-  const password = "01234567890123456789012345678901";
-  const nonce = "012345678901";
-  const textEncoder = new TextEncoder();
-  const decryptor = new Chacha20(
-    textEncoder.encode(password),
-    textEncoder.encode(nonce)
-  );
+  // const password = "01234567890123456789012345678901";
+  // const nonce = "012345678901";
+  // const textEncoder = new TextEncoder();
+  // const decryptor = new Chacha20(
+  //   textEncoder.encode(password),
+  //   textEncoder.encode(nonce)
+  // );
   while (index < fileSize) {
     response = await fetch(url, {
       headers: {
-        Range: `bytes=${index}-${index + idealRangeSize}`,
+        // range start and end is inclusive
+        Range: `bytes=${index}-${index + idealRangeSize - 1}`,
       },
     });
     if (response.status !== 206) {
@@ -70,10 +71,11 @@ const whileRangeDownloadWithDecrypt = async function (
       range = parseResponseRangeHeader(rangeHeader);
       fileSize = range.size;
     }
-    length = Number(response.headers.get("content-length"));
-    if (length == 0) {
-      throw new Error("empty response received");
-    }
+    length = range.end - range.start + 1;
+    // length = Number(response.headers.get("content-length"));
+    // if (length == 0) {
+    //   throw new Error("empty response received");
+    // }
     // write the current request data to file and then we will loop over the range
     const readableStream = response.body;
     if (!readableStream) {
@@ -98,28 +100,28 @@ const whileRangeDownloadWithDecrypt = async function (
   fileStream.close();
 };
 
-export function newDecryptTransformer(decryptor: Chacha20) {
-  return new TransformStream<Uint8Array, Uint8Array>({
-    start() {},
-    transform(chunk, controller) {
-      if (!chunk) {
-        console.log("undefined chunk");
-      }
-      controller.enqueue(decryptChunk(decryptor, chunk));
-    },
-    flush() {},
-  });
-}
+// export function newDecryptTransformer(decryptor: Chacha20) {
+//   return new TransformStream<Uint8Array, Uint8Array>({
+//     start() {},
+//     transform(chunk, controller) {
+//       if (!chunk) {
+//         console.log("undefined chunk");
+//       }
+//       controller.enqueue(decryptChunk(decryptor, chunk));
+//     },
+//     flush() {},
+//   });
+// }
 
-export function decryptChunk(decryptor: Chacha20, input: Uint8Array) {
-  try {
-    const decrypted = decryptor.decrypt(input);
-    if (!decrypted?.length || decrypted.length !== input.length) {
-      console.log(decrypted);
-    }
-    return decrypted;
-  } catch (err) {
-    console.log(err);
-  }
-  return new Uint8Array(0);
-}
+// export function decryptChunk(decryptor: Chacha20, input: Uint8Array) {
+//   try {
+//     const decrypted = decryptor.decrypt(input);
+//     if (!decrypted?.length || decrypted.length !== input.length) {
+//       console.log(decrypted);
+//     }
+//     return decrypted;
+//   } catch (err) {
+//     console.log(err);
+//   }
+//   return new Uint8Array(0);
+// }

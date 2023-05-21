@@ -1,26 +1,24 @@
 <script setup lang="ts">
-import { UserManager, OidcClient, User } from "oidc-client-ts";
+import type { UserManager, User } from "oidc-client-ts";
 import { onMounted, inject } from "vue";
 import { useRouter, type LocationQueryRaw } from "vue-router";
 import { userManagerKey } from "@/symbols/injectionSymbols";
-import { useStore } from "vuex";
-import { SET_USERINFO_ACTION } from "@/store/actions-type";
 import {
   handlePostLoginUsingUserManager,
   signinUsingUserManager,
 } from "@/utils/auth";
-
-const store = useStore();
+import { useAuthStore } from "@/piniaStore/auth";
+const authStore = useAuthStore();
 // todo make this a component with slot for ui and callback methods as props, onSuccess, onError, getUserinfo: bool, onGetUserInfoSuccess, onGetUserInfoError
 // button type signIn or singOut?
 
-const oidcClient = new OidcClient({
-  client_id: "spa-test",
-  authority: "http://localhost:8080",
-  redirect_uri: window.location.origin + "/pkce",
-  metadataUrl:
-    "http://localhost:8080/v1/spa-test/.well-known/openid-configuration",
-});
+// const oidcClient = new OidcClient({
+//   client_id: "spa-test",
+//   authority: "http://localhost:8080",
+//   redirect_uri: window.location.origin + "/pkce",
+//   metadataUrl:
+//     "http://localhost:8080/v1/spa-test/.well-known/openid-configuration",
+// });
 
 const userManager: UserManager | undefined = inject(userManagerKey);
 
@@ -49,33 +47,28 @@ const handlePostLogin = async () => {
   handlePostLoginUsingUserManager(userManager)
     .then((user: User) => {
       console.log(user);
-      store
-        .dispatch(SET_USERINFO_ACTION, user)
-        .then((message) => {
-          console.log(message);
-          let internalState = user.state as InternalState;
-          if (
-            internalState.internalRedirectPath.length !== 0 ||
-            internalState.internalRedirectQuery.length !== 0
-          ) {
-            // location.href = user.state?.internalRedirectUri;
-            let query: LocationQueryRaw = {};
-            let searchParams = new URLSearchParams(
-              internalState.internalRedirectQuery
-            );
-            searchParams.forEach((value, key) => {
-              query[key] = value;
-            });
-            router.replace({
-              path: internalState.internalRedirectPath,
-              query: query,
-            });
-          }
-        })
-        .catch((message) => {
-          console.log(message);
-          // todo redirect to error page
+      if (user.profile.email === undefined) {
+        throw new Error("email missing from the response");
+      }
+      authStore.setUserInfo(user);
+      let internalState = user.state as InternalState;
+      if (
+        internalState.internalRedirectPath.length !== 0 ||
+        internalState.internalRedirectQuery.length !== 0
+      ) {
+        // location.href = user.state?.internalRedirectUri;
+        let query: LocationQueryRaw = {};
+        let searchParams = new URLSearchParams(
+          internalState.internalRedirectQuery
+        );
+        searchParams.forEach((value, key) => {
+          query[key] = value;
         });
+        router.replace({
+          path: internalState.internalRedirectPath,
+          query: query,
+        });
+      }
     })
     .catch((err) => {
       console.log(err);

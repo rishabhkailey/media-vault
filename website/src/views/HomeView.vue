@@ -4,7 +4,6 @@ import NavigationBar from "../components/NavigationBar.vue";
 import HomePage from "../components/HomePage.vue";
 import { computed, inject, onMounted, provide, ref } from "vue";
 import store from "@/store";
-import { SET_USERINFO_ACTION } from "@/store/actions-type";
 import { initializingKey, userManagerKey } from "@/symbols/injectionSymbols";
 import type { UserManager } from "oidc-client-ts";
 import decryptWorker from "@/worker/decrypt?url";
@@ -12,6 +11,8 @@ import decryptWorker from "@/worker/decrypt?url";
 // maybe /about
 import { useDisplay } from "vuetify";
 import { useRoute } from "vue-router";
+import { useAuthStore } from "@/piniaStore/auth";
+const authStore = useAuthStore();
 const display = useDisplay();
 
 const smallDisplay = computed(
@@ -34,20 +35,15 @@ const userInit = () => {
       .getUser()
       .then((user) => {
         if (user?.expired) {
-          resolve(true);
+          resolve(false);
           return;
         }
-        store
-          .dispatch(SET_USERINFO_ACTION, user)
-          .then(() => {
-            console.log("user details restored");
-            resolve(true);
-            return;
-          })
-          .catch((err) => {
-            reject(err);
-            return;
-          });
+        if (user === null) {
+          resolve(false);
+          return;
+        }
+        authStore.setUserInfo(user);
+        resolve(true);
       })
       .catch((err) => {
         reject(err);

@@ -1,7 +1,7 @@
 <script setup lang="ts">
 import axios from "axios";
 import { computed, inject, ref, type Ref, watch, provide } from "vue";
-import { useStore } from "vuex";
+import { useAuthStore } from "@/piniaStore/auth";
 import {
   initializingKey,
   loadMoreMediaKey,
@@ -10,11 +10,13 @@ import {
 } from "@/symbols/injectionSymbols";
 import MonthlyThumbnailPreview from "./MonthlyThumbnailPreview.vue";
 import { getMonthlyMediaIndex } from "@/utils/date";
+import { storeToRefs } from "pinia";
 
 const props = defineProps<{
   mediaList: Array<Media>;
   allMediaLoaded: boolean;
   loadMoreMedia: () => Promise<any>;
+  loadAllMediaOfDate: (date: Date) => Promise<any>;
 }>();
 
 provide(
@@ -27,9 +29,10 @@ provide(
 );
 provide(loadMoreMediaKey, props.loadMoreMedia);
 
-const store = useStore();
+const authStore = useAuthStore();
+const { accessToken } = storeToRefs(authStore);
+console.log(authStore);
 const initializing: Ref<boolean> | undefined = inject(initializingKey);
-const accessToken = computed<string>(() => store.getters.accessToken);
 
 const monthlyMediaList = computed<Array<MonthlyMedia>>(() =>
   getMonthlyMediaIndex(props.mediaList)
@@ -117,6 +120,7 @@ watch(lazyApiLoadObserverTarget, (newValue, oldvalue) => {
           :year="monthlyMedia.year"
           :index-media-list="monthlyMedia.media"
           :index-offset="0"
+          :load-all-media-of-date="props.loadAllMediaOfDate"
         />
         <v-divider />
       </div>

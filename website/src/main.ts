@@ -13,12 +13,13 @@ import { aliases, mdi } from "vuetify/iconsets/mdi";
 import axios from "axios";
 import VueAxios from "vue-axios";
 import router from "./router";
-import store from "./store";
 
 import VueVideoPlayer from "@videojs-player/vue";
 import { UserManager, WebStorageStateStore } from "oidc-client-ts";
 import "./assets/main.css";
 import { userManagerKey } from "./symbols/injectionSymbols";
+import { createPinia } from "pinia";
+const pinia = createPinia();
 
 const app = createApp(App);
 
@@ -83,7 +84,7 @@ const vuetify = createVuetify({
     },
   },
   theme: {
-    defaultTheme: "lightTheme",
+    defaultTheme: "darkTheme",
     themes: { darkTheme, lightTheme },
   },
 });
@@ -108,7 +109,8 @@ const userManager = new UserManager({
 });
 
 app.use(router);
-app.use(store);
+app.use(pinia);
+
 app.use(vuetify);
 app.use(VueVideoPlayer);
 app.use(VueAxios, axios);

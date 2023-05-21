@@ -7,6 +7,7 @@ const props = defineProps<{
   year: number;
   indexMediaList: Array<IndexMedia>;
   indexOffset: number;
+  loadAllMediaOfDate: (date: Date) => Promise<any>;
 }>();
 
 const dailyMediaList = computed<Array<DailyMedia>>(() =>
@@ -26,6 +27,7 @@ const dailyMediaList = computed<Array<DailyMedia>>(() =>
         :year="dailyMedia.year"
         :date="dailyMedia.date"
         :index-media-list="dailyMedia.media"
+        :load-all-media-of-date="props.loadAllMediaOfDate"
       />
     </div>
   </v-card>

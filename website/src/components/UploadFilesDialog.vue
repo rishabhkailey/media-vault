@@ -1,11 +1,12 @@
 <script setup lang="ts">
-import { ref, withDefaults, onMounted, computed, reactive } from "vue";
+import { ref, onMounted, computed, reactive } from "vue";
 import { chunkUpload } from "@/utils/encryptFileUpload";
-import { useStore } from "vuex";
-const store = useStore();
+import { useAuthStore } from "@/piniaStore/auth";
+import { storeToRefs } from "pinia";
+const authStore = useAuthStore();
 // todo store getter typing
 // todo check
-const accessToken = store.getters.accessToken;
+const { accessToken } = storeToRefs(authStore);
 const props = withDefaults(
   defineProps<{
     modelValue: boolean;
@@ -18,6 +19,7 @@ const props = withDefaults(
     width: 250,
     height: 250,
     margin: 25,
+    modelValue: false,
   }
 );
 
@@ -65,7 +67,7 @@ async function uploadFiles(files: Array<File>) {
       // not waiting for upload to finish
       let uploadInfo = await chunkUpload(
         file,
-        accessToken,
+        accessToken.value,
         filesUploadStatus.value[index].controller,
         (progress: number) => {
           filesUploadStatus.value[index].progress = progress;

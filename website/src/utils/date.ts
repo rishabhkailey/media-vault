@@ -1,6 +1,8 @@
 export const UNKNOWN_DATE = new Date("01/01/0100");
 
+// not 0 indexed
 export const daysLong = [
+  "invalid",
   "Sunday",
   "Monday",
   "Tuesday",
@@ -9,8 +11,11 @@ export const daysLong = [
   "Friday",
   "Saturday",
 ];
+
+// not 0 indexed
 export const daysShort = ["Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat"];
 
+// 0 indexed
 export const monthLong = [
   "January",
   "February",
@@ -25,6 +30,8 @@ export const monthLong = [
   "November",
   "December",
 ];
+
+// 0 indexed
 export const monthShort = [
   "Jan",
   "Feb",

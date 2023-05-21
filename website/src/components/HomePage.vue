@@ -1,18 +1,36 @@
 <script setup lang="ts">
 import LazyMediaThumbnailsPreview from "@/components/LazyMediaThumbnailsPreview.vue";
-import { LOAD_MORE_MEDIA_ACTION } from "@/store/modules/media";
-import { computed } from "vue";
-import { useStore } from "vuex";
-const store = useStore();
-const mediaList = computed<Array<Media>>(() => store.getters.mediaList);
-const allMediaLoaded = computed<boolean>(() => store.getters.allMediaLoaded);
-const loadMoreMedia = () => store.dispatch(LOAD_MORE_MEDIA_ACTION);
+import { useMediaStore } from "@/piniaStore/media";
+import { useAuthStore } from "@/piniaStore/auth";
+import { storeToRefs } from "pinia";
+const mediaStore = useMediaStore();
+const { mediaList, allMediaLoaded } = storeToRefs(mediaStore);
+console.log(mediaStore);
+const { loadMoreMedia } = mediaStore;
+const authStore = useAuthStore();
+const { accessToken } = storeToRefs(authStore);
+
+async function loadAllMediaOfDate(date: Date): Promise<boolean> {
+  let lastMediaDate = mediaList.value[mediaList.value.length - 1].date;
+  console.log(date, lastMediaDate);
+  while (
+    date.getDate() === lastMediaDate.getDate() &&
+    date.getFullYear() === lastMediaDate.getFullYear() &&
+    date.getMonth() === lastMediaDate.getMonth() &&
+    !allMediaLoaded.value
+  ) {
+    await loadMoreMedia(accessToken.value);
+    lastMediaDate = mediaList.value[mediaList.value.length - 1].date;
+  }
+  return true;
+}
 </script>
 
 <template>
   <LazyMediaThumbnailsPreview
     :media-list="mediaList"
     :all-media-loaded="allMediaLoaded"
-    :load-more-media="loadMoreMedia"
+    :load-more-media="() => loadMoreMedia(accessToken)"
+    :load-all-media-of-date="loadAllMediaOfDate"
   />
 </template>
