@@ -41,3 +41,11 @@ type UpdateStatusCommand struct {
 	Status Status
 	ID     string
 }
+
+type DeleteOneCommand struct {
+	ID string
+}
+
+type DeleteManyCommand struct {
+	IDs []string
+}

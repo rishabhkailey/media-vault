@@ -34,23 +34,26 @@ func NewRouter(v1ApiServer *v1Api.Server, config config.Config) (*gin.Engine, er
 		v1.POST("/refreshSession", v1ApiServer.RefreshSession)
 
 		// session based and fallback to bearer token
-		userProtected := v1.Group("/")
-		userProtected.Use(v1ApiServer.UserAuthMiddleware)
+		v1UserProtected := v1.Group("/")
+		v1UserProtected.Use(v1ApiServer.UserAuthMiddleware)
 		{
-			v1UserProtected := userProtected.Group("/")
-			{
-				v1UserProtected.POST("/initChunkUpload", v1ApiServer.InitChunkUpload)
-				v1UserProtected.POST("/uploadChunk", v1ApiServer.UploadChunk)
-				v1UserProtected.POST("/finishChunkUpload", v1ApiServer.FinishChunkUpload)
-				v1UserProtected.POST("/uploadThumbnail", v1ApiServer.UploadThumbnail)
-				v1UserProtected.GET("/mediaList", v1ApiServer.MediaList)
-				v1UserProtected.GET("/search", v1ApiServer.Search)
-			}
+			// todo gitlab style api endpoints?
+			// POST /v1/upload (init)
+			// POST /v1/upload/:upload_request_id/chunk (upload chunk)
+			// POST /v1/upload/:upload_request_id/thumbnail (upload thumbnail)
+			// POST /v1/upload/:upload_request_id/finish (finish upload)
+			v1UserProtected.POST("/initChunkUpload", v1ApiServer.InitChunkUpload)
+			v1UserProtected.POST("/uploadChunk", v1ApiServer.UploadChunk)
+			v1UserProtected.POST("/finishChunkUpload", v1ApiServer.FinishChunkUpload)
+			v1UserProtected.POST("/uploadThumbnail", v1ApiServer.UploadThumbnail)
+			v1UserProtected.GET("/mediaList", v1ApiServer.MediaList)
+			v1UserProtected.GET("/search", v1ApiServer.Search)
+			v1UserProtected.DELETE("/media/:mediaID", v1ApiServer.DeleteMedia)
 		}
 
 		// session based only
 		v1FileAccessProtected := v1.Group("/")
-		v1FileAccessProtected.Use(v1ApiServer.SessionBasedMediaAuthMiddleware)
+		v1FileAccessProtected.Use(v1ApiServer.SessionBasedMediaFileAuthMiddleware)
 		{
 			v1FileAccessProtected.GET("/media/:fileName", v1ApiServer.GetMedia)
 			v1FileAccessProtected.GET("/thumbnail/:fileName", v1ApiServer.GetThumbnail)

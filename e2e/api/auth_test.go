@@ -19,18 +19,32 @@ func TestNormalEndpointsAuth(t *testing.T) {
 		requestBearerToken string
 		expectedStatusCode int
 	}{
+		// todo do we need to start the upload? for auth only confirming 400 should be enough
+		// {
+		// 	name:       "correct bearer token: initChunkUpload",
+		// 	requestUri: "/v1/initChunkUpload",
+		// 	requestBody: map[string]any{
+		// 		"fileName":  "test.txt",
+		// 		"size":      100,
+		// 		"mediaType": "txt",
+		// 		"date":      time.Now().UnixMilli(),
+		// 	},
+		// 	requestMethod:      "POST",
+		// 	requestBearerToken: AUTH_TOKEN,
+		// 	expectedStatusCode: http.StatusOK,
+		// },
 		{
 			name:       "correct bearer token: initChunkUpload",
 			requestUri: "/v1/initChunkUpload",
 			requestBody: map[string]any{
-				"fileName":  "test.txt",
-				"size":      100,
-				"mediaType": "txt",
-				"date":      time.Now().UnixMilli(),
+				"fileName123": "test.txt",
+				"size":        100,
+				"mediaType":   "txt",
+				"date":        time.Now().UnixMilli(),
 			},
 			requestMethod:      "POST",
 			requestBearerToken: AUTH_TOKEN,
-			expectedStatusCode: http.StatusOK,
+			expectedStatusCode: http.StatusBadRequest,
 		},
 		{
 			name:       "wrong bearer token: initChunkUpload",

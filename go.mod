@@ -4,16 +4,17 @@ go 1.19
 
 require (
 	github.com/3d0c/gmf v0.0.0-20220906170454-be727bc5b56c
+	github.com/DATA-DOG/go-sqlmock v1.5.0
 	github.com/awnumar/memguard v0.22.3
 	github.com/coreos/go-oidc/v3 v3.5.0
 	github.com/gin-contrib/sessions v0.0.5
 	github.com/gin-contrib/static v0.0.1
 	github.com/gin-gonic/gin v1.8.1
-	github.com/go-oauth2/oauth2/v4 v4.5.1
 	github.com/go-redis/redis/v8 v8.11.4
 	github.com/go-session/redis/v3 v3.1.0
 	github.com/go-session/session/v3 v3.1.5
 	github.com/google/uuid v1.3.0
+	github.com/hashicorp/golang-lru/v2 v2.0.2
 	github.com/meilisearch/meilisearch-go v0.24.0
 	github.com/minio/minio-go/v7 v7.0.45
 	github.com/sirupsen/logrus v1.9.0
@@ -22,8 +23,8 @@ require (
 	github.com/stretchr/testify v1.8.2
 	github.com/u2takey/ffmpeg-go v0.4.1
 	golang.org/x/crypto v0.7.0
+	golang.org/x/net v0.8.0
 	golang.org/x/oauth2 v0.3.0
-	golang.org/x/sync v0.1.0
 	gorm.io/driver/postgres v1.4.5
 	gorm.io/gorm v1.24.2
 )
@@ -90,7 +91,6 @@ require (
 	github.com/ugorji/go/codec v1.2.7 // indirect
 	github.com/valyala/bytebufferpool v1.0.0 // indirect
 	github.com/valyala/fasthttp v1.45.0 // indirect
-	golang.org/x/net v0.8.0 // indirect
 	golang.org/x/sys v0.6.0 // indirect
 	golang.org/x/text v0.8.0 // indirect
 	google.golang.org/appengine v1.6.7 // indirect

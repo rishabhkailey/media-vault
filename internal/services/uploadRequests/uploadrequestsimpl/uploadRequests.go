@@ -24,6 +24,12 @@ func NewService(db *gorm.DB) (uploadrequests.Service, error) {
 	}, nil
 }
 
+func (s *Service) WithTransaction(tx *gorm.DB) uploadrequests.Service {
+	return &Service{
+		store: s.store.WithTransaction(tx),
+	}
+}
+
 func (s *Service) Create(ctx context.Context, cmd uploadrequests.CreateUploadRequestCommand) (uploadrequests.Model, error) {
 	UploadRequest := uploadrequests.Model{
 		ID:     uuid.New().String(),
@@ -37,6 +43,14 @@ func (s *Service) Create(ctx context.Context, cmd uploadrequests.CreateUploadReq
 
 func (s *Service) GetByID(ctx context.Context, query uploadrequests.GetByIDQuery) (uploadrequests.Model, error) {
 	return s.store.GetByID(ctx, query.ID)
+}
+
+func (s *Service) DeleteOne(ctx context.Context, cmd uploadrequests.DeleteOneCommand) error {
+	return s.store.DeleteOne(ctx, cmd.ID)
+}
+
+func (s *Service) DeleteMany(ctx context.Context, cmd uploadrequests.DeleteManyCommand) error {
+	return s.store.DeleteMany(ctx, cmd.IDs)
 }
 
 func (s *Service) UpdateStatus(ctx context.Context, cmd uploadrequests.UpdateStatusCommand) error {

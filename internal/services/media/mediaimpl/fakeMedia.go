@@ -4,6 +4,7 @@ import (
 	"context"
 
 	"github.com/rishabhkailey/media-service/internal/services/media"
+	"gorm.io/gorm"
 )
 
 type FakeService struct {
@@ -18,8 +19,20 @@ func NewFakeService() media.Service {
 
 var _ media.Service = (*FakeService)(nil)
 
+func (s *FakeService) WithTransaction(_ *gorm.DB) media.Service {
+	return s
+}
+
 func (s *FakeService) Create(ctx context.Context, cmd media.CreateMediaCommand) (media.Model, error) {
 	return s.ExpectedMedia, s.ExpectedError
+}
+
+func (s *FakeService) DeleteOne(ctx context.Context, cmd media.DeleteOneCommand) error {
+	return s.ExpectedError
+}
+
+func (s *FakeService) DeleteMany(ctx context.Context, cmd media.DeleteManyCommand) error {
+	return s.ExpectedError
 }
 
 func (s *FakeService) GetByUploadRequestID(ctx context.Context, cmd media.GetByUploadRequestQuery) (media.Model, error) {
@@ -40,6 +53,9 @@ func (s *FakeService) GetByUserID(ctx context.Context, cmd media.GetByUserIDQuer
 
 func (s *FakeService) GetByMediaIDs(ctx context.Context, query media.GetByMediaIDsQuery) ([]media.GetMediaQueryResultItem, error) {
 	return s.ExpectedMediaList, s.ExpectedError
+}
+func (s *FakeService) GetByMediaID(context.Context, media.GetByMediaIDQuery) (media.Model, error) {
+	return s.ExpectedMedia, s.ExpectedError
 }
 
 func (s *FakeService) GetTypeByFileName(ctx context.Context, cmd media.GetTypeByFileNameQuery) (string, error) {

@@ -10,9 +10,11 @@ import (
 )
 
 type FakeService struct {
-	ExpectedError        error
-	ExpectedWrittenBytes int64
-	FileBytes            []byte
+	ExpectedError                     error
+	ExpectedWrittenBytes              int64
+	ExpectedDeleteManyFailedFileNames []string
+	ExpectedDeleteManyErrs            []error
+	FileBytes                         []byte
 }
 
 func NewFakeService() mediastorage.Service {
@@ -63,6 +65,13 @@ func (s *FakeService) FinishChunkUpload(ctx context.Context, cmd mediastorage.Fi
 
 func (s *FakeService) ThumbnailUpload(ctx context.Context, cmd mediastorage.UploadThumbnailCmd) error {
 	return s.ExpectedError
+}
+
+func (s *FakeService) DeleteOne(ctx context.Context, cmd mediastorage.DeleteOneCommand) error {
+	return s.ExpectedError
+}
+func (s *FakeService) DeleteMany(ctx context.Context, cmd mediastorage.DeleteManyCommand) ([]string, []error) {
+	return s.ExpectedDeleteManyFailedFileNames, s.ExpectedDeleteManyErrs
 }
 
 func (s *FakeService) GetThumbnailFileName(fileName string) string {

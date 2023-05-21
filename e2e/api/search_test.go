@@ -26,7 +26,7 @@ func TestSearch(t *testing.T) {
 		t.Error(err)
 		return
 	}
-	files, err := testClient.GenerateAndUploadTestFiles(t, 6, testFileNamePrefix, testFileType, 100, 10, time.Second*10)
+	files, mediaIDs, err := testClient.GenerateAndUploadTestFiles(t, 6, testFileNamePrefix, testFileType, 100, 10, time.Second*10)
 	if err != nil {
 		t.Fail()
 		t.Error(err)
@@ -285,6 +285,15 @@ func TestSearch(t *testing.T) {
 			}
 		})
 	}
+	t.Run("delete media search test files", func(t *testing.T) {
+		testClient, err := newTestHttpClient()
+		if err != nil {
+			t.Fail()
+			t.Error(err)
+			return
+		}
+		_ = testClient.DeleteTestMediaFiles(t, mediaIDs, AUTH_TOKEN)
+	})
 }
 
 type resultFile struct {

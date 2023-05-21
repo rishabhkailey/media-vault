@@ -15,4 +15,6 @@ type Service interface {
 	FinishChunkUpload(context.Context, FinishChunkUpload) error
 	ThumbnailUpload(context.Context, UploadThumbnailCmd) error
 	GetThumbnailFileName(string) string
+	DeleteOne(context.Context, DeleteOneCommand) error
+	DeleteMany(context.Context, DeleteManyCommand) (failedFileNames []string, errs []error)
 }

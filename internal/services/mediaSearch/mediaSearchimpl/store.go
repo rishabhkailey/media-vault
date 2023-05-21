@@ -14,6 +14,7 @@ import (
 type store interface {
 	// media(2nd argument) pointer because gorm adds the missing info like ID, create_at to the pointer it self.
 	Insert(context.Context, []mediasearch.Model) (int64, error)
+	Delete(context.Context, []string) (int64, error)
 	Search(context.Context, mediasearch.MediaSearchQuery) ([]mediasearch.Model, error)
 	SearchGetMediaIDsOnly(context.Context, mediasearch.MediaSearchQuery) ([]uint, error)
 	MonitorTask(int64, string) error
@@ -82,6 +83,14 @@ func newMeiliSearchStore(cli *meilisearch.Client) (*meiliSearchStore, error) {
 
 func (s *meiliSearchStore) Insert(ctx context.Context, documents []mediasearch.Model) (int64, error) {
 	taskInfo, err := s.index.AddDocuments(documents, mediasearch.PRIMARY_KEY)
+	if err != nil {
+		return 0, err
+	}
+	return taskInfo.TaskUID, nil
+}
+
+func (s *meiliSearchStore) Delete(ctx context.Context, ids []string) (int64, error) {
+	taskInfo, err := s.index.DeleteDocuments(ids)
 	if err != nil {
 		return 0, err
 	}

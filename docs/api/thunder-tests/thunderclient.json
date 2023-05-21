@@ -17,5 +17,24 @@
       "form": []
     },
     "tests": []
+  },
+  {
+    "_id": "59972d3d-afc6-414f-ab00-a02ad3a3ffc4",
+    "colId": "13ecca62-56bd-4fe7-b81a-44ea636ff882",
+    "containerId": "",
+    "name": "delete",
+    "url": "http://localhost:8090/v1/media/2215",
+    "method": "DELETE",
+    "sortNum": 10000,
+    "created": "2023-05-17T03:53:31.578Z",
+    "modified": "2023-05-17T04:13:13.637Z",
+    "headers": [
+      {
+        "name": "Authorization",
+        "value": "Bearer eyJhbGciOiJSUzI1NiIsImtpZCI6IjAiLCJ0eXAiOiJKV1QifQ.eyJhdWQiOiJzcGEtdGVzdCIsImV4cCI6MTY4NDMwMjE2OCwic3ViIjoiMSJ9.CytXuFH6Ebkiw_uHJKeC_8WWqI_-CBmV7T4rv8KjdYh5RVMBX_q_nIDx-utBD3-PmRuqIckophKKMk3ak2zLZxK6_zlmYOCKJfCL2k5yeAYPIXVVpBqY7ayzrnHAFSYPfpHtFMXAn31QdoE5Uy0WX0-vT7gU85fLgvnNDm7HNipsuFrOitBHX8GWBdPCmepNUueBIhGQ3xt8n8X6BqOAbYFoNxcUrEw4SJHaBT9coDGYJRaLoGXNBlmOLHrkRXOZiF0vTPHMxmkpAFQxMBOkfqyiTOxdu8r1cfY492wUCg7zTc8DGfNtybl9v5QELHB39R3juQzh2OKs2fM4QYLErg"
+      }
+    ],
+    "params": [],
+    "tests": []
   }
 ]

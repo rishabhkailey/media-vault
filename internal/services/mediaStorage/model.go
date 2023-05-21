@@ -71,3 +71,12 @@ type File interface {
 	io.ReadSeeker
 	fs.File
 }
+
+type DeleteOneCommand struct {
+	FileName     string
+	HasThumbnail bool
+}
+
+type DeleteManyCommand struct {
+	DeleteCmds []DeleteOneCommand
+}

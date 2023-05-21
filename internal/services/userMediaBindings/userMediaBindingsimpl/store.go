@@ -11,8 +11,11 @@ import (
 )
 
 type store interface {
+	WithTransaction(*gorm.DB) store
 	// media(2nd argument) pointer because gorm adds the missing info like ID, create_at to the pointer it self.
 	Insert(context.Context, *usermediabindings.Model) (uint, error)
+	DeleteOne(ctx context.Context, userID string, MediaID uint) error
+	DeleteMany(ctx context.Context, userID string, MediaIDs []uint) error
 	GetByMediaID(context.Context, uint) (usermediabindings.Model, error)
 	CheckFileBelongsToUser(context.Context, usermediabindings.CheckFileBelongsToUserQuery) (bool, error)
 	GetUserMedia(context.Context, usermediabindings.GetUserMediaQuery) ([]media.Model, error)
@@ -33,9 +36,28 @@ func newSqlStore(db *gorm.DB) (*sqlStore, error) {
 	}, nil
 }
 
+func (s *sqlStore) WithTransaction(tx *gorm.DB) store {
+	return &sqlStore{
+		db: tx,
+	}
+}
+
 func (s *sqlStore) Insert(ctx context.Context, userMediaBinding *usermediabindings.Model) (uint, error) {
 	err := s.db.WithContext(ctx).Create(&userMediaBinding).Error
 	return userMediaBinding.ID, err
+}
+
+func (s *sqlStore) DeleteOne(ctx context.Context, userID string, mediaID uint) error {
+	return s.db.WithContext(ctx).Delete(&usermediabindings.Model{
+		UserID:  userID,
+		MediaID: mediaID,
+	}).Error
+}
+
+func (s *sqlStore) DeleteMany(ctx context.Context, userID string, mediaIDs []uint) error {
+	return s.db.WithContext(ctx).Where("media_id IN ?", mediaIDs).Delete(&usermediabindings.Model{
+		UserID: userID,
+	}).Error
 }
 
 func (s *sqlStore) GetByMediaID(ctx context.Context, mediaID uint) (userMediaBinding usermediabindings.Model, err error) {
@@ -43,6 +65,9 @@ func (s *sqlStore) GetByMediaID(ctx context.Context, mediaID uint) (userMediaBin
 	return
 }
 
+// todo this logic should be in service not in store
+// it should be like get by fileName
+// and service should check the userID
 func (s *sqlStore) CheckFileBelongsToUser(ctx context.Context, cmd usermediabindings.CheckFileBelongsToUserQuery) (ok bool, err error) {
 	db := s.db.WithContext(ctx)
 	getMediaByFileNameQuery := db.Model(&media.Model{}).Select("media_id").Where("file_name = ?", cmd.FileName)

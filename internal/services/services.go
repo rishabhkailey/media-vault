@@ -25,6 +25,7 @@ import (
 )
 
 type Services struct {
+	db                *gorm.DB
 	Media             media.Service
 	MediaMetadata     mediametadata.Service
 	UserMediaBindings usermediabindings.Service
@@ -73,6 +74,7 @@ func NewServices(
 		return nil, err
 	}
 	return &Services{
+		db:                db,
 		Media:             mediaService,
 		UserMediaBindings: userMediaBindingsService,
 		MediaMetadata:     mediaMetadataService,
@@ -81,4 +83,9 @@ func NewServices(
 		MediaStorage:      mediaStorageService,
 		AuthService:       authService,
 	}, nil
+}
+
+// todo for mock? return nil?
+func (s *Services) CreateTransaction() *gorm.DB {
+	return s.db.Begin()
 }

@@ -4,6 +4,7 @@ import (
 	"context"
 
 	uploadrequests "github.com/rishabhkailey/media-service/internal/services/uploadRequests"
+	"gorm.io/gorm"
 )
 
 type FakeService struct {
@@ -17,6 +18,10 @@ func NewFakeService() uploadrequests.Service {
 
 var _ uploadrequests.Service = (*FakeService)(nil)
 
+func (s *FakeService) WithTransaction(_ *gorm.DB) uploadrequests.Service {
+	return s
+}
+
 func (s *FakeService) Create(ctx context.Context, cmd uploadrequests.CreateUploadRequestCommand) (uploadrequests.Model, error) {
 	return s.ExpectedUploadRequest, s.ExpectedError
 }
@@ -26,5 +31,13 @@ func (s *FakeService) GetByID(ctx context.Context, query uploadrequests.GetByIDQ
 }
 
 func (s *FakeService) UpdateStatus(ctx context.Context, cmd uploadrequests.UpdateStatusCommand) error {
+	return s.ExpectedError
+}
+
+func (s *FakeService) DeleteOne(ctx context.Context, cmd uploadrequests.DeleteOneCommand) error {
+	return s.ExpectedError
+}
+
+func (s *FakeService) DeleteMany(ctx context.Context, cmd uploadrequests.DeleteManyCommand) error {
 	return s.ExpectedError
 }

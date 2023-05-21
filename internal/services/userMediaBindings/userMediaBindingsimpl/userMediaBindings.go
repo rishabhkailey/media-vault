@@ -24,6 +24,12 @@ func NewService(db *gorm.DB) (usermediabindings.Service, error) {
 	}, nil
 }
 
+func (s *Service) WithTransaction(tx *gorm.DB) usermediabindings.Service {
+	return &Service{
+		store: s.store.WithTransaction(tx),
+	}
+}
+
 func (s *Service) Create(ctx context.Context, cmd usermediabindings.CreateCommand) (usermediabindings.Model, error) {
 	userMediaBinding := usermediabindings.Model{
 		UserID:  cmd.UserID,
@@ -32,6 +38,14 @@ func (s *Service) Create(ctx context.Context, cmd usermediabindings.CreateComman
 
 	_, err := s.store.Insert(ctx, &userMediaBinding)
 	return userMediaBinding, err
+}
+
+func (s *Service) DeleteOne(ctx context.Context, cmd usermediabindings.DeleteOneCommand) error {
+	return s.store.DeleteOne(ctx, cmd.UserID, cmd.MediaID)
+}
+
+func (s *Service) DeleteMany(ctx context.Context, cmd usermediabindings.DeleteManyCommand) error {
+	return s.store.DeleteMany(ctx, cmd.UserID, cmd.MediaIDs)
 }
 
 func (s *Service) GetByMediaID(ctx context.Context, query usermediabindings.GetByMediaIDQuery) (usermediabindings.Model, error) {
@@ -44,4 +58,12 @@ func (s *Service) CheckFileBelongsToUser(ctx context.Context, cmd usermediabindi
 
 func (s *Service) GetUserMedia(ctx context.Context, query usermediabindings.GetUserMediaQuery) (mediaList []media.Model, err error) {
 	return s.store.GetUserMedia(ctx, query)
+}
+
+func (s *Service) CheckMediaBelongsToUser(ctx context.Context, query usermediabindings.CheckMediaBelongsToUserQuery) (bool, error) {
+	userMediaBinding, err := s.store.GetByMediaID(ctx, query.MediaID)
+	if err != nil {
+		return false, err
+	}
+	return userMediaBinding.UserID == query.UserID, err
 }

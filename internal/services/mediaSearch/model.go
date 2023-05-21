@@ -59,6 +59,14 @@ type MediaSearchQuery struct {
 	Query   string `form:"query" json:"query" binding:"required"`
 }
 
+type DeleteOneCommand struct {
+	MediaID uint
+}
+
+type DeleteManyCommand struct {
+	MediaIDs []uint
+}
+
 func UserMediaBindingToMeiliSearchMediaIndex(userMediaBindingList []usermediabindings.Model) (meiliSearchMediaList []Model, err error) {
 	defer func() {
 		if r := recover(); r != nil {

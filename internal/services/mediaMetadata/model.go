@@ -40,3 +40,11 @@ type UpdateThumbnailCommand struct {
 	ID        uint
 	Thumbnail bool
 }
+
+type DeleteOneCommand struct {
+	ID uint
+}
+
+type DeleteManyCommand struct {
+	IDs []uint
+}

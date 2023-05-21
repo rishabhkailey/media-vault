@@ -84,6 +84,12 @@ func TestCorrectFlow(t *testing.T) {
 				value := body["thumbnail_url"]
 				thumbnailUrl = value.(string)
 			}
+			var mediaID uint
+			{
+				body := resp.body.(map[string]any)
+				value := body["id"]
+				mediaID = uint(value.(float64))
+			}
 			resp, err = testClient.DownloadTest(t, mediaUrl, testCase.bearerToken, testCase.file)
 			if err != nil {
 				t.Errorf("DownloadTest failed: %v", err)
@@ -96,6 +102,11 @@ func TestCorrectFlow(t *testing.T) {
 			resp, err = testClient.GetMediaRangeTest(t, mediaUrl, testCase.bearerToken, testCase.getRangeSize, testCase.file)
 			if err != nil {
 				t.Errorf("GetMediaRangeTest failed: %v", err)
+				return
+			}
+			resp, err = testClient.DeleteMediaTest(t, mediaID, testCase.bearerToken)
+			if err != nil {
+				t.Errorf("DeleteMediaTest failed: %v", err)
 				return
 			}
 		})

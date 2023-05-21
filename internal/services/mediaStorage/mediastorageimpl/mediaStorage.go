@@ -51,6 +51,8 @@ func (s *Service) HttpGetRangeHandler(ctx context.Context, query mediastorage.Ht
 	if err != nil {
 		return 0, fmt.Errorf("[mediaService.HttpGetRangeHandler]: get by file name failed: %w", err)
 	}
+	// todo close file/object when it is removed from cache
+	// defer file.Close()
 	stat, err := file.Stat()
 	if err != nil {
 		return 0, fmt.Errorf("[mediaService.HttpGetRangeHandler]: get file stats failed: %w", err)
@@ -77,6 +79,7 @@ func (s *Service) HttpGetMediaHandler(ctx context.Context, query mediastorage.Ht
 	if err != nil {
 		return 0, err
 	}
+	// defer file.Close()
 	stat, err := file.Stat()
 	if err != nil {
 		return 0, err
@@ -217,6 +220,31 @@ func (s *Service) ThumbnailUpload(ctx context.Context, cmd mediastorage.UploadTh
 		FileReader: cmd.FileReader,
 	})
 	return err
+}
+
+func (s *Service) DeleteOne(ctx context.Context, cmd mediastorage.DeleteOneCommand) error {
+	err := s.store.DeleteOne(ctx, cmd.FileName)
+	if err != nil {
+		return err
+	}
+	if cmd.HasThumbnail {
+		err := s.store.DeleteOne(ctx, s.GetThumbnailFileName(cmd.FileName))
+		if err != nil {
+			logrus.Warnf("[mediaStorage.DeleteOne]: %s's Thumnail deletion failed: %w", cmd.FileName, err)
+		}
+	}
+	return nil
+}
+
+func (s *Service) DeleteMany(ctx context.Context, cmd mediastorage.DeleteManyCommand) (failedFileNames []string, errs []error) {
+	for _, deleteOneCmd := range cmd.DeleteCmds {
+		err := s.DeleteOne(ctx, deleteOneCmd)
+		if err != nil {
+			errs = append(errs, err)
+			failedFileNames = append(failedFileNames, deleteOneCmd.FileName)
+		}
+	}
+	return
 }
 
 func (s *Service) GetThumbnailFileName(fileName string) string {

@@ -19,7 +19,7 @@ import (
 )
 
 // copy it from the UI
-const AUTH_TOKEN = "eyJhbGciOiJSUzI1NiIsImtpZCI6IjAiLCJ0eXAiOiJKV1QifQ.eyJhdWQiOiJzcGEtdGVzdCIsImV4cCI6MTY4NDE0ODI3Miwic3ViIjoiMSJ9.iBuwwFCn6tl0bCvYtbEREr1cOB4T0x8ek_UT-A7-PDeupiurbGPWJh0CYGMhiULb8aomsz3EczyqN_p3TCRE4Od0-TDvrEHSCYXkPuZ7n97a31fH286PfOM_V_fUdaxQBk6xrn4qchZoyo1GUOwDjx4x2Rdg0xpI-_vzEmVOa5VkF1XPb4H0IHlC2gMSiOIBBNA9khSYeB72dkz2mCPnCZ0cyf06yE_vdSFQlHX_T16mKP0o59ohZQwxeuYPb5LX1Cb00SLGVBI-drkoarwi7t-zpQ9u0VVEvaQW5rP3zcgC2wAXZ3kLY4c-Z72VKKV7D63x8JSONGq8q7COq7Rkhg"
+const AUTH_TOKEN = "eyJhbGciOiJSUzI1NiIsImtpZCI6IjAiLCJ0eXAiOiJKV1QifQ.eyJhdWQiOiJzcGEtdGVzdCIsImV4cCI6MTY4NDMzOTQ0Miwic3ViIjoiMSJ9.HiHiTfZ7UojmHHZdH2crB3I8SqxXPC4SIVjRhHMur_kaYsgYYG3uQKn7Q9bm6ZyZxqhYp32yZ8eejIkmViqCi9k5IIgcISmJVIS-XpPccI5HOH07R0R77AXt-S3kGrssHsnsPs3IqwJnwF-1evO2_UTfiqrmu2Ca5L-tI6kxFSoUdX44tLcwuHrHcb4If1xojquB9pNwYuSSFPtZCDwaCQIUj7tpQzXdmmVISlOKKdK9BMEQRBuMR36kdQbWxbN9JhydhGZEBT_NLOasjmQwbKh-pHKcfDHu6kH9tZpXLs1lakQk8al-zaX44vvsXrF1fJR88e3RqTLmGZpS1IUmMQ"
 const BASE_URL = "http://localhost:8090"
 
 type testHttpClient struct {
@@ -427,7 +427,24 @@ func (c *testHttpClient) GetMediaRangeTest(t assert.TestingT, url string, bearer
 	return resp, err
 }
 
-func (c *testHttpClient) GenerateAndUploadTestFiles(t assert.TestingT, n int, fileNamePrefix string, fileType string, fileSize int64, thumbnailSize int64, timeDifference time.Duration) (files []testFile, err error) {
+func (c *testHttpClient) DeleteMediaTest(t assert.TestingT, mediaID uint, bearerToken string) (httpResponse, error) {
+	resp, err := c.sendHttpRequest(
+		httpRequest{
+			method:      "DELETE",
+			url:         fmt.Sprintf("/v1/media/%d", mediaID),
+			bearerToken: bearerToken,
+		}, false,
+	)
+	if !assert.NoError(t, err, "delete media request") {
+		return resp, fmt.Errorf("[testHttpClient.DeleteMediaTest] deleting %d media failed: %w", mediaID, err)
+	}
+	if !assert.Equal(t, http.StatusOK, resp.status, "delete media request status code") {
+		return resp, fmt.Errorf("[testHttpClient.DeleteMediaTest] deleting %d media failed with status %d", mediaID, resp.status)
+	}
+	return resp, err
+}
+
+func (c *testHttpClient) GenerateAndUploadTestFiles(t assert.TestingT, n int, fileNamePrefix string, fileType string, fileSize int64, thumbnailSize int64, timeDifference time.Duration) (files []testFile, mediaIDs []uint, err error) {
 	for index := 0; index < n; index++ {
 		file := testFile{
 			name:          fmt.Sprintf("%s-%02d", fileNamePrefix, index+1),
@@ -437,11 +454,29 @@ func (c *testHttpClient) GenerateAndUploadTestFiles(t assert.TestingT, n int, fi
 			mediaType:     fileType,
 			thumbnialData: randomString(thumbnailSize),
 		}
-		_, err = c.UploadTest(t, file, 10_000_000, AUTH_TOKEN)
+		var resp httpResponse
+		resp, err = c.UploadTest(t, file, 10_000_000, AUTH_TOKEN)
 		if err != nil {
 			return
 		}
+		var id uint
+		{
+			body := resp.body.(map[string]any)
+			value := body["id"]
+			id = uint(value.(float64))
+		}
+		mediaIDs = append(mediaIDs, id)
 		files = append(files, file)
+	}
+	return
+}
+
+func (c *testHttpClient) DeleteTestMediaFiles(t assert.TestingT, mediaIDs []uint, bearerToken string) (errs []error) {
+	for _, mediaId := range mediaIDs {
+		_, err := c.DeleteMediaTest(t, mediaId, bearerToken)
+		if err != nil {
+			errs = append(errs, err)
+		}
 	}
 	return
 }

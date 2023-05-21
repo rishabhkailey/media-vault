@@ -23,6 +23,12 @@ func NewService(db *gorm.DB) (mediametadata.Service, error) {
 	}, nil
 }
 
+func (s *Service) WithTransaction(tx *gorm.DB) mediametadata.Service {
+	return &Service{
+		store: s.store.WithTransaction(tx),
+	}
+}
+
 func (s *Service) Create(ctx context.Context, cmd mediametadata.CreateCommand) (mediametadata.Model, error) {
 	mediaMetadata := mediametadata.Model{
 		Metadata: cmd.Metadata,
@@ -30,6 +36,14 @@ func (s *Service) Create(ctx context.Context, cmd mediametadata.CreateCommand) (
 
 	_, err := s.store.Insert(ctx, &mediaMetadata)
 	return mediaMetadata, err
+}
+
+func (s *Service) DeleteOne(ctx context.Context, cmd mediametadata.DeleteOneCommand) error {
+	return s.store.DeleteOne(ctx, cmd.ID)
+}
+
+func (s *Service) DeleteMany(ctx context.Context, cmd mediametadata.DeleteManyCommand) error {
+	return s.store.DeleteMany(ctx, cmd.IDs)
 }
 
 func (s *Service) UpdateThumbnail(ctx context.Context, cmd mediametadata.UpdateThumbnailCommand) error {

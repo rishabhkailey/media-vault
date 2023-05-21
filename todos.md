@@ -146,6 +146,7 @@ Stack:
 * encrypt file name? but then we will not be able to use file name in search
 
 
+
 ## Test Commands
 ```bash
 curl -X GET 'http://localhost:8090/v1/mediaList?perPage=5&sort=desc&page=1' -H "Authorization: Bearer <token>" | tee test.json
@@ -159,3 +160,8 @@ curl -v -X GET 'http://localhost:8090/v1/media?file=8379ada2-e309-4d3a-b4b8-18d4
 * health endpoint
 * local storage store implementation
 * on finish upload add the media to the list in client
+
+* add cache for custom file type
+* local store implementation and migration command
+* Delete api using transactions - https://gorm.io/docs/transactions.html
+* Try https://vuetifyjs.com/en/api/v-img/#props-gradient for hover effect

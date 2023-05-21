@@ -18,13 +18,19 @@ type Service struct {
 var _ media.Service = (*Service)(nil)
 
 func NewService(db *gorm.DB, cache *redis.Client) (media.Service, error) {
-	store, err := newSqlStore(db, cache)
+	store, err := newSqlStoreWithMigrate(db, cache)
 	if err != nil {
 		return nil, err
 	}
 	return &Service{
 		store: store,
 	}, nil
+}
+
+func (s *Service) WithTransaction(tx *gorm.DB) media.Service {
+	return &Service{
+		store: s.store.WithTransaction(tx),
+	}
 }
 
 func (s *Service) Create(ctx context.Context, cmd media.CreateMediaCommand) (media.Model, error) {
@@ -38,6 +44,14 @@ func (s *Service) Create(ctx context.Context, cmd media.CreateMediaCommand) (med
 		return media, fmt.Errorf("[mediaService.Create] failed: %w", err)
 	}
 	return media, nil
+}
+
+func (s *Service) DeleteOne(ctx context.Context, query media.DeleteOneCommand) error {
+	return s.store.DeleteOne(ctx, query.ID)
+}
+
+func (s *Service) DeleteMany(ctx context.Context, query media.DeleteManyCommand) error {
+	return s.store.DeleteMany(ctx, query.IDs)
 }
 
 func (s *Service) GetByUploadRequestID(ctx context.Context, query media.GetByUploadRequestQuery) (media.Model, error) {
@@ -71,6 +85,9 @@ func (s *Service) GetByMediaIDs(ctx context.Context, query media.GetByMediaIDsQu
 	}
 	return NewGetMediaQueryResult(mediaList)
 }
+func (s *Service) GetByMediaID(ctx context.Context, query media.GetByMediaIDQuery) (media.Model, error) {
+	return s.store.GetByMediaID(ctx, query)
+}
 
 func NewGetMediaQueryResult(mediaList []media.Model) (result []media.GetMediaQueryResultItem, err error) {
 	for _, mediaItem := range mediaList {
@@ -89,6 +106,7 @@ func NewGetMediaQueryResultItem(media media.Model) (item media.GetMediaQueryResu
 	if err != nil {
 		return
 	}
+	item.Id = media.ID
 	item.Metadata = media.Metadata.Metadata
 	if media.Metadata.Thumbnail {
 		item.ThumbnailUrl, err = parseMediaURL(media.FileName, true)

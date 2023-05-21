@@ -22,9 +22,10 @@ func WrapFile(file mediastorage.File) FileCacheWrapper {
 func (f FileCacheWrapper) Stat() (stat fs.FileInfo, err error) {
 	if f.stat == nil {
 		stat, err = f.File.Stat()
-		if err == nil {
-			f.stat = &stat
+		if err != nil {
+			return stat, err
 		}
+		f.stat = &stat
 	}
 	return *f.stat, err
 }
@@ -66,4 +67,15 @@ func (s *StoreCacheWrapper) GetByFileName(ctx context.Context, fileName string) 
 	}
 	s.cache.Add(fileName, WrapFile(file))
 	return file, err
+}
+
+func (s *StoreCacheWrapper) DeleteOne(ctx context.Context, fileName string) error {
+	err := s.store.DeleteOne(ctx, fileName)
+	if err != nil {
+		return err
+	}
+	if s.cache.Contains(fileName) {
+		s.cache.Remove(fileName)
+	}
+	return nil
 }

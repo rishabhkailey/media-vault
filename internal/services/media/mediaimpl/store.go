@@ -12,16 +12,22 @@ import (
 )
 
 type store interface {
+	WithTransaction(*gorm.DB) store
 	// media(2nd argument) pointer because gorm adds the missing info like ID, create_at to the pointer it self.
 	Insert(context.Context, *media.Model) (uint, error)
+	DeleteOne(context.Context, uint) error
+	DeleteMany(context.Context, []uint) error
 	GetByUploadRequestID(context.Context, string) (media.Model, error)
 	GetByFileName(context.Context, string) (media.Model, error)
 	GetMediaWithMetadataByUploadRequestID(context.Context, string) (media.Model, error)
 	GetByUserID(context.Context, media.GetByUserIDQuery) ([]media.Model, error)
+	GetByMediaID(context.Context, media.GetByMediaIDQuery) (media.Model, error)
 	GetByMediaIDs(context.Context, media.GetByMediaIDsQuery) ([]media.Model, error)
 	GetTypeByFileName(context.Context, string) (string, error)
 }
 
+// todo cache should have different store?
+// maybe we can do something similar to media storage(cache wrapper for store)
 type sqlStore struct {
 	db    *gorm.DB
 	cache *redis.Client
@@ -29,7 +35,15 @@ type sqlStore struct {
 
 var _ store = (*sqlStore)(nil)
 
-func newSqlStore(db *gorm.DB, cache *redis.Client) (*sqlStore, error) {
+// todo
+// func newSqlStore(db *gorm.DB, cache *redis.Client) store {
+// 	return &sqlStore{
+// 		db:    db,
+// 		cache: cache,
+// 	}
+// }
+
+func newSqlStoreWithMigrate(db *gorm.DB, cache *redis.Client) (store, error) {
 	if err := db.Migrator().AutoMigrate(&media.Model{}); err != nil {
 		return nil, err
 	}
@@ -39,9 +53,30 @@ func newSqlStore(db *gorm.DB, cache *redis.Client) (*sqlStore, error) {
 	}, nil
 }
 
+func (s *sqlStore) WithTransaction(tx *gorm.DB) store {
+	return &sqlStore{
+		db:    tx,
+		cache: s.cache,
+	}
+}
+
 func (s *sqlStore) Insert(ctx context.Context, media *media.Model) (uint, error) {
 	err := s.db.WithContext(ctx).Create(&media).Error
 	return media.ID, err
+}
+
+func (s *sqlStore) DeleteOne(ctx context.Context, id uint) error {
+	err := s.db.WithContext(ctx).Delete(&media.Model{
+		Model: gorm.Model{
+			ID: id,
+		},
+	}).Error
+	return err
+}
+
+func (s *sqlStore) DeleteMany(ctx context.Context, ids []uint) error {
+	err := s.db.WithContext(ctx).Delete(&media.Model{}, ids).Error
+	return err
 }
 
 func (s *sqlStore) GetByUploadRequestID(ctx context.Context, uploadRequestID string) (media media.Model, err error) {
@@ -89,5 +124,10 @@ func (s *sqlStore) GetTypeByFileName(ctx context.Context, fileName string) (medi
 func (s *sqlStore) GetByMediaIDs(ctx context.Context, query media.GetByMediaIDsQuery) (mediaList []media.Model, err error) {
 	orderBy := fmt.Sprintf(`"Metadata"."%s" %s`, media.OrderAttributesMapping[query.OrderBy], media.SortKeywordMapping[query.Sort])
 	err = s.db.WithContext(ctx).Joins("Metadata").Model(&media.Model{}).Where("media.id IN (?)", query.MediaIDs).Order(orderBy).Find(&mediaList).Error
+	return
+}
+
+func (s *sqlStore) GetByMediaID(ctx context.Context, query media.GetByMediaIDQuery) (m media.Model, err error) {
+	err = s.db.WithContext(ctx).Joins("Metadata").Model(&media.Model{}).Where("media.id = (?)", query.MediaID).First(&m).Error
 	return
 }

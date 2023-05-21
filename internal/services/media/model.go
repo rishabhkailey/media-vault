@@ -65,6 +65,7 @@ type GetByUserIDQuery struct {
 }
 
 type GetMediaQueryResultItem struct {
+	Id           uint   `json:"id"`
 	MediaUrl     string `json:"url"`
 	ThumbnailUrl string `json:"thumbnail_url"`
 	mediametadata.Metadata
@@ -74,4 +75,16 @@ type GetByMediaIDsQuery struct {
 	MediaIDs []uint
 	OrderBy  string
 	Sort     string
+}
+
+type GetByMediaIDQuery struct {
+	MediaID uint
+}
+
+type DeleteOneCommand struct {
+	ID uint
+}
+
+type DeleteManyCommand struct {
+	IDs []uint
 }

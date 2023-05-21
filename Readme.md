@@ -63,6 +63,10 @@ Go Profiling
 wget -O cpu.pprof http://localhost:8090/debug/pprof/profile?seconds=120
 sudo apt install -y graphviz
 go tool pprof -http 0.0.0.0:8989 cpu.pprof
+
+# heap
+wget -O heap.pprof http://localhost:8090/debug/pprof/heap
+go tool pprof -http 0.0.0.0:8989 heap.pprof
 ```
 
 system CPU debugging (helpful if other service like minio, postgres or redis is using high cpu)

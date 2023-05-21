@@ -27,6 +27,14 @@ func (s *FakeService) CreateMany(ctx context.Context, cmd []mediasearch.Model) (
 	return s.ExpectedTaskID, s.ExpectedError
 }
 
+func (s *FakeService) DeleteOne(ctx context.Context, cmd mediasearch.DeleteOneCommand) (int64, error) {
+	return s.ExpectedTaskID, s.ExpectedError
+}
+
+func (s *FakeService) DeleteMany(ctx context.Context, cmd mediasearch.DeleteManyCommand) (int64, error) {
+	return s.ExpectedTaskID, s.ExpectedError
+}
+
 func (s *FakeService) Search(ctx context.Context, query mediasearch.MediaSearchQuery) ([]mediasearch.Model, error) {
 	return s.ExpectedMediaList, s.ExpectedError
 }

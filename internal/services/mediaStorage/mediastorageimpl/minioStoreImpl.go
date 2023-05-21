@@ -97,3 +97,18 @@ func (s *minioStore) GetByFileName(ctx context.Context, fileName string) (medias
 	object.Stat()
 	return NewMinioFileWrapper(*object, fileName), err
 }
+
+func (s *minioStore) DeleteOne(ctx context.Context, fileName string) error {
+	return s.cli.RemoveObject(ctx, s.bucketName, fileName, minio.RemoveObjectOptions{})
+}
+
+// func (s *minioStore) DeleteMany(ctx context.Context, fileNames []string) (failedFileNames []string, errs []error) {
+// 	for _, fileName := range fileNames {
+// 		err := s.DeleteOne(ctx, fileName)
+// 		if err != nil {
+// 			errs = append(errs, err)
+// 			failedFileNames = append(failedFileNames, fileName)
+// 		}
+// 	}
+// 	return
+// }

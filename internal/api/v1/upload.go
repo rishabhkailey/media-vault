@@ -49,61 +49,70 @@ func (server *Server) InitChunkUpload(c *gin.Context) {
 		)
 		return
 	}
-	uploadRequest, err := server.UploadRequests.Create(c.Request.Context(), uploadrequests.CreateUploadRequestCommand{
-		UserID: userID,
-	})
-	if err != nil {
-		c.Error(
-			internalErrors.NewInternalServerError(
-				fmt.Errorf("[InitChunkUpload] uploadRequest creation failed: %w", err),
-			),
-		)
-		return
-	}
-	mediaMetadata, err := server.MediaMetadata.Create(c.Request.Context(), mediametadata.CreateCommand{
-		Metadata: mediametadata.Metadata{
-			Name: requestBody.FileName,
-			Date: time.UnixMilli(requestBody.Date),
-			Size: uint64(requestBody.Size),
-			Type: requestBody.MediaType,
-		},
-	})
-	if err != nil {
-		c.Error(
-			internalErrors.NewInternalServerError(
-				fmt.Errorf("[InitUpload] media metadata creation failed: %w", err),
-			),
-		)
-		return
-	}
-	media, err := server.Media.Create(c.Request.Context(), media.CreateMediaCommand{
-		UploadRequestID: uploadRequest.ID,
-		MetadataID:      mediaMetadata.ID,
-	})
-	if err != nil {
-		c.Error(
-			internalErrors.NewInternalServerError(
-				fmt.Errorf("[InitUpload] media creation failed: %w", err),
-			),
-		)
-		return
-	}
-	_, err = server.UserMediaBindings.Create(c.Request.Context(), usermediabindings.CreateCommand{
-		UserID:  userID,
-		MediaID: media.ID,
-	})
-	if err != nil {
-		c.Error(
-			internalErrors.NewInternalServerError(
-				fmt.Errorf("[InitUpload] UserMediaBindings creation failed: %w", err),
-			),
-		)
-		return
+	var uploadRequest uploadrequests.Model
+	var uploadingMedia media.Model
+	{
+		tx := server.Services.CreateTransaction()
+		uploadRequest, err = server.UploadRequests.Create(c.Request.Context(), uploadrequests.CreateUploadRequestCommand{
+			UserID: userID,
+		})
+		if err != nil {
+			c.Error(
+				internalErrors.NewInternalServerError(
+					fmt.Errorf("[InitChunkUpload] uploadRequest creation failed: %w", err),
+				),
+			)
+			return
+		}
+		mediaMetadata, err := server.MediaMetadata.WithTransaction(tx).Create(c.Request.Context(), mediametadata.CreateCommand{
+			Metadata: mediametadata.Metadata{
+				Name: requestBody.FileName,
+				Date: time.UnixMilli(requestBody.Date),
+				Size: uint64(requestBody.Size),
+				Type: requestBody.MediaType,
+			},
+		})
+		if err != nil {
+			tx.Rollback()
+			c.Error(
+				internalErrors.NewInternalServerError(
+					fmt.Errorf("[InitUpload] media metadata creation failed: %w", err),
+				),
+			)
+			return
+		}
+		uploadingMedia, err = server.Media.WithTransaction(tx).Create(c.Request.Context(), media.CreateMediaCommand{
+			UploadRequestID: uploadRequest.ID,
+			MetadataID:      mediaMetadata.ID,
+		})
+		if err != nil {
+			tx.Rollback()
+			c.Error(
+				internalErrors.NewInternalServerError(
+					fmt.Errorf("[InitUpload] media creation failed: %w", err),
+				),
+			)
+			return
+		}
+		_, err = server.UserMediaBindings.WithTransaction(tx).Create(c.Request.Context(), usermediabindings.CreateCommand{
+			UserID:  userID,
+			MediaID: uploadingMedia.ID,
+		})
+		if err != nil {
+			tx.Rollback()
+			c.Error(
+				internalErrors.NewInternalServerError(
+					fmt.Errorf("[InitUpload] UserMediaBindings creation failed: %w", err),
+				),
+			)
+			return
+		}
+		tx.Commit()
 	}
 	err = server.MediaStorage.InitChunkUpload(c.Request.Context(), mediastorage.InitChunkUploadCmd{
 		UserID:    userID,
 		RequestID: uploadRequest.ID,
-		FileName:  media.FileName,
+		FileName:  uploadingMedia.FileName,
 		FileSize:  requestBody.Size,
 	})
 	if err != nil {
