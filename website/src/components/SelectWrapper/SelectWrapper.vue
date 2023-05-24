@@ -1,16 +1,5 @@
 <script setup lang="ts">
-// import MediaThumbnail from "@/components/MediaThumbnail.vue";
-// import { ref } from "vue";
-
-// const media: Media = {
-//   thumbnail_url: "/v1/thumbnail/c72ce9d9-0763-4876-825f-a6b1791bfc9f",
-//   thumbnail: true,
-//   date: new Date(),
-//   name: "test",
-//   size: 100,
-//   type: "image/jpeg",
-//   url: "",
-// };
+import { ref, watch } from "vue";
 
 const props = defineProps<{
   modelValue: boolean;
@@ -27,11 +16,36 @@ const emit = defineEmits<{
   (e: "change", value: boolean): void;
 }>();
 
-const clickHanlder = () => {
+const clickHandler = () => {
   // selected.value = !selected.value;
   emit("update:modelValue", !props.modelValue);
   emit("change", !props.modelValue);
 };
+
+const contentClickHandler = (e: MouseEvent) => {
+  e.stopPropagation();
+  clickHandler();
+};
+
+const contentWrapper = ref<HTMLElement | undefined>(undefined);
+
+watch(
+  () => props.selectOnContentClick,
+  (newValue, oldValue) => {
+    if (contentWrapper.value === undefined) {
+      return;
+    }
+    if (newValue) {
+      contentWrapper.value.addEventListener("click", contentClickHandler, true);
+      return;
+    }
+    contentWrapper.value.removeEventListener(
+      "click",
+      contentClickHandler,
+      true
+    );
+  }
+);
 // const selected = ref(false);
 </script>
 <template>
@@ -40,7 +54,12 @@ const clickHanlder = () => {
       <div v-bind="hoverProps" class="d-flex child-flex pa-2">
         <v-scale-transition>
           <div
-            v-if="isHovering || props.modelValue || props.loading"
+            v-if="
+              props.alwaysShowSelectButton ||
+              isHovering ||
+              props.modelValue ||
+              props.loading
+            "
             :class="{
               'check-button-absolute': props.absolutePosition,
             }"
@@ -56,7 +75,7 @@ const clickHanlder = () => {
               v-else
               icon="mdi-check-circle"
               class="mr-2"
-              @click="clickHanlder"
+              @click.stop="clickHandler"
               :color="props.modelValue ? 'primary' : 'grey  '"
               :size="props.selectIconSize"
             />
@@ -64,9 +83,11 @@ const clickHanlder = () => {
         </v-scale-transition>
         <div
           :class="{
-            slide: isHovering || props.modelValue,
+            'pointer-cursor': props.selectOnContentClick,
           }"
+          ref="contentWrapper"
         >
+          <!-- @click.stop.capture="props.selectOnContentClick ? contentClickHandler : null" -->
           <slot></slot>
         </div>
       </div>
@@ -75,9 +96,8 @@ const clickHanlder = () => {
 </template>
 
 <style scoped>
-.content {
-  flex-grow: 1;
-  transition: flex-grow 1s ease;
+.pointer-cursor {
+  cursor: pointer;
 }
 .check-button-absolute {
   position: absolute;

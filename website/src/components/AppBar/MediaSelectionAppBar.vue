@@ -14,7 +14,7 @@ const { count: selectedMediaCount, selectedMediaIDs } =
 const authStore = useAuthStore();
 const { accessToken } = storeToRefs(authStore);
 
-const { deleteMedia } = useMediaStore();
+const { deleteMultipleMedia } = useMediaStore();
 const { setGlobalLoading, setProgress } = useLoadingStore();
 
 const deleteConfirmationPopUp = ref(false);
@@ -27,12 +27,19 @@ async function deleteSelectedMedia() {
   let count = mediaIDs.length;
   resetMediaSelection();
   setGlobalLoading(true, false, 0);
-  for (let index = 0; index < count; index++) {
+  const batchSize = 30;
+  for (let index = 0; index < count; index += batchSize) {
+    let end = Math.min(index + batchSize, mediaIDs.length);
+    let mediaIDsToDelete = mediaIDs.slice(index, end);
     try {
-      await deleteMedia(accessToken.value, mediaIDs[index]);
-      setProgress((100 * (index + 1)) / count);
+      let failedMediaIDs = await deleteMultipleMedia(
+        accessToken.value,
+        mediaIDsToDelete
+      );
+      failedIDs.push(...failedMediaIDs);
+      setProgress((100 * (index + batchSize)) / count);
     } catch (err) {
-      failedIDs.push(mediaIDs[index]);
+      failedIDs.push(...mediaIDsToDelete);
       // todo user feedback component for errors
       console.log(err);
     }
@@ -80,7 +87,11 @@ async function deleteSelectedMedia() {
           <div class="d-flex flex-row" v-if="deleteConfirmationPopUp">
             <v-tooltip text="confirm delete" location="bottom">
               <template v-slot:activator="{ props }">
-                <v-btn icon="mdi-check" v-bind="props" />
+                <v-btn
+                  icon="mdi-check"
+                  v-bind="props"
+                  @click.stop="deleteSelectedMedia"
+                />
               </template>
             </v-tooltip>
             <v-tooltip text="cancel delete" location="bottom">

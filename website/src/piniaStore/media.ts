@@ -90,6 +90,12 @@ export const useMediaStore = defineStore("media", () => {
     mediaList.value = mediaList.value.filter((media) => media.id !== mediaID);
   }
 
+  function removeMediaByIDs(mediaIDs: Array<number>) {
+    mediaList.value = mediaList.value.filter(
+      (media) => !mediaIDs.includes(media.id)
+    );
+  }
+
   function deleteMedia(accessToken: string, mediaID: number): Promise<boolean> {
     return new Promise<boolean>((resolve, reject) => {
       axios
@@ -113,6 +119,36 @@ export const useMediaStore = defineStore("media", () => {
     });
   }
 
+  // returns failed media ids
+  // reject only in case of unexpected/unhandeled error
+  async function deleteMultipleMedia(
+    accessToken: string,
+    mediaIDs: Array<number>
+  ): Promise<Array<number>> {
+    const failedMediaIDs = new Set<number>();
+    const successMediaIDs = new Set<number>();
+
+    for (const mediaID of mediaIDs) {
+      try {
+        const resp = await axios.delete(`/v1/media/${mediaID}`, {
+          headers: {
+            Authorization: `Bearer ${accessToken}`,
+          },
+        });
+        if (resp.status !== 200) {
+          failedMediaIDs.add(mediaID);
+          continue;
+        } else {
+          successMediaIDs.add(mediaID);
+        }
+      } catch {
+        failedMediaIDs.add(mediaID);
+      }
+    }
+    removeMediaByIDs(Array.from(successMediaIDs));
+    return Array.from(failedMediaIDs);
+  }
+
   return {
     nextPageNumber,
     mediaList,
@@ -120,5 +156,6 @@ export const useMediaStore = defineStore("media", () => {
     loadMoreMedia,
     loadAllMediaForDate,
     deleteMedia,
+    deleteMultipleMedia,
   };
 });

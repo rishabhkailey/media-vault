@@ -20,7 +20,8 @@ const props = defineProps<{
 
 const selectDayMediaLoading = ref(false);
 const mediaSelectionStore = useMediaSelectionStore();
-const { selectionMap } = storeToRefs(mediaSelectionStore);
+const { selectionMap, count: selectedMediaIDsCount } =
+  storeToRefs(mediaSelectionStore);
 const { updateSelection } = mediaSelectionStore;
 
 function getSelection(index: number): boolean {
@@ -61,9 +62,9 @@ const prviewOverlay = ref<boolean>(false);
         :model-value="dayMediaSelected"
         @change="selectDayMedia"
         selectIconSize="small"
-        :always-show-select-button="false"
+        :always-show-select-button="selectedMediaIDsCount > 0"
         :show-select-button-on-hover="true"
-        :select-on-content-click="false"
+        :select-on-content-click="selectedMediaIDsCount > 0"
       >
         {{
           `${daysShort[props.day]}, ${monthShort[props.month]} ${props.date}, ${
@@ -83,9 +84,9 @@ const prviewOverlay = ref<boolean>(false);
             :loading="false"
             :absolute-position="true"
             :model-value="getSelection(media.id)"
-            :always-show-select-button="false"
+            :always-show-select-button="selectedMediaIDsCount > 0"
             :show-select-button-on-hover="true"
-            :select-on-content-click="false"
+            :select-on-content-click="selectedMediaIDsCount > 0"
             @change="
               (value) => {
                 updateSelection(media.id, value);
