@@ -10,7 +10,7 @@ export const useMediaStore = defineStore("media", () => {
   const nextPageNumber = ref(1);
   const mediaList = ref<Array<Media>>([]);
   const allMediaLoaded = ref(false);
-  console.log(mediaList);
+
   function appendMedia(_mediaList: Array<Media>) {
     if (_mediaList.length > 0) {
       const newMediaList = _mediaList
@@ -86,11 +86,39 @@ export const useMediaStore = defineStore("media", () => {
     });
   }
 
+  function removeMediaByID(mediaID: number) {
+    mediaList.value = mediaList.value.filter((media) => media.id !== mediaID);
+  }
+
+  function deleteMedia(accessToken: string, mediaID: number): Promise<boolean> {
+    return new Promise<boolean>((resolve, reject) => {
+      axios
+        .delete(`/v1/media/${mediaID}`, {
+          headers: {
+            Authorization: `Bearer ${accessToken}`,
+          },
+        })
+        .then((resp) => {
+          if (resp.status === 200) {
+            removeMediaByID(mediaID);
+            resolve(true);
+            return;
+          }
+          resolve(false);
+          return;
+        })
+        .catch((err) => {
+          reject(err);
+        });
+    });
+  }
+
   return {
     nextPageNumber,
     mediaList,
     allMediaLoaded,
     loadMoreMedia,
     loadAllMediaForDate,
+    deleteMedia,
   };
 });

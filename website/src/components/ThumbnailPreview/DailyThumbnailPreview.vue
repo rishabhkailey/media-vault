@@ -1,11 +1,11 @@
 <script setup lang="ts">
 import MediaThumbnail from "./MediaThumbnail.vue";
-import MediaPreview from "./MediaPreview.vue";
+import MediaPreview from "@/components/MediaPreview.vue";
 import { computed, ref } from "vue";
 import { daysShort, monthShort } from "@/utils/date";
 import { useMediaSelectionStore } from "@/piniaStore/mediaSelection";
 import { storeToRefs } from "pinia";
-import SelectWrapper from "./SelectWrapper/SelectWrapper.vue";
+import SelectWrapper from "@/components/SelectWrapper/SelectWrapper.vue";
 // interface doesn't work https://github.com/vuejs/core/issues/4294
 // const props = defineProps<DailyMedia>();
 const props = defineProps<{
@@ -61,6 +61,9 @@ const prviewOverlay = ref<boolean>(false);
         :model-value="dayMediaSelected"
         @change="selectDayMedia"
         selectIconSize="small"
+        :always-show-select-button="false"
+        :show-select-button-on-hover="true"
+        :select-on-content-click="false"
       >
         {{
           `${daysShort[props.day]}, ${monthShort[props.month]} ${props.date}, ${
@@ -80,6 +83,9 @@ const prviewOverlay = ref<boolean>(false);
             :loading="false"
             :absolute-position="true"
             :model-value="getSelection(media.id)"
+            :always-show-select-button="false"
+            :show-select-button-on-hover="true"
+            :select-on-content-click="false"
             @change="
               (value) => {
                 updateSelection(media.id, value);

@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import LazyMediaThumbnailsPreview from "@/components/LazyMediaThumbnailsPreview.vue";
+import LazyMediaThumbnailsPreview from "@/components/ThumbnailPreview/LazyMediaThumbnailsPreview.vue";
 import { useMediaStore } from "@/piniaStore/media";
 import { useAuthStore } from "@/piniaStore/auth";
 import { storeToRefs } from "pinia";

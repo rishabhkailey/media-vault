@@ -44,6 +44,7 @@ const getIcon = (mediaType: string) => {
         :height="props.height - 2 * props.padding"
         :aspect-ratio="props.aspectRatio"
         ref="imageElement"
+        transition="scale"
         cover
       >
         <!-- <template v-slot:placeholder>

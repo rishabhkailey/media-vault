@@ -17,6 +17,9 @@ const props = defineProps<{
   absolutePosition: boolean;
   selectIconSize: string | number;
   loading: boolean;
+  showSelectButtonOnHover: boolean;
+  alwaysShowSelectButton: boolean;
+  selectOnContentClick: boolean;
 }>();
 
 const emit = defineEmits<{
@@ -32,82 +35,12 @@ const clickHanlder = () => {
 // const selected = ref(false);
 </script>
 <template>
-  <!-- using badge, hover 
-  <v-hover>
-    <template v-slot:default="{ isHovering, props }">
-      <div v-bind="props" class="d-flex child-flex pa-2">
-        <v-badge
-          location="top start"
-          color="transparent"
-          icon="mdi-check-circle-outline"
-          :model-value="isHovering"
-        >
-          <div class="d-flex child-flex pa-2">
-            <MediaThumbnail :media="media" @click="() => {}" />
-          </div>
-        </v-badge>
-      </div>
-    </template>
-  </v-hover>
-  -->
-
-  <!-- using badge (slot) and hover
-  <v-hover>
-    <template v-slot:default="{ isHovering, props }">
-      <div v-bind="props" class="d-flex child-flex pa-2">
-        <v-badge
-          location="top start"
-          color="transparent"
-          :model-value="isHovering || selected"
-        >
-          <div class="d-flex child-flex pa-2">
-            <MediaThumbnail :media="media" @click="() => {}" />
-          </div>
-          <template v-slot:badge>
-            <v-icon
-              icon="mdi-check-circle-outline"
-              class="select-badge"
-              @click="onSelect"
-              :color="selected ? 'success' : 'white'"
-              size="x-large"
-            />
-          </template>
-        </v-badge>
-      </div>
-    </template>
-  </v-hover>
-  -->
-
-  <!-- todo try custom method so we can set the size of the select button
-  <v-hover>
-    <template v-slot:default="{ isHovering, props }">
-      <div v-bind="props" class="d-flex child-flex pa-2">
-        <v-scale-transition>
-          <div
-            v-if="isHovering || selected"
-            style="position: absolute; z-index: 1"
-          >
-            <v-icon
-              icon="mdi-check-circle"
-              class="select-badge"
-              @click="onSelect"
-              :color="selected ? 'success' : 'white'"
-              size="large"
-            />
-          </div>
-        </v-scale-transition>
-        <div :class="`d-flex child-flex ${selected ? 'pa-2' : ''}`">
-          <MediaThumbnail :media="media" @click="() => {}" />
-        </div>
-      </div>
-    </template>
-  </v-hover> -->
   <v-hover>
     <template v-slot:default="{ isHovering, props: hoverProps }">
       <div v-bind="hoverProps" class="d-flex child-flex pa-2">
         <v-scale-transition>
           <div
-            v-if="isHovering || props.modelValue"
+            v-if="isHovering || props.modelValue || props.loading"
             :class="{
               'check-button-absolute': props.absolutePosition,
             }"
@@ -142,6 +75,10 @@ const clickHanlder = () => {
 </template>
 
 <style scoped>
+.content {
+  flex-grow: 1;
+  transition: flex-grow 1s ease;
+}
 .check-button-absolute {
   position: absolute;
   z-index: 1;

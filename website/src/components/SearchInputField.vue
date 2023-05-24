@@ -38,7 +38,6 @@ watch(searchElement, (newValue) => {
       v-if="!props.collapsed"
       :clearable="true"
       clear-icon="mdi-close"
-      append-inner-icon="mdi-magnify"
       :model-value="props.modelValue"
       @update:model-value="
         (value) => {
@@ -48,7 +47,11 @@ watch(searchElement, (newValue) => {
       :rules="searchInputRules"
       label="search"
       :hide-details="true"
-    />
+    >
+      <template #append-inner>
+        <v-icon icon="mdi-magnify" @click="(e) => emits('submit', e)" />
+      </template>
+    </v-text-field>
     <v-dialog v-else v-model="searchDialog" location="top">
       <template v-slot:activator="{ props }">
         <v-btn color="primary" v-bind="props" icon="mdi-magnify"> </v-btn>
@@ -58,7 +61,6 @@ watch(searchElement, (newValue) => {
           <v-text-field
             :clearable="true"
             clear-icon="mdi-close"
-            append-inner-icon="mdi-magnify"
             :model-value="props.modelValue"
             @update:model-value="
               (value) => {
@@ -70,7 +72,19 @@ watch(searchElement, (newValue) => {
             ref="searchElement"
             focused
             hide-details
-          />
+          >
+            <template #append-inner>
+              <v-icon
+                icon="mdi-magnify"
+                @click="
+                  (e) => {
+                    searchDialog = false;
+                    emits('submit', e);
+                  }
+                "
+              />
+            </template>
+          </v-text-field>
         </v-card-text>
         <v-card-actions>
           <v-btn color="primary" block @click="searchDialog = false"

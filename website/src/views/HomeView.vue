@@ -1,9 +1,7 @@
 <script setup lang="ts">
-import AppBar from "../components/AppBar.vue";
+import AppBar from "@/components/AppBar/AppBar.vue";
 import NavigationBar from "../components/NavigationBar.vue";
-import HomePage from "../components/HomePage.vue";
 import { computed, inject, onMounted, provide, ref } from "vue";
-import store from "@/store";
 import { initializingKey, userManagerKey } from "@/symbols/injectionSymbols";
 import type { UserManager } from "oidc-client-ts";
 import decryptWorker from "@/worker/decrypt?url";
