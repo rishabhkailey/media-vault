@@ -1,6 +1,6 @@
 import { Chacha20 } from "ts-chacha20";
-import { parseRequestRangeHeader } from "@/utils/request";
-import type { IRequestRange } from "@/utils/request";
+import { parseRequestRangeHeader } from "../utils/request";
+import type { IRequestRange } from "../utils/request";
 // stream saver worker code + our custom code for decryption
 
 declare let self: ServiceWorkerGlobalScope;

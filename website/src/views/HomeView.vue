@@ -4,7 +4,7 @@ import NavigationBar from "../components/NavigationBar.vue";
 import { computed, inject, onMounted, provide, ref } from "vue";
 import { initializingKey, userManagerKey } from "@/symbols/injectionSymbols";
 import type { UserManager } from "oidc-client-ts";
-import decryptWorker from "@/worker/decrypt?url";
+import decryptWorker from "@/worker/dist/bundle.js?url";
 // todo if not authenticated redirect to some different page
 // maybe /about
 import { useDisplay } from "vuetify";
@@ -79,6 +79,8 @@ const updateOrRegisterServiceWorker = () => {
 };
 
 const updateServiceWorker = () => {
+  // todo instead delete and install again?
+  // because if we are changing the path or file name of worker then this fails
   return new Promise<ServiceWorker>((resolve, reject) => {
     navigator.serviceWorker.getRegistration().then((registration) => {
       if (registration === undefined) {
