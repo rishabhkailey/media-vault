@@ -54,6 +54,8 @@
 * https://www.npmjs.com/package/resumablejs
 * js performance test https://jsben.ch/
 * for file meteada - https://www.npmjs.com/package/mediainfo.js (for now continuing with file extensions)
+* https://github.com/casdoor/casdoor
+* request size for json endponits(memory safe and ddos)
 
 ## Pilain
 * every user will have 2 buckets 
@@ -165,3 +167,4 @@ curl -v -X GET 'http://localhost:8090/v1/media?file=8379ada2-e309-4d3a-b4b8-18d4
 * local store implementation and migration command
 * Delete api using transactions - https://gorm.io/docs/transactions.html
 * Try https://vuetifyjs.com/en/api/v-img/#props-gradient for hover effect
+* change encryption algo to AES-CBC (no nonce required)

@@ -90,6 +90,7 @@ func (s *Service) GetByMediaID(ctx context.Context, query media.GetByMediaIDQuer
 }
 
 func NewGetMediaQueryResult(mediaList []media.Model) (result []media.GetMediaQueryResultItem, err error) {
+	result = []media.GetMediaQueryResultItem{} // required, if not done then we get null in json
 	for _, mediaItem := range mediaList {
 		var item media.GetMediaQueryResultItem
 		item, err = NewGetMediaQueryResultItem(mediaItem)

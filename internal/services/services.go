@@ -7,6 +7,8 @@ import (
 	"github.com/meilisearch/meilisearch-go"
 	"github.com/minio/minio-go/v7"
 	"github.com/rishabhkailey/media-service/internal/auth"
+	"github.com/rishabhkailey/media-service/internal/services/album"
+	"github.com/rishabhkailey/media-service/internal/services/album/albumimpl"
 	authservice "github.com/rishabhkailey/media-service/internal/services/authService"
 	authserviceimpl "github.com/rishabhkailey/media-service/internal/services/authService/authServiceImpl"
 	"github.com/rishabhkailey/media-service/internal/services/media"
@@ -21,6 +23,7 @@ import (
 	"github.com/rishabhkailey/media-service/internal/services/uploadRequests/uploadrequestsimpl"
 	usermediabindings "github.com/rishabhkailey/media-service/internal/services/userMediaBindings"
 	usermediabindingsimpl "github.com/rishabhkailey/media-service/internal/services/userMediaBindings/userMediaBindingsimpl"
+	"github.com/rishabhkailey/media-service/internal/store"
 	"gorm.io/gorm"
 )
 
@@ -33,6 +36,7 @@ type Services struct {
 	MediaSearch       mediasearch.Service
 	MediaStorage      mediastorage.Service
 	AuthService       authservice.Service
+	AlbumService      album.Service
 }
 
 func NewServices(
@@ -68,6 +72,14 @@ func NewServices(
 		return nil, err
 	}
 
+	store, err := store.NewStore(db, redis)
+	if err != nil {
+		return nil, err
+	}
+	albumService, err := albumimpl.NewService(*store)
+	if err != nil {
+		return nil, err
+	}
 	// todo move bucket name to config
 	mediaStorageService, err := mediastorageimpl.NewMinioService(minio, "test", uploadRequestsService)
 	if err != nil {
@@ -82,6 +94,7 @@ func NewServices(
 		MediaSearch:       mediaSearchService,
 		MediaStorage:      mediaStorageService,
 		AuthService:       authService,
+		AlbumService:      albumService,
 	}, nil
 }
 

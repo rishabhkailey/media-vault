@@ -32,3 +32,7 @@ func (request *GetMediaListRequest) Validate() error {
 }
 
 type GetMediaListResponse []media.GetMediaQueryResultItem
+
+// type DeleteMultipleMediaRequest struct {
+// 	MediaIDs uint `json:"media_ids"`
+// }

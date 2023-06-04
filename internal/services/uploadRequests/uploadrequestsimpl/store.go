@@ -44,13 +44,13 @@ func (s *sqlStore) Insert(ctx context.Context, uploadRequest *uploadrequests.Mod
 }
 
 func (s *sqlStore) DeleteOne(ctx context.Context, id string) (err error) {
-	return s.db.WithContext(ctx).Delete(&uploadrequests.Model{
+	return s.db.WithContext(ctx).Unscoped().Delete(&uploadrequests.Model{
 		ID: id,
 	}).Error
 }
 
 func (s *sqlStore) DeleteMany(ctx context.Context, ids []string) (err error) {
-	return s.db.WithContext(ctx).Delete(&uploadrequests.Model{}, ids).Error
+	return s.db.WithContext(ctx).Unscoped().Delete(&uploadrequests.Model{}, ids).Error
 }
 
 func (s *sqlStore) GetByID(ctx context.Context, id string) (uploadRequest uploadrequests.Model, err error) {

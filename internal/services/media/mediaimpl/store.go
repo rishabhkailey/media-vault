@@ -66,7 +66,7 @@ func (s *sqlStore) Insert(ctx context.Context, media *media.Model) (uint, error)
 }
 
 func (s *sqlStore) DeleteOne(ctx context.Context, id uint) error {
-	err := s.db.WithContext(ctx).Delete(&media.Model{
+	err := s.db.WithContext(ctx).Unscoped().Delete(&media.Model{
 		Model: gorm.Model{
 			ID: id,
 		},
@@ -75,7 +75,7 @@ func (s *sqlStore) DeleteOne(ctx context.Context, id uint) error {
 }
 
 func (s *sqlStore) DeleteMany(ctx context.Context, ids []uint) error {
-	err := s.db.WithContext(ctx).Delete(&media.Model{}, ids).Error
+	err := s.db.WithContext(ctx).Unscoped().Delete(&media.Model{}, ids).Error
 	return err
 }
 

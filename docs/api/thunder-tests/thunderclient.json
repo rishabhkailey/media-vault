@@ -36,5 +36,170 @@
     ],
     "params": [],
     "tests": []
+  },
+  {
+    "_id": "03ffab5c-72ce-4c1e-9c15-05d537df8a06",
+    "colId": "5d35e389-1c45-4f7f-baf0-45bae10424c3",
+    "containerId": "",
+    "name": "Get Albums",
+    "url": "http://localhost:8090/v1/albums?page=1&perPage=30&order=updated_at&sort=desc",
+    "method": "GET",
+    "sortNum": 10000,
+    "created": "2023-06-03T13:44:17.702Z",
+    "modified": "2023-06-04T02:22:49.366Z",
+    "headers": [],
+    "params": [
+      {
+        "name": "page",
+        "value": "1",
+        "isPath": false
+      },
+      {
+        "name": "perPage",
+        "value": "30",
+        "isPath": false
+      },
+      {
+        "name": "order",
+        "value": "updated_at",
+        "isPath": false
+      },
+      {
+        "name": "sort",
+        "value": "desc",
+        "isPath": false
+      }
+    ],
+    "auth": {
+      "type": "bearer",
+      "bearer": "eyJhbGciOiJSUzI1NiIsImtpZCI6IjAiLCJ0eXAiOiJKV1QifQ.eyJhdWQiOiJzcGEtdGVzdCIsImV4cCI6MTY4NTg1MDA0NCwic3ViIjoiMSJ9.WB7WHF6mQaYWuv60A5rcqFTqGKsFDRkujd26zYFRflvp-kY-QM5NFX8ffibmVLfSAE581wvXmXBaM4Pa2g3zI8BiwqbI_Hic5RcmebQcCeBhvvjI42xPEavkohVXQFNS7QGJ4ni69qlXMSCDQl3Uq0qpXKr8cNSeJcJLoibP4Mio51VDrksytd0SlfO6WXvPL3Hg71s_-GLGH5VFcH8pQIdLt3MF5hcWEi4kZeFlTEtYOy_O0CRX6MfZdvnEHOR66lGjo_Ct_ANkPd6EH5bO0Tfu9NJVdH-EqEZ5oJfQw41ygD-s5wF_IAiEgm49Yi10YDvF7xOdWRiLBNWYR5UJLw"
+    },
+    "tests": []
+  },
+  {
+    "_id": "321ab38c-cfc7-436c-898b-bd5850b9fdc2",
+    "colId": "5d35e389-1c45-4f7f-baf0-45bae10424c3",
+    "containerId": "",
+    "name": "Create Album",
+    "url": "http://localhost:8090/v1/album",
+    "method": "POST",
+    "sortNum": 20000,
+    "created": "2023-06-03T14:02:56.634Z",
+    "modified": "2023-06-03T14:02:56.634Z",
+    "headers": [],
+    "params": [],
+    "body": {
+      "type": "json",
+      "raw": "{\n  \"name\": \"test\",\n  \"thumbnail_url\": \"/v1/thumbnail/c72ce9d9-0763-4876-825f-a6b1791bfc9f\"\n}",
+      "form": []
+    },
+    "auth": {
+      "type": "bearer",
+      "bearer": "eyJhbGciOiJSUzI1NiIsImtpZCI6IjAiLCJ0eXAiOiJKV1QifQ.eyJhdWQiOiJzcGEtdGVzdCIsImV4cCI6MTY4NTgwNTIwNSwic3ViIjoiMSJ9.GbsHVvzZqZ4HBsSFfEw01ybkC8FWe2NHpRG1KIuRgdGrnT5IFJyt5QC7ZV8YLs5YZCSelMgcMmzQM9xDl4ni9Je3fYQ9GSRGvbuBC0D-xfWKPl0hw5yPZFyBb6HUdKMv0gJ0z04Ghd7hcYku3uG60GmInfdZUcJv8l8VI8a0C2thRcA15yBA0lXaMsEgVS0vWuEGTG737viAZURj4mUhMvsB1jkOTSp47hgAYZ9J8pLblMOTzxGcWYiQCDtr1d-A93VzGR56g2wmEYncyC1VCCspIq7LOaD3mw-Iiso6wqZkBSls_4EyaTipXjC7dHFKNR5VQV3Hp3Sa7pc27FW9zA"
+    },
+    "tests": []
+  },
+  {
+    "_id": "437f983a-d8d8-4184-b2e3-cc65653cb367",
+    "colId": "5d35e389-1c45-4f7f-baf0-45bae10424c3",
+    "containerId": "",
+    "name": "Delete Album",
+    "url": "http://localhost:8090/v1/album/2",
+    "method": "DELETE",
+    "sortNum": 30000,
+    "created": "2023-06-03T14:27:21.054Z",
+    "modified": "2023-06-04T01:47:59.703Z",
+    "headers": [],
+    "params": [],
+    "auth": {
+      "type": "bearer",
+      "bearer": "eyJhbGciOiJSUzI1NiIsImtpZCI6IjAiLCJ0eXAiOiJKV1QifQ.eyJhdWQiOiJzcGEtdGVzdCIsImV4cCI6MTY4NTg1MDA0NCwic3ViIjoiMSJ9.WB7WHF6mQaYWuv60A5rcqFTqGKsFDRkujd26zYFRflvp-kY-QM5NFX8ffibmVLfSAE581wvXmXBaM4Pa2g3zI8BiwqbI_Hic5RcmebQcCeBhvvjI42xPEavkohVXQFNS7QGJ4ni69qlXMSCDQl3Uq0qpXKr8cNSeJcJLoibP4Mio51VDrksytd0SlfO6WXvPL3Hg71s_-GLGH5VFcH8pQIdLt3MF5hcWEi4kZeFlTEtYOy_O0CRX6MfZdvnEHOR66lGjo_Ct_ANkPd6EH5bO0Tfu9NJVdH-EqEZ5oJfQw41ygD-s5wF_IAiEgm49Yi10YDvF7xOdWRiLBNWYR5UJLw"
+    },
+    "tests": []
+  },
+  {
+    "_id": "1c4c38d9-0f6b-4e56-b20c-39705410588c",
+    "colId": "5d35e389-1c45-4f7f-baf0-45bae10424c3",
+    "containerId": "",
+    "name": "Add Media",
+    "url": "http://localhost:8090/v1/album/3/media",
+    "method": "POST",
+    "sortNum": 25000,
+    "created": "2023-06-04T02:44:23.958Z",
+    "modified": "2023-06-04T09:21:02.935Z",
+    "headers": [],
+    "params": [],
+    "body": {
+      "type": "json",
+      "raw": "{\n  \"media_ids\": [2344, 2189, 420]\n}",
+      "form": []
+    },
+    "auth": {
+      "type": "bearer",
+      "bearer": "eyJhbGciOiJSUzI1NiIsImtpZCI6IjAiLCJ0eXAiOiJKV1QifQ.eyJhdWQiOiJzcGEtdGVzdCIsImV4cCI6MTY4NTg3MTY4NCwic3ViIjoiMSJ9.PPiPY9VzH4ZGDkeY4fb_1balpoyF9vsk43nAUqYKRH-OL3i3ZLGqYHRHiQIq8KFsKyokRFziN0EgIVP1It10pb9VMjdQf-qlQpq5ElmuiN6kfs0E5GDxuwIKUJCrcMLEg2XGqJW9p3tT-FrnCOetTQD4VxSVuNdBntcE0iC7-sea2Rtlp4mmGhPhzFX6gW8scY_-83A5hM1eiFFZ-tX1-BGCYp8EjuaqyEgjT6x6DxJLJbpcGn_hIJepYXQc1KaQe998VlDn5UWfrdGZSIYyLzoNOUTPWP5iE7dkurSW2qiIsMYZFJgOPb86StHuGnhReYMTIMOLhyBQbI3TRAasGg"
+    },
+    "tests": []
+  },
+  {
+    "_id": "4d76604e-f22a-4640-9d79-7639fa0fd2fd",
+    "colId": "5d35e389-1c45-4f7f-baf0-45bae10424c3",
+    "containerId": "",
+    "name": "Remove Media",
+    "url": "http://localhost:8090/v1/album/3/media",
+    "method": "DELETE",
+    "sortNum": 27500,
+    "created": "2023-06-04T09:30:45.364Z",
+    "modified": "2023-06-04T09:31:12.753Z",
+    "headers": [],
+    "params": [],
+    "body": {
+      "type": "json",
+      "raw": "{\n  \"media_ids\": [2344, 2189, 420]\n}",
+      "form": []
+    },
+    "auth": {
+      "type": "bearer",
+      "bearer": "eyJhbGciOiJSUzI1NiIsImtpZCI6IjAiLCJ0eXAiOiJKV1QifQ.eyJhdWQiOiJzcGEtdGVzdCIsImV4cCI6MTY4NTg3MTY4NCwic3ViIjoiMSJ9.PPiPY9VzH4ZGDkeY4fb_1balpoyF9vsk43nAUqYKRH-OL3i3ZLGqYHRHiQIq8KFsKyokRFziN0EgIVP1It10pb9VMjdQf-qlQpq5ElmuiN6kfs0E5GDxuwIKUJCrcMLEg2XGqJW9p3tT-FrnCOetTQD4VxSVuNdBntcE0iC7-sea2Rtlp4mmGhPhzFX6gW8scY_-83A5hM1eiFFZ-tX1-BGCYp8EjuaqyEgjT6x6DxJLJbpcGn_hIJepYXQc1KaQe998VlDn5UWfrdGZSIYyLzoNOUTPWP5iE7dkurSW2qiIsMYZFJgOPb86StHuGnhReYMTIMOLhyBQbI3TRAasGg"
+    },
+    "tests": []
+  },
+  {
+    "_id": "c0b1c31d-ab6f-49f9-917c-d5ed2f9bea0b",
+    "colId": "5d35e389-1c45-4f7f-baf0-45bae10424c3",
+    "containerId": "",
+    "name": "Get Album Media",
+    "url": "http://localhost:8090/v1/album/3/media?page=1&perPage=10&order=added_at&sort=desc",
+    "method": "GET",
+    "sortNum": 15000,
+    "created": "2023-06-04T10:03:35.876Z",
+    "modified": "2023-06-04T10:13:48.151Z",
+    "headers": [],
+    "params": [
+      {
+        "name": "page",
+        "value": "1",
+        "isPath": false
+      },
+      {
+        "name": "perPage",
+        "value": "10",
+        "isPath": false
+      },
+      {
+        "name": "order",
+        "value": "added_at",
+        "isPath": false
+      },
+      {
+        "name": "sort",
+        "value": "desc",
+        "isPath": false
+      }
+    ],
+    "auth": {
+      "type": "bearer",
+      "bearer": "eyJhbGciOiJSUzI1NiIsImtpZCI6IjAiLCJ0eXAiOiJKV1QifQ.eyJhdWQiOiJzcGEtdGVzdCIsImV4cCI6MTY4NTg1MDA0NCwic3ViIjoiMSJ9.WB7WHF6mQaYWuv60A5rcqFTqGKsFDRkujd26zYFRflvp-kY-QM5NFX8ffibmVLfSAE581wvXmXBaM4Pa2g3zI8BiwqbI_Hic5RcmebQcCeBhvvjI42xPEavkohVXQFNS7QGJ4ni69qlXMSCDQl3Uq0qpXKr8cNSeJcJLoibP4Mio51VDrksytd0SlfO6WXvPL3Hg71s_-GLGH5VFcH8pQIdLt3MF5hcWEi4kZeFlTEtYOy_O0CRX6MfZdvnEHOR66lGjo_Ct_ANkPd6EH5bO0Tfu9NJVdH-EqEZ5oJfQw41ygD-s5wF_IAiEgm49Yi10YDvF7xOdWRiLBNWYR5UJLw"
+    },
+    "tests": []
   }
 ]

@@ -48,14 +48,14 @@ func (s *sqlStore) Insert(ctx context.Context, userMediaBinding *usermediabindin
 }
 
 func (s *sqlStore) DeleteOne(ctx context.Context, userID string, mediaID uint) error {
-	return s.db.WithContext(ctx).Delete(&usermediabindings.Model{
+	return s.db.WithContext(ctx).Unscoped().Delete(&usermediabindings.Model{
 		UserID:  userID,
 		MediaID: mediaID,
 	}).Error
 }
 
 func (s *sqlStore) DeleteMany(ctx context.Context, userID string, mediaIDs []uint) error {
-	return s.db.WithContext(ctx).Where("media_id IN ?", mediaIDs).Delete(&usermediabindings.Model{
+	return s.db.WithContext(ctx).Where("media_id IN ?", mediaIDs).Unscoped().Delete(&usermediabindings.Model{
 		UserID: userID,
 	}).Error
 }
