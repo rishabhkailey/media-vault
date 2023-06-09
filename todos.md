@@ -168,3 +168,4 @@ curl -v -X GET 'http://localhost:8090/v1/media?file=8379ada2-e309-4d3a-b4b8-18d4
 * Delete api using transactions - https://gorm.io/docs/transactions.html
 * Try https://vuetifyjs.com/en/api/v-img/#props-gradient for hover effect
 * change encryption algo to AES-CBC (no nonce required)
+* fix media deleting (before this we can also move all stores to store package)

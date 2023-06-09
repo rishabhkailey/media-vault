@@ -10,24 +10,23 @@ import (
 
 type CreateAlbumRequest struct {
 	Name         string `form:"name" json:"name" binding:"required"`
-	ThumbnailUrl string `form:"thumbnail_url" json:"thumbnail_url" binding:"required"`
+	ThumbnailUrl string `form:"thumbnail_url" json:"thumbnail_url"`
 }
 
 func (request *CreateAlbumRequest) Validate() error {
 	if len(request.Name) == 0 {
 		return fmt.Errorf("[CreateAlbumRequest.validate]: empty name")
 	}
-	if len(request.ThumbnailUrl) == 0 {
-		return fmt.Errorf("[CreateAlbumRequest.validate]: empty thumbnail url")
-	}
 	return nil
 }
 
 type AlbumResponse struct {
-	ID        uint      `json:"id"`
-	Name      string    `json:"name"`
-	CreatedAt time.Time `json:"created_at"`
-	UpdatedAt time.Time `json:"updated_at"`
+	ID           uint      `json:"id"`
+	Name         string    `json:"name"`
+	CreatedAt    time.Time `json:"created_at"`
+	UpdatedAt    time.Time `json:"updated_at"`
+	ThumbnailUrl string    `json:"thumbnail_url"`
+	MediaCount   int       `json:"media_count"`
 }
 
 type GetAlbumsRequest struct {
@@ -50,6 +49,17 @@ func (request *GetAlbumsRequest) Validate() error {
 	if request.PerPage > album.MAX_ALBUMS_PER_PAGE_VALUE {
 		logrus.Warnf("[MediaSearchQueryValidator] PerPage value exceeded the max supported value")
 		request.PerPage = album.MAX_ALBUMS_PER_PAGE_VALUE
+	}
+	return nil
+}
+
+type GetAlbumRequest struct {
+	AlbumID uint `uri:"albumID" binding:"required"`
+}
+
+func (request *GetAlbumRequest) Validate() error {
+	if request.AlbumID == 0 {
+		return fmt.Errorf("[CreateAlbumRequest.validate]: invalid album ID")
 	}
 	return nil
 }

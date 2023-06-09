@@ -1,16 +1,18 @@
 <script setup lang="ts">
 import axios from "axios";
-import { computed, inject, ref, type Ref, watch, provide } from "vue";
+import { computed, watch, provide, onBeforeUnmount } from "vue";
 import { useAuthStore } from "@/piniaStore/auth";
 import {
-  initializingKey,
   loadMoreMediaKey,
   allMediaLoadedKey,
   mediaListKey,
 } from "@/symbols/injectionSymbols";
 import MonthlyThumbnailPreview from "./MonthlyThumbnailPreview.vue";
+import LazyLoading from "@/components/LazyLoading/LazyLoading.vue";
 import { getMonthlyMediaIndex } from "@/utils/date";
 import { storeToRefs } from "pinia";
+import { useLoadingStore } from "@/piniaStore/loading";
+import { useMediaSelectionStore } from "@/piniaStore/mediaSelection";
 
 const props = defineProps<{
   mediaList: Array<Media>;
@@ -32,14 +34,15 @@ provide(loadMoreMediaKey, props.loadMoreMedia);
 const authStore = useAuthStore();
 const { accessToken } = storeToRefs(authStore);
 console.log(authStore);
-const initializing: Ref<boolean> | undefined = inject(initializingKey);
-
 const monthlyMediaList = computed<Array<MonthlyMedia>>(() =>
   getMonthlyMediaIndex(props.mediaList)
 );
-if (initializing === undefined) {
-  throw new Error("undefined initializing");
-}
+
+const { initializing } = storeToRefs(useLoadingStore());
+// const initializing: Ref<boolean> | undefined = inject(initializingKey);
+// if (initializing === undefined) {
+//   throw new Error("undefined initializing");
+// }
 watch(initializing, async (newValue, oldValue) => {
   console.log("initializing changed to ", newValue);
   if (newValue === oldValue) {
@@ -58,55 +61,11 @@ watch(initializing, async (newValue, oldValue) => {
     console.log(response);
   }
 });
-const lazyApiLoadObserverTarget = ref<HTMLElement | undefined>(undefined);
-let lazyApiLoadTimedOut = false;
-const observer = new IntersectionObserver(
-  (entries, observer) => {
-    console.log(entries, observer);
-    entries.forEach((entry) => {
-      if (
-        !entry.isIntersecting ||
-        lazyApiLoadObserverTarget.value === undefined
-      ) {
-        return;
-      }
-      switch (entry.target) {
-        case lazyApiLoadObserverTarget.value:
-          console.log("lazyApiLoadObserverTarget matched");
-          if (!lazyApiLoadTimedOut) {
-            observer.unobserve(lazyApiLoadObserverTarget.value);
-            props.loadMoreMedia().then(() => {
-              if (
-                !props.allMediaLoaded &&
-                lazyApiLoadObserverTarget.value !== undefined
-              ) {
-                observer.observe(lazyApiLoadObserverTarget.value);
-              }
-            });
-            // timeout of 100ms second to prevent any bug from overloading the browser with api calls
-            lazyApiLoadTimedOut = true;
-            setTimeout(() => {
-              lazyApiLoadTimedOut = false;
-            }, 100);
-          }
-      }
-    });
-  },
-  {
-    root: null,
-    rootMargin: "10px",
-    threshold: 0.1,
-  }
-);
-watch(lazyApiLoadObserverTarget, (newValue, oldvalue) => {
-  if (oldvalue !== undefined) {
-    observer.unobserve(oldvalue);
-  }
-  if (newValue === undefined || !(newValue instanceof HTMLElement)) {
-    console.warn("lazyApiLoadObserverTarget undefined");
-    return;
-  }
-  observer.observe(newValue);
+
+const { reset: resetMediaSelection } = useMediaSelectionStore();
+
+onBeforeUnmount(() => {
+  resetMediaSelection();
 });
 </script>
 
@@ -124,12 +83,14 @@ watch(lazyApiLoadObserverTarget, (newValue, oldvalue) => {
         />
         <v-divider />
       </div>
-
-      <div
-        ref="lazyApiLoadObserverTarget"
-        style="min-height: 100px"
+      <LazyLoading
         v-if="!allMediaLoaded"
-      ></div>
+        :on-threshold-reach="loadMoreMedia"
+        :threshold="0.1"
+        :min-height="100"
+        :min-width="100"
+        :root-margin="10"
+      ></LazyLoading>
     </div>
   </div>
 </template>

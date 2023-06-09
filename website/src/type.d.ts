@@ -8,6 +8,15 @@ type point = {
   y: number;
 };
 
+interface Album {
+  id: number;
+  name: string;
+  media_count: number;
+  thumbnail_url: string;
+  updated_at: Date;
+  created_at: Date;
+}
+
 interface Media {
   id: number;
   name: string;

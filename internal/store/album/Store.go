@@ -12,6 +12,7 @@ type Store interface {
 	InsertAlbum(ctx context.Context, albumName string, thumbnailUrl string) (album Album, err error)
 	InsertUserAlbumBindings(ctx context.Context, userID string, albumID uint) (id uint, err error)
 	GetByUserId(ctx context.Context, userID string, orderBy string, sort string, limit int, offset int) (albums []Album, err error)
+	GetByID(ctx context.Context, albumID uint) (result Album, err error)
 	GetMediaByAlbumId(ctx context.Context, albumID uint, orderBy string, sort string, limit int, offset int) (mediaList []media.Model, err error)
 	CheckAlbumBelongsToUser(ctx context.Context, userID string, albumID uint) (ok bool, err error)
 	AddMediaInAlbum(ctx context.Context, albumID uint, mediaIDs []uint) (addedMediaIDs []uint, err error)

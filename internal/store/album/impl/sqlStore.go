@@ -77,6 +77,11 @@ func (s *sqlStore) GetByUserId(ctx context.Context, userID string, orderBy strin
 	return
 }
 
+func (s *sqlStore) GetByID(ctx context.Context, albumID uint) (result album.Album, err error) {
+	err = s.db.WithContext(ctx).Model(&album.Album{}).First(&result, albumID).Error
+	return
+}
+
 func (s *sqlStore) GetMediaByAlbumId(ctx context.Context, albumID uint, orderBy string, sort string, limit int, offset int) (mediaList []media.Model, err error) {
 	db := s.db.WithContext(ctx)
 	mediaIDsByAlbumQuery := db.Model(&album.AlbumMediaBindings{}).Select("media_id").Where("album_id = ?", albumID)
@@ -155,7 +160,7 @@ func (s *sqlStore) RemoveMediaFromAlbum(ctx context.Context, albumID uint, media
 }
 
 func (s *sqlStore) FilterMediaIDsByAlbumID(ctx context.Context, albumID uint, mediaIDs []uint) (result []uint, err error) {
-	err = s.db.Model(&album.AlbumMediaBindings{}).Where("media_id IN ?", mediaIDs).Pluck("media_id", &result).Error
+	err = s.db.Model(&album.AlbumMediaBindings{}).Where("media_id IN ? and album_id = ?", mediaIDs, albumID).Pluck("media_id", &result).Error
 	return
 }
 

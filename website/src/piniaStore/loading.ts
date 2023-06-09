@@ -2,6 +2,7 @@ import { defineStore } from "pinia";
 import { ref } from "vue";
 
 export const useLoadingStore = defineStore("loading", () => {
+  // global loading used in progress bar in app bar
   const loading = ref(false);
   const progress = ref(0);
   const indeterminate = ref(false);
@@ -20,11 +21,22 @@ export const useLoadingStore = defineStore("loading", () => {
     progress.value = _progress;
   }
 
+  // initializing used to wait for service worker to register and other init things
+  const initializing = ref(false);
+
+  function setInitializing(_initializing: boolean) {
+    initializing.value = _initializing;
+  }
+
   return {
+    // global
     loading,
     progress,
     indeterminate,
     setGlobalLoading,
     setProgress,
+    // initializing
+    initializing,
+    setInitializing,
   };
 });

@@ -51,6 +51,7 @@ func NewRouter(v1ApiServer *v1Api.Server, config config.Config) (*gin.Engine, er
 			v1UserProtected.DELETE("/media/:mediaID", v1ApiServer.DeleteMedia)
 			v1UserProtected.POST("/album", v1ApiServer.CreateAlbum)
 			v1UserProtected.GET("/albums", v1ApiServer.GetAlbums)
+			v1UserProtected.GET("/album/:albumID", v1ApiServer.GetAlbum)
 			v1UserProtected.DELETE("/album/:albumID", v1ApiServer.DeleteAlbum)
 			v1UserProtected.GET("/album/:albumID/media", v1ApiServer.GetAlubmMedia)
 			v1UserProtected.POST("/album/:albumID/media", v1ApiServer.AlbumAddMedia)

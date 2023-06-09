@@ -1,6 +1,7 @@
 package albumimpl
 
 import (
+	"errors"
 	"fmt"
 
 	internalErrors "github.com/rishabhkailey/media-service/internal/errors"
@@ -10,6 +11,7 @@ import (
 	"github.com/rishabhkailey/media-service/internal/store"
 	albumStore "github.com/rishabhkailey/media-service/internal/store/album"
 	"golang.org/x/net/context"
+	"gorm.io/gorm"
 )
 
 type Service struct {
@@ -51,6 +53,22 @@ func (s *Service) GetUserAlbums(ctx context.Context, query album.GetUserAlbumsQu
 		int(query.PerPage),
 		int((query.Page-1)*query.PerPage),
 	)
+}
+
+func (s *Service) GetUserAlbum(ctx context.Context, query album.GetUserAlbumQuery) (album albumStore.Album, err error) {
+	ok, err := s.store.AlbumStore.CheckAlbumBelongsToUser(ctx, query.UserID, query.AlbumID)
+	if err != nil {
+		return
+	}
+	if !ok {
+		err = internalErrors.ErrForbidden
+		return
+	}
+	album, err = s.store.AlbumStore.GetByID(ctx, query.AlbumID)
+	if errors.Is(err, gorm.ErrRecordNotFound) {
+		err = internalErrors.ErrForbidden
+	}
+	return
 }
 
 func (s *Service) AddMedia(ctx context.Context, query album.AddMediaQuery) (addedMediaIDs []uint, err error) {

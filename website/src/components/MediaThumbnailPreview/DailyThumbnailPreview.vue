@@ -66,6 +66,7 @@ const prviewOverlay = ref<boolean>(false);
         :show-select-button-on-hover="true"
         :select-on-content-click="selectedMediaIDsCount > 0"
       >
+        <!-- todo unknown date -->
         {{
           `${daysShort[props.day]}, ${monthShort[props.month]} ${props.date}, ${
             props.year

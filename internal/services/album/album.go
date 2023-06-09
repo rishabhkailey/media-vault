@@ -10,6 +10,7 @@ import (
 type Service interface {
 	Create(context.Context, CreateAlbumCmd) (albumStore.Album, error)
 	GetUserAlbums(context.Context, GetUserAlbumsQuery) ([]albumStore.Album, error)
+	GetUserAlbum(context.Context, GetUserAlbumQuery) (albumStore.Album, error)
 	AddMedia(context.Context, AddMediaQuery) (addedMediaIDs []uint, err error)
 	RemoveAlbumMedia(context.Context, RemoveMediaCmd) (removedMediaIDs []uint, err error)
 	DeleteAlbum(context.Context, DeleteAlbumCmd) error

@@ -43,7 +43,7 @@ func (s *sqlStore) Insert(ctx context.Context, mediaMetadata *mediametadata.Mode
 }
 
 func (s *sqlStore) DeleteOne(ctx context.Context, ID uint) error {
-	return s.db.WithContext(ctx).Unscoped().Delete(&mediametadata.Model{
+	return s.db.WithContext(ctx).Delete(&mediametadata.Model{
 		Model: gorm.Model{
 			ID: ID,
 		},
@@ -51,7 +51,7 @@ func (s *sqlStore) DeleteOne(ctx context.Context, ID uint) error {
 }
 
 func (s *sqlStore) DeleteMany(ctx context.Context, IDs []uint) error {
-	return s.db.WithContext(ctx).Unscoped().Delete(&mediametadata.Model{}, IDs).Error
+	return s.db.WithContext(ctx).Delete(&mediametadata.Model{}, IDs).Error
 }
 
 func (s *sqlStore) UpdateThumbnail(ctx context.Context, cmd mediametadata.UpdateThumbnailCommand) (err error) {

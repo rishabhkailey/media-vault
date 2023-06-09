@@ -1,8 +1,14 @@
 <script setup lang="ts">
+import LazyLoading from "@/components/LazyLoading/LazyLoading.vue";
+import { useAlbumStore } from "@/piniaStore/album";
+import { useAuthStore } from "@/piniaStore/auth";
+import { storeToRefs } from "pinia";
 import { computed } from "vue";
+import { useRouter } from "vue-router";
 import { useDisplay } from "vuetify";
 const display = useDisplay();
 
+const router = useRouter();
 const props = defineProps<{
   modelValue: boolean;
 }>();
@@ -12,6 +18,20 @@ const emit = defineEmits<{
 const smallDisplay = computed(
   () => display.mobile.value || display.smAndDown.value
 );
+
+const albumStore = useAlbumStore();
+const { albums, allAlbumsLoaded } = storeToRefs(albumStore);
+const { loadMoreAlbums } = albumStore;
+
+const maxNumberOfAlbums = 4;
+const albumsSubSlice = computed<Array<Album>>(() => {
+  return albums.value.length > maxNumberOfAlbums
+    ? albums.value.slice(0, 4)
+    : albums.value;
+});
+
+const authStore = useAuthStore();
+const { accessToken } = storeToRefs(authStore);
 </script>
 
 <template>
@@ -29,20 +49,86 @@ const smallDisplay = computed(
   >
     <v-list nav>
       <v-list-item
-        prepend-icon="mdi-email"
-        title="Inbox"
-        value="inbox"
+        prepend-icon="mdi-home"
+        title="Home"
+        value="Home"
+        :to="{
+          name: 'Home',
+        }"
+        :exact="true"
+        color="primary"
       ></v-list-item>
-      <v-list-item
-        prepend-icon="mdi-account-supervisor-circle"
-        title="Supervisors"
-        value="supervisors"
-      ></v-list-item>
-      <v-list-item
-        prepend-icon="mdi-clock-start"
-        title="Clock-in"
-        value="clockin"
-      ></v-list-item>
+      <v-list-group value="Albums">
+        <template v-slot:activator="{ props, isOpen }">
+          <v-list-item
+            title="Albums"
+            prepend-icon="mdi-image-album"
+            color=""
+            @click="
+              () => {
+                router.push({
+                  name: 'Albums',
+                });
+              }
+            "
+            value="Albums"
+          >
+            <template #append>
+              <v-icon
+                :icon="isOpen ? 'mdi-menu-up' : 'mdi-menu-down'"
+                v-bind="props"
+                @click.stop.prevent="() => {}"
+              />
+            </template>
+          </v-list-item>
+        </template>
+        <v-list-item
+          v-for="album in albumsSubSlice"
+          :key="album.id"
+          :title="album.name"
+          prepend-icon="mdi-image"
+          :value="album.name"
+          :to="{
+            name: 'Album',
+            params: {
+              album_id: album.id,
+            },
+          }"
+          color="primary"
+        >
+          <!-- <template #prepend>
+            <v-img :src="album.thumbnail_url">
+              <template #error>
+                <v-icon icon="mdi-image" />
+              </template>
+            </v-img>
+          </template> -->
+        </v-list-item>
+        <v-list-item
+          v-if="albums.length > maxNumberOfAlbums"
+          title="View all albums"
+          prepend-icon="mdi-arrow-right-thin"
+          :to="{
+            name: 'Albums',
+          }"
+          color="primary"
+        ></v-list-item>
+        <div
+          v-if="!(allAlbumsLoaded || albums.length >= 5)"
+          class="d-flex flex-row justify-center"
+        >
+          <LazyLoading
+            v-if="!allAlbumsLoaded"
+            :on-threshold-reach="() => loadMoreAlbums(accessToken)"
+            :threshold="0.1"
+            :min-height="100"
+            :min-width="100"
+            :root-margin="10"
+          >
+            <v-progress-circular indeterminate></v-progress-circular>
+          </LazyLoading>
+        </div>
+      </v-list-group>
     </v-list>
   </v-navigation-drawer>
 </template>

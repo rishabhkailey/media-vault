@@ -245,6 +245,21 @@ func (server *Server) DeleteMedia(c *gin.Context) {
 		}
 
 		tx := server.Services.CreateTransaction()
+		err = server.Media.WithTransaction(tx).DeleteOne(c.Request.Context(), media.DeleteOneCommand{
+			ID: deletingMedia.ID,
+		})
+		if err != nil {
+			tx.Rollback()
+			c.Error(
+				c.Error(
+					internalErrors.NewInternalServerError(
+						fmt.Errorf("[DeleteMedia] error while deleting media: %w", err),
+					),
+				),
+			)
+			return
+		}
+
 		err = server.MediaMetadata.WithTransaction(tx).DeleteOne(c.Request.Context(), mediametadata.DeleteOneCommand{
 			ID: deletingMedia.Metadata.ID,
 		})
@@ -260,20 +275,6 @@ func (server *Server) DeleteMedia(c *gin.Context) {
 			return
 		}
 
-		err = server.Media.WithTransaction(tx).DeleteOne(c.Request.Context(), media.DeleteOneCommand{
-			ID: deletingMedia.ID,
-		})
-		if err != nil {
-			tx.Rollback()
-			c.Error(
-				c.Error(
-					internalErrors.NewInternalServerError(
-						fmt.Errorf("[DeleteMedia] error while deleting media: %w", err),
-					),
-				),
-			)
-			return
-		}
 		_, err = server.MediaSearch.DeleteOne(c.Request.Context(), mediasearch.DeleteOneCommand{
 			MediaID: deletingMedia.ID,
 		})

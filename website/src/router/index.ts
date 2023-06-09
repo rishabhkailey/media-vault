@@ -6,6 +6,8 @@ import PKCEVue from "@/views/PKCE.vue";
 import TestView from "@/views/TestView.vue";
 import SearchView from "@/views/SearchView.vue";
 import HomePageVue from "@/components/HomePage.vue";
+import AlbumsPageVue from "@/components/Album/AlbumsPage.vue";
+import AlbumMediaThumbnailsVue from "@/components/Album/AlbumMediaThumbnails.vue";
 // todo pages without redirect from vue should be lazy loaded on external/server redirect
 const router = createRouter({
   history: createWebHistory(import.meta.env.BASE_URL),
@@ -28,6 +30,16 @@ const router = createRouter({
           path: "search/:query",
           component: SearchView,
           name: "search",
+        },
+        {
+          path: "/albums",
+          component: AlbumsPageVue,
+          name: "Albums",
+        },
+        {
+          path: "/album/:album_id",
+          component: AlbumMediaThumbnailsVue,
+          name: "Album",
         },
       ],
     },

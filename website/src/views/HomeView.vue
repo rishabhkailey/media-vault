@@ -1,8 +1,8 @@
 <script setup lang="ts">
 import AppBar from "@/components/AppBar/AppBar.vue";
 import NavigationBar from "../components/NavigationBar.vue";
-import { computed, inject, onMounted, provide, ref } from "vue";
-import { initializingKey, userManagerKey } from "@/symbols/injectionSymbols";
+import { computed, inject, onMounted, ref } from "vue";
+import { userManagerKey } from "@/symbols/injectionSymbols";
 import type { UserManager } from "oidc-client-ts";
 import decryptWorker from "@/worker/dist/bundle.js?url";
 // todo if not authenticated redirect to some different page
@@ -10,17 +10,21 @@ import decryptWorker from "@/worker/dist/bundle.js?url";
 import { useDisplay } from "vuetify";
 import { useRoute } from "vue-router";
 import { useAuthStore } from "@/piniaStore/auth";
+import { useLoadingStore } from "@/piniaStore/loading";
 const authStore = useAuthStore();
 const display = useDisplay();
+
+const { setInitializing } = useLoadingStore();
+setInitializing(true);
 
 const smallDisplay = computed(
   () => display.mobile.value || display.smAndDown.value
 );
 
 const route = useRoute();
-const initializingRef = ref(true);
+// const initializingRef = ref(true);
 const navigationBar = ref(!smallDisplay.value);
-provide(initializingKey, initializingRef);
+// provide(initializingKey, initializingRef);
 const userManager: UserManager | undefined = inject(userManagerKey);
 
 const userInit = () => {
@@ -151,7 +155,8 @@ const init = () => {
     .then(() => {
       userInit()
         .then(() => {
-          initializingRef.value = false;
+          setInitializing(false);
+          // initializingRef.value = false;
           // setTimeout(() => {
           // }, 3000);
         })

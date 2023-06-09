@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import LazyMediaThumbnailsPreview from "@/components/ThumbnailPreview/LazyMediaThumbnailsPreview.vue";
+import LazyMediaThumbnailsPreview from "@/components/MediaThumbnailPreview/LazyMediaThumbnailsPreview.vue";
 import { onBeforeMount } from "vue";
 import { useRoute } from "vue-router";
 import { useSearchStore } from "@/piniaStore/search";

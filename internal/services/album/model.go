@@ -42,6 +42,11 @@ type GetUserAlbumsQuery struct {
 	PerPage int64
 }
 
+type GetUserAlbumQuery struct {
+	UserID  string
+	AlbumID uint
+}
+
 type AddMediaQuery struct {
 	AlbumID  uint
 	UserID   string

@@ -83,6 +83,7 @@ const searchSubmit = () => {
     },
   });
 };
+// todo different commonent for mobile app bar instead of if else
 </script>
 
 <template>
@@ -98,8 +99,34 @@ const searchSubmit = () => {
     >
       <v-btn icon="mdi-menu"> </v-btn>
     </v-col>
-    <v-col v-else class="d-flex flex-row justify-start">
-      <v-toolbar-title>TODO</v-toolbar-title>
+
+    <v-col v-else class="d-flex flex-row justify-start align-stretch pa-0 ma-0">
+      <v-toolbar-title>
+        <div>
+          <v-btn
+            @click="
+              () => {
+                router.push({
+                  name: `Home`,
+                });
+              }
+            "
+          >
+            <img src="/src/assets/logo.svg" style="height: 30px" /> placeholder
+          </v-btn>
+          <!-- <v-icon
+            icon="mdi-home"
+            @click="
+              () => {
+                router.push({
+                  name: `Home`,
+                });
+              }
+            "
+          /> -->
+        </div>
+        <!-- <v-list-item prepend-icon="mdi-home" title="Home" /> -->
+      </v-toolbar-title>
     </v-col>
     <!-- mid -->
     <v-col class="d-flex flex-row justify-center">
