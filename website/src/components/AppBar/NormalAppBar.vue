@@ -3,6 +3,7 @@ import { computed, inject, ref } from "vue";
 import SelectFileButton from "@/components/SelectFileButton.vue";
 import UploadFilesDialog from "@/components/UploadFilesDialog.vue";
 import SearchInputField from "@/components/SearchInputField.vue";
+import LogoButton from "../Logo/LogoButton.vue";
 import { useAuthStore } from "@/piniaStore/auth";
 import { userManagerKey } from "@/symbols/injectionSymbols";
 import { signinUsingUserManager } from "@/utils/auth";
@@ -63,7 +64,7 @@ const logIn = () => {
     error.value = true;
     return;
   }
-  signinUsingUserManager(userManager);
+  signinUsingUserManager(userManager, false);
 };
 const uploadFiles = (files: Array<File>) => {
   selectedFiles.value = files;
@@ -103,27 +104,7 @@ const searchSubmit = () => {
     <v-col v-else class="d-flex flex-row justify-start align-stretch pa-0 ma-0">
       <v-toolbar-title>
         <div>
-          <v-btn
-            @click="
-              () => {
-                router.push({
-                  name: `Home`,
-                });
-              }
-            "
-          >
-            <img src="/src/assets/logo.svg" style="height: 30px" /> placeholder
-          </v-btn>
-          <!-- <v-icon
-            icon="mdi-home"
-            @click="
-              () => {
-                router.push({
-                  name: `Home`,
-                });
-              }
-            "
-          /> -->
+          <LogoButton :redirect="true" redirect-component-name="Home" />
         </div>
         <!-- <v-list-item prepend-icon="mdi-home" title="Home" /> -->
       </v-toolbar-title>

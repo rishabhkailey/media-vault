@@ -189,6 +189,21 @@ func (s *sqlStore) DeleteAlbum(ctx context.Context, albumID uint) error {
 	return nil
 }
 
+func (s *sqlStore) UpdateAlbum(ctx context.Context, albumID uint, name *string, thumbnailUrl *string) (updatedAlbum album.Album, err error) {
+	err = s.db.WithContext(ctx).First(&updatedAlbum, albumID).Error
+	if err != nil {
+		return
+	}
+	if name != nil {
+		updatedAlbum.Name = *name
+	}
+	if thumbnailUrl != nil {
+		updatedAlbum.ThumbnailUrl = *thumbnailUrl
+	}
+	err = s.db.WithContext(ctx).Save(&updatedAlbum).Error
+	return
+}
+
 func (s *sqlStore) UpdateAlbumMediaCount(ctx context.Context, albumID uint, change int) (updatedAlbum album.Album, err error) {
 	// album.ID = albumID
 	// album.UpdatedAt = updatedAt

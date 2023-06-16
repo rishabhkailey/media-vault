@@ -70,7 +70,7 @@ func (s *sqlStore) GetByMediaID(ctx context.Context, mediaID uint) (userMediaBin
 // and service should check the userID
 func (s *sqlStore) CheckFileBelongsToUser(ctx context.Context, cmd usermediabindings.CheckFileBelongsToUserQuery) (ok bool, err error) {
 	db := s.db.WithContext(ctx)
-	getMediaByFileNameQuery := db.Model(&media.Model{}).Select("media_id").Where("file_name = ?", cmd.FileName)
+	getMediaByFileNameQuery := db.Model(&media.Model{}).Select("id").Where("file_name = ?", cmd.FileName).Limit(1)
 	userMediaBinding := usermediabindings.Model{}
 	err = db.Model(&usermediabindings.Model{}).Where("media_id = (?)", getMediaByFileNameQuery).First(&userMediaBinding).Error
 	if errors.Is(err, gorm.ErrRecordNotFound) {

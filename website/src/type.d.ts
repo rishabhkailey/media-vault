@@ -47,3 +47,10 @@ interface DailyMedia {
   date: number;
   media: Array<IndexMedia>;
 }
+
+interface UserInfo {
+  id: string;
+  prefered_timezone: string;
+  encryption_key_checksum: string;
+  storage_usage: number;
+}

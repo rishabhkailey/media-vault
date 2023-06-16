@@ -125,6 +125,7 @@ func (server *Server) InitChunkUpload(c *gin.Context) {
 	}
 	c.JSON(http.StatusOK, &v1models.InitChunkUploadResponse{
 		RequestID: uploadRequest.ID,
+		FileName:  uploadingMedia.FileName,
 	})
 }
 

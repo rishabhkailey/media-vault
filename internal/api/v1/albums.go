@@ -201,6 +201,63 @@ func (server *Server) GetAlbum(c *gin.Context) {
 	})
 }
 
+func (server *Server) PathchAlbum(c *gin.Context) {
+	userID, ok := c.Keys["userID"].(string)
+	if !ok || len(userID) == 0 {
+		c.Error(
+			internalErrors.NewInternalServerError(
+				fmt.Errorf("[Search]: empty userID"),
+			),
+		)
+		return
+	}
+	var requestBody v1models.PatchAlbumRequest
+	if err := c.BindUri(&requestBody); err != nil {
+		c.Error(
+			internalErrors.NewBadRequestError(
+				fmt.Errorf("[GetAlbums] invalid request: %w", err),
+				"bad request",
+			),
+		)
+		return
+	}
+	if err := c.Bind(&requestBody); err != nil {
+		c.Error(
+			internalErrors.NewBadRequestError(
+				fmt.Errorf("[GetAlbums] invalid request: %w", err),
+				"bad request",
+			),
+		)
+		return
+	}
+	if err := requestBody.Validate(); err != nil {
+		c.Error(
+			internalErrors.NewBadRequestError(
+				fmt.Errorf("[GetAlbums] invalid request: %w", err),
+				"bad request",
+			),
+		)
+		return
+	}
+	album, err := server.AlbumService.UpdateAlbum(c.Request.Context(), album.UpdateAlbumCmd{
+		AlbumID:      requestBody.ID,
+		Name:         requestBody.Name,
+		ThumbnailUrl: requestBody.ThumbnailUrl,
+	})
+	if err != nil {
+		c.Error(err)
+		return
+	}
+	c.JSON(http.StatusOK, &v1models.AlbumResponse{
+		ID:           album.ID,
+		Name:         album.Name,
+		CreatedAt:    album.CreatedAt,
+		UpdatedAt:    album.UpdatedAt,
+		ThumbnailUrl: album.ThumbnailUrl,
+		MediaCount:   album.MediaCount,
+	})
+}
+
 func (server *Server) GetAlubmMedia(c *gin.Context) {
 	userID, ok := c.Keys["userID"].(string)
 	if !ok || len(userID) == 0 {

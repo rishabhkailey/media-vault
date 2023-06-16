@@ -21,6 +21,8 @@ import (
 	"github.com/rishabhkailey/media-service/internal/services/mediaStorage/mediastorageimpl"
 	uploadrequests "github.com/rishabhkailey/media-service/internal/services/uploadRequests"
 	"github.com/rishabhkailey/media-service/internal/services/uploadRequests/uploadrequestsimpl"
+	userinfo "github.com/rishabhkailey/media-service/internal/services/userInfo"
+	userinfoimpl "github.com/rishabhkailey/media-service/internal/services/userInfo/impl"
 	usermediabindings "github.com/rishabhkailey/media-service/internal/services/userMediaBindings"
 	usermediabindingsimpl "github.com/rishabhkailey/media-service/internal/services/userMediaBindings/userMediaBindingsimpl"
 	"github.com/rishabhkailey/media-service/internal/store"
@@ -37,6 +39,7 @@ type Services struct {
 	MediaStorage      mediastorage.Service
 	AuthService       authservice.Service
 	AlbumService      album.Service
+	UserInfoService   userinfo.Service
 }
 
 func NewServices(
@@ -71,7 +74,6 @@ func NewServices(
 	if err != nil {
 		return nil, err
 	}
-
 	store, err := store.NewStore(db, redis)
 	if err != nil {
 		return nil, err
@@ -80,6 +82,11 @@ func NewServices(
 	if err != nil {
 		return nil, err
 	}
+	userInfoService, err := userinfoimpl.NewService(*store)
+	if err != nil {
+		return nil, err
+	}
+
 	// todo move bucket name to config
 	mediaStorageService, err := mediastorageimpl.NewMinioService(minio, "test", uploadRequestsService)
 	if err != nil {
@@ -95,6 +102,7 @@ func NewServices(
 		MediaStorage:      mediaStorageService,
 		AuthService:       authService,
 		AlbumService:      albumService,
+		UserInfoService:   userInfoService,
 	}, nil
 }
 

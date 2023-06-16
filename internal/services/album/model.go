@@ -72,3 +72,9 @@ type GetAlbumMediaQuery struct {
 	Page    int64
 	PerPage int64
 }
+
+type UpdateAlbumCmd struct {
+	AlbumID      uint
+	Name         *string
+	ThumbnailUrl *string
+}

@@ -8,6 +8,8 @@ import SearchView from "@/views/SearchView.vue";
 import HomePageVue from "@/components/HomePage.vue";
 import AlbumsPageVue from "@/components/Album/AlbumsPage.vue";
 import AlbumMediaThumbnailsVue from "@/components/Album/AlbumMediaThumbnails.vue";
+import AboutPage from "@/views/AboutPage.vue";
+import UserOnboarding from "@/views/UserOnboarding.vue";
 // todo pages without redirect from vue should be lazy loaded on external/server redirect
 const router = createRouter({
   history: createWebHistory(import.meta.env.BASE_URL),
@@ -47,6 +49,16 @@ const router = createRouter({
       path: "/error",
       name: "errorscreen",
       component: ErrorScreenView,
+    },
+    {
+      path: "/about",
+      name: "about",
+      component: AboutPage,
+    },
+    {
+      path: "/onboarding",
+      name: "onboarding",
+      component: UserOnboarding,
     },
     // {
     //   path: "/testVideo",

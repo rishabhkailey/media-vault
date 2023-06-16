@@ -1,6 +1,7 @@
 <script setup lang="ts">
 import AppBar from "@/components/AppBar/AppBar.vue";
 import NavigationBar from "../components/NavigationBar.vue";
+import EncryptionKeyInput from "@/components/EncryptionKeyInput.vue";
 import { computed, inject, onMounted, ref } from "vue";
 import { userManagerKey } from "@/symbols/injectionSymbols";
 import type { UserManager } from "oidc-client-ts";
@@ -8,11 +9,22 @@ import decryptWorker from "@/worker/dist/bundle.js?url";
 // todo if not authenticated redirect to some different page
 // maybe /about
 import { useDisplay } from "vuetify";
-import { useRoute } from "vue-router";
+import { useRoute, useRouter } from "vue-router";
 import { useAuthStore } from "@/piniaStore/auth";
 import { useLoadingStore } from "@/piniaStore/loading";
+import { useUserInfoStore } from "@/piniaStore/userInfo";
+import { storeToRefs } from "pinia";
 const authStore = useAuthStore();
+const { authenticated } = storeToRefs(authStore);
 const display = useDisplay();
+
+const userInfoStore = useUserInfoStore();
+const { updateUserInfo } = userInfoStore;
+const {
+  initRequired: userInfoInitRequired,
+  encryptionKeyValidated,
+  usableEncryptionKey,
+} = storeToRefs(userInfoStore);
 
 const { setInitializing } = useLoadingStore();
 setInitializing(true);
@@ -22,8 +34,10 @@ const smallDisplay = computed(
 );
 
 const route = useRoute();
+const router = useRouter();
 // const initializingRef = ref(true);
 const navigationBar = ref(!smallDisplay.value);
+const encryptionKeyOverlay = ref(false);
 // provide(initializingKey, initializingRef);
 const userManager: UserManager | undefined = inject(userManagerKey);
 
@@ -111,7 +125,7 @@ const updateServiceWorker = () => {
 };
 
 // https://github.com/jimmywarting/StreamSaver.js/blob/master/mitm.html#L39
-const registerServiceWorker = () => {
+function registerServiceWorker(): Promise<ServiceWorker> {
   return new Promise<ServiceWorker>((resolve, reject) => {
     if ("serviceWorker" in navigator) {
       // unregister the existing service worker
@@ -148,29 +162,72 @@ const registerServiceWorker = () => {
         });
     }
   });
-};
-
-const init = () => {
-  updateOrRegisterServiceWorker()
-    .then(() => {
-      userInit()
-        .then(() => {
-          setInitializing(false);
-          // initializingRef.value = false;
-          // setTimeout(() => {
-          // }, 3000);
-        })
-        .catch((err) => {
-          console.log("user init failed ", err);
-        });
-    })
-    .catch((err) => {
-      console.log("worker registeration failed ", err);
+}
+async function init(): Promise<boolean> {
+  // todo try catch
+  await updateOrRegisterServiceWorker();
+  await userInit();
+  if (!authenticated.value) {
+    // route to about page
+    router.push({
+      name: "about",
     });
-};
+  }
+  await updateUserInfo();
+  if (userInfoInitRequired.value) {
+    router.push({
+      name: "onboarding",
+    });
+    return false;
+  }
+  if (encryptionKeyValidated.value == false) {
+    encryptionKeyOverlay.value = true;
+    // router.push({
+    //   name: "onboarding",
+    // });
+    return false;
+  }
+  setInitializing(false);
+  return true;
+}
+
+function onValidationEncryptionKey() {
+  encryptionKeyOverlay.value = false;
+  setInitializing(false);
+  navigator.serviceWorker.ready.then((registration) => {
+    if (registration.active === null) {
+      // todo handle errors
+      throw new Error("service worker not active");
+    }
+    registration?.active?.postMessage({
+      encryptionKey: usableEncryptionKey.value,
+    });
+  });
+}
+// const init = () => {
+//   updateOrRegisterServiceWorker()
+//     .then(() => {
+//       userInit()
+//         .then(() => {
+//           setInitializing(false);
+//           // initializingRef.value = false;
+//           // setTimeout(() => {
+//           // }, 3000);
+//         })
+//         .catch((err) => {
+//           console.log("user init failed ", err);
+//         });
+//     })
+//     .catch((err) => {
+//       console.log("worker registeration failed ", err);
+//     });
+// };
 
 onMounted(() => {
-  init();
+  init().catch((err) => {
+    console.log(err);
+    // setInitializing(false);
+  });
 });
 
 const test = (value: boolean) => {
@@ -180,6 +237,12 @@ const test = (value: boolean) => {
 
 <template>
   <v-container class="pa-0 ma-0" fluid>
+    <v-overlay
+      v-model="encryptionKeyOverlay"
+      class="justify-center align-center"
+    >
+      <EncryptionKeyInput @success="onValidationEncryptionKey" />
+    </v-overlay>
     <v-card>
       <v-layout>
         <AppBar

@@ -30,7 +30,8 @@ func ValidateInitChunkUploadRequest(body InitChunkUploadRequest) (InitChunkUploa
 }
 
 type InitChunkUploadResponse struct {
-	RequestID string `json:"requestID" binding:"required"`
+	RequestID string `json:"requestID"`
+	FileName  string `json:"file_name"`
 }
 
 // *int for binding to not fail for 0 value https://github.com/go-playground/validator/issues/692#issuecomment-737039536

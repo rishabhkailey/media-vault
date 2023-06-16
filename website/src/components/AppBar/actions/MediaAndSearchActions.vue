@@ -20,6 +20,7 @@ const { accessToken } = storeToRefs(authStore);
 const { deleteMultipleMedia } = useMediaStore();
 const { setGlobalLoading, setProgress } = useLoadingStore();
 
+const { removeMediaByIDsFromLocalState } = useAlbumMediaStore();
 const deleteConfirmationPopUp = ref(false);
 // const deleteButton = ref<HTMLElement | undefined>(undefined);
 
@@ -50,6 +51,9 @@ async function deleteSelectedMedia() {
     }
   }
   failedIDs.forEach((id) => updateSelection(id, true));
+  removeMediaByIDsFromLocalState(
+    mediaIDs.filter((id) => !failedIDs.includes(id))
+  );
   setGlobalLoading(false, false, 0);
 }
 

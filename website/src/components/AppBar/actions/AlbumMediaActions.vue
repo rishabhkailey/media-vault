@@ -8,6 +8,7 @@ import { useAuthStore } from "@/piniaStore/auth";
 import ConfirmationPopup from "@/components/ConfirmationPopup.vue";
 import { useRoute } from "vue-router";
 import { useAlbumStore } from "@/piniaStore/album";
+import { useAlbumMediaStore } from "@/piniaStore/albumMedia";
 
 const mediaSelectionStore = useMediaSelectionStore();
 const { reset: resetMediaSelection, updateSelection } = mediaSelectionStore;
@@ -16,6 +17,7 @@ const { selectedMediaIDs } = storeToRefs(mediaSelectionStore);
 const authStore = useAuthStore();
 const { accessToken } = storeToRefs(authStore);
 
+const { removeMediaByIDsFromLocalState } = useAlbumMediaStore();
 const { deleteMultipleMedia } = useMediaStore();
 const { setGlobalLoading, setProgress } = useLoadingStore();
 
@@ -48,6 +50,9 @@ async function deleteSelectedMedia() {
     }
   }
   failedIDs.forEach((id) => updateSelection(id, true));
+  removeMediaByIDsFromLocalState(
+    mediaIDs.filter((id) => !failedIDs.includes(id))
+  );
   setGlobalLoading(false, false, 0);
 }
 

@@ -15,13 +15,25 @@ self.addEventListener("activate", (event) => {
 });
 
 const map = new Map();
-
+let encryptionKey = "";
 // This should be called once per download
 // Each event has a dataChannel that the data will be piped through
 self.onmessage = (event) => {
+  console.log("message received", event);
   // We send a heartbeat every x second to keep the
   // service worker alive if a transferable stream is not sent
   if (event.data === "ping") {
+    return;
+  }
+
+  // set encryption key message
+  if (
+    event.data?.encryptionKey &&
+    typeof event.data.encryptionKey === "string" &&
+    event.data.encryptionKey.length !== 0
+  ) {
+    console.log("set encryption key message received");
+    encryptionKey = event.data.encryptionKey;
     return;
   }
 
@@ -123,8 +135,28 @@ async function internalFetch(req: Request) {
   } else {
     // todo
   }
-  const password = "01234567890123456789012345678901";
-  const nonce = "012345678901";
+  // const password = "01234567890123456789012345678901";
+  let nonce = "";
+  {
+    // todo move it to some different package or file
+    if (req.url.indexOf("/v1/media/") !== -1) {
+      nonce = req.url.substring(
+        req.url.indexOf("/v1/media/") + "/v1/media/".length
+      );
+    }
+    if (req.url.indexOf("/v1/thumbnail/") !== -1) {
+      nonce = req.url.substring(
+        req.url.indexOf("/v1/thumbnail/") + "/v1/thumbnail/".length
+      );
+    }
+
+    console.log("nonce", nonce);
+    if (nonce.length === 0) {
+      throw new Error("invalid url");
+    }
+    nonce = nonce.substring(0, 12);
+  }
+  console.log("nonce", nonce);
   const useless = new TextEncoder().encode(
     "00000000000000000000000000000000000000000000000000000000000000000"
   );
@@ -137,7 +169,7 @@ async function internalFetch(req: Request) {
 
   const textEncoder = new TextEncoder();
   const decryptor = new Chacha20(
-    textEncoder.encode(password),
+    textEncoder.encode(encryptionKey),
     textEncoder.encode(nonce),
     counter
   );
@@ -185,6 +217,7 @@ self.onfetch = (event) => {
     return event.respondWith(new Response("pong"));
   }
   const urlObj = new URL(url);
+  // todo use contains instead of startsWith, it will cause issues if we are using some different base url
   if (
     event?.request?.method === "GET" &&
     typeof event?.request?.url === "string" &&

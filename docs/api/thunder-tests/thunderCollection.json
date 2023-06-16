@@ -19,5 +19,12 @@
     "created": "2023-06-03T13:43:55.492Z",
     "sortNum": 30000,
     "folders": []
+  },
+  {
+    "_id": "09c7761d-64e1-41c0-bd80-bca1958098a2",
+    "colName": "UserInfo",
+    "created": "2023-06-10T04:10:22.789Z",
+    "sortNum": 40000,
+    "folders": []
   }
 ]

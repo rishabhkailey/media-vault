@@ -52,10 +52,13 @@ func NewRouter(v1ApiServer *v1Api.Server, config config.Config) (*gin.Engine, er
 			v1UserProtected.POST("/album", v1ApiServer.CreateAlbum)
 			v1UserProtected.GET("/albums", v1ApiServer.GetAlbums)
 			v1UserProtected.GET("/album/:albumID", v1ApiServer.GetAlbum)
+			v1UserProtected.PATCH("/album/:albumID", v1ApiServer.PathchAlbum)
 			v1UserProtected.DELETE("/album/:albumID", v1ApiServer.DeleteAlbum)
 			v1UserProtected.GET("/album/:albumID/media", v1ApiServer.GetAlubmMedia)
 			v1UserProtected.POST("/album/:albumID/media", v1ApiServer.AlbumAddMedia)
 			v1UserProtected.DELETE("/album/:albumID/media", v1ApiServer.RemoveAlbumMedia)
+			v1UserProtected.GET("/user-info", v1ApiServer.GetUserInfo)
+			v1UserProtected.POST("/user-info", v1ApiServer.PostUserInfo)
 		}
 
 		// session based only

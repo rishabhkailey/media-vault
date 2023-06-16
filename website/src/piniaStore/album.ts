@@ -1,8 +1,9 @@
 import { UNKNOWN_DATE } from "@/utils/date";
 import axios from "axios";
-import { defineStore } from "pinia";
+import { defineStore, storeToRefs } from "pinia";
 import { ref } from "vue";
 import { useAlbumMediaStore } from "./albumMedia";
+import { useMediaStore } from "./media";
 
 // we will need lock or something else
 // to prevent duplicates if the same request is called twice
@@ -10,6 +11,7 @@ import { useAlbumMediaStore } from "./albumMedia";
 // todo better function names to differentiate delete from backend or just remove from local state
 export const useAlbumStore = defineStore("album", () => {
   const albumMediaStore = useAlbumMediaStore();
+  const { mediaList } = storeToRefs(useMediaStore());
 
   const nextPageNumber = ref(1);
   const albums = ref<Array<Album>>([]);
@@ -274,17 +276,49 @@ export const useAlbumStore = defineStore("album", () => {
         });
     });
   }
-  function addMediaToAlbum(
+
+  async function addMediaToAlbum(
     accessToken: string,
     albumID: number,
     mediaIDs: Array<number>
   ): Promise<boolean> {
-    return new Promise<boolean>((resolve, reject) => {
+    // will call api if not present in local store
+    let album = await getAlbumByID(accessToken, albumID);
+    const res = await axios.post<{ media_ids: Array<number> }>(
+      `/v1/album/${albumID}/media`,
+      {
+        media_ids: mediaIDs,
+      },
+      {
+        headers: {
+          Authorization: `Bearer ${accessToken}`,
+        },
+      }
+    );
+    if (album.media_count == 0) {
+      const thumbnailUrl = getFirstThumbnail(mediaIDs);
+      if (thumbnailUrl.length != 0) {
+        album = await updateAlbumThumbnail(accessToken, albumID, thumbnailUrl);
+      }
+    }
+    if (res.status != 200) {
+      throw new Error("non 200 status code");
+    }
+    updateAlbumByID(accessToken, albumID);
+    return true;
+  }
+
+  function updateAlbumThumbnail(
+    accessToken: string,
+    albumID: number,
+    thumbnailUrl: string
+  ): Promise<Album> {
+    return new Promise<Album>((resolve, reject) => {
       axios
-        .post<{ media_ids: Array<number> }>(
-          `/v1/album/${albumID}/media`,
+        .patch(
+          `/v1/album/${albumID}`,
           {
-            media_ids: mediaIDs,
+            thumbnail_url: thumbnailUrl,
           },
           {
             headers: {
@@ -297,8 +331,7 @@ export const useAlbumStore = defineStore("album", () => {
             reject(new Error("non 200 status code"));
             return;
           }
-          updateAlbumByID(accessToken, albumID);
-          resolve(true);
+          resolve(res.data);
           return;
         })
         .catch((err) => {
@@ -306,6 +339,19 @@ export const useAlbumStore = defineStore("album", () => {
           return;
         });
     });
+  }
+
+  function getFirstThumbnail(mediaIDs: Array<number>): string {
+    let thumbnailUrl = "";
+    for (const mediaID of mediaIDs) {
+      for (const media of mediaList.value) {
+        if (media.id === mediaID && media.thumbnail) {
+          thumbnailUrl = media.thumbnail_url;
+          return thumbnailUrl;
+        }
+      }
+    }
+    return "";
   }
 
   return {

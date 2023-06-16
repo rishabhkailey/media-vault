@@ -49,6 +49,14 @@ func NewForbiddenError(err error) CustomError {
 	}
 }
 
+func NewNotFoundError(err error) CustomError {
+	return CustomError{
+		Err:           err,
+		PublicMessage: "Not found",
+		Status:        http.StatusNotFound,
+	}
+}
+
 // predefined errors
 var (
 	ErrUnauthorized       CustomError = New(http.StatusUnauthorized, "unathurized", "Authentication Required - Please provide valid credentials to access this resource")

@@ -14,19 +14,21 @@ interface ChunkUploadInfo {
 export function chunkUpload(
   file: File,
   bearerToken: string,
+  encryptionKey: string,
   controller: AbortController,
   callback: ProgressCallback
 ): Promise<ChunkUploadInfo> {
   return new Promise((resolve, reject) => {
-    const password = "01234567890123456789012345678901";
-    const nonce = "012345678901";
-    const textEncoder = new TextEncoder();
-    const encryptor = new Chacha20(
-      textEncoder.encode(password),
-      textEncoder.encode(nonce)
-    );
     initChunkUpload(file, bearerToken, controller)
       .then((chunkRequestInfo) => {
+        // const password = "01234567890123456789012345678901";
+        const nonce = chunkRequestInfo.fileName.substring(0, 12);
+        console.log("upload nonce", nonce);
+        const textEncoder = new TextEncoder();
+        const encryptor = new Chacha20(
+          textEncoder.encode(encryptionKey),
+          textEncoder.encode(nonce)
+        );
         uploadFileChunks(
           file,
           bearerToken,
@@ -42,7 +44,7 @@ export function chunkUpload(
               file,
               bearerToken,
               new Chacha20(
-                textEncoder.encode(password),
+                textEncoder.encode(encryptionKey),
                 textEncoder.encode(nonce)
               ),
               controller
@@ -91,6 +93,7 @@ export function chunkUpload(
 
 interface ChunkRequestInfo {
   requestID: string;
+  fileName: string;
 }
 function initChunkUpload(
   file: File,
@@ -119,14 +122,22 @@ function initChunkUpload(
         if (response.status !== 200) {
           throw new Error("init equest failed with " + response.status);
         }
+        // todo use interface and validator method
         if (
           !response.data?.requestID ||
           typeof response.data.requestID !== "string"
         ) {
           throw new Error("invalid response for init request " + response);
         }
+        if (
+          !response.data?.file_name ||
+          typeof response.data.file_name !== "string"
+        ) {
+          throw new Error("invalid response for init request " + response);
+        }
         resolve({
           requestID: response.data.requestID,
+          fileName: response.data.file_name,
         });
         return;
       })

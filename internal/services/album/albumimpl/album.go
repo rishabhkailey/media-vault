@@ -128,3 +128,7 @@ func (s *Service) GetAlbumMedia(ctx context.Context, query album.GetAlbumMediaQu
 	mediaListResponse, err = mediaimpl.NewGetMediaQueryResult(mediaList)
 	return
 }
+
+func (s *Service) UpdateAlbum(ctx context.Context, cmd album.UpdateAlbumCmd) (albumStore.Album, error) {
+	return s.store.AlbumStore.UpdateAlbum(ctx, cmd.AlbumID, cmd.Name, cmd.ThumbnailUrl)
+}

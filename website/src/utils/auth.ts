@@ -7,13 +7,20 @@ export interface InternalState {
   nonce: string;
 }
 
-export function signinUsingUserManager(userManager: UserManager) {
+export function signinUsingUserManager(
+  userManager: UserManager,
+  redirectToHome: boolean
+) {
   const nonce = v4();
   const state: InternalState = {
-    internalRedirectPath: location.pathname,
-    internalRedirectQuery: location.search,
+    internalRedirectPath: "/",
+    internalRedirectQuery: "",
     nonce: nonce,
   };
+  if (!redirectToHome) {
+    state.internalRedirectPath = location.pathname;
+    state.internalRedirectQuery = location.search;
+  }
   userManager
     .signinRedirect({
       nonce: nonce,

@@ -10,6 +10,7 @@ import (
 type Store interface {
 	WithTransaction(tx *gorm.DB) Store
 	InsertAlbum(ctx context.Context, albumName string, thumbnailUrl string) (album Album, err error)
+	UpdateAlbum(ctx context.Context, albumID uint, name *string, thumbnailUrl *string) (album Album, err error)
 	InsertUserAlbumBindings(ctx context.Context, userID string, albumID uint) (id uint, err error)
 	GetByUserId(ctx context.Context, userID string, orderBy string, sort string, limit int, offset int) (albums []Album, err error)
 	GetByID(ctx context.Context, albumID uint) (result Album, err error)

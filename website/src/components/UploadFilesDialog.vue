@@ -3,10 +3,12 @@ import { ref, onMounted, computed, reactive } from "vue";
 import { chunkUpload } from "@/utils/encryptFileUpload";
 import { useAuthStore } from "@/piniaStore/auth";
 import { storeToRefs } from "pinia";
+import { useUserInfoStore } from "@/piniaStore/userInfo";
 const authStore = useAuthStore();
 // todo store getter typing
 // todo check
 const { accessToken } = storeToRefs(authStore);
+const { usableEncryptionKey } = storeToRefs(useUserInfoStore());
 const props = withDefaults(
   defineProps<{
     modelValue: boolean;
@@ -68,6 +70,7 @@ async function uploadFiles(files: Array<File>) {
       let uploadInfo = await chunkUpload(
         file,
         accessToken.value,
+        usableEncryptionKey.value,
         filesUploadStatus.value[index].controller,
         (progress: number) => {
           filesUploadStatus.value[index].progress = progress;
@@ -82,6 +85,7 @@ async function uploadFiles(files: Array<File>) {
       if (err instanceof Error) {
         filesUploadStatus.value[index].errMessage = err.toString();
       }
+      console.log(err);
     }
   }
 }

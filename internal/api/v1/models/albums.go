@@ -64,6 +64,22 @@ func (request *GetAlbumRequest) Validate() error {
 	return nil
 }
 
+type PatchAlbumRequest struct {
+	ID           uint    `uri:"albumID" binding:"required"`
+	Name         *string `json:"name"`
+	ThumbnailUrl *string `json:"thumbnail_url"`
+}
+
+func (request *PatchAlbumRequest) Validate() error {
+	if request.ID == 0 {
+		return fmt.Errorf("[PatchAlbumRequest.validate]: invalid album ID")
+	}
+	if (request.Name == nil || len(*request.Name) == 0) && (request.ThumbnailUrl == nil || len(*request.ThumbnailUrl) == 0) {
+		return fmt.Errorf("[PatchAlbumRequest.validate]: atleast one update feild required")
+	}
+	return nil
+}
+
 type DeleteAlbumRequest struct {
 	AlbumID uint `uri:"albumID" binding:"required"`
 }
