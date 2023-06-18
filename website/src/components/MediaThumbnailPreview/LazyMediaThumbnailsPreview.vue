@@ -6,6 +6,7 @@ import {
   loadMoreMediaKey,
   allMediaLoadedKey,
   mediaListKey,
+  mediaDateGetterKey,
 } from "@/symbols/injectionSymbols";
 import MonthlyThumbnailPreview from "./MonthlyThumbnailPreview.vue";
 import LazyLoading from "@/components/LazyLoading/LazyLoading.vue";
@@ -19,6 +20,7 @@ const props = defineProps<{
   allMediaLoaded: boolean;
   loadMoreMedia: () => Promise<any>;
   loadAllMediaOfDate: (date: Date) => Promise<any>;
+  mediaDateGetter: (media: Media) => Date;
 }>();
 
 provide(
@@ -30,19 +32,16 @@ provide(
   computed(() => props.allMediaLoaded)
 );
 provide(loadMoreMediaKey, props.loadMoreMedia);
+provide(mediaDateGetterKey, props.mediaDateGetter);
 
 const authStore = useAuthStore();
 const { accessToken } = storeToRefs(authStore);
 console.log(authStore);
 const monthlyMediaList = computed<Array<MonthlyMedia>>(() =>
-  getMonthlyMediaIndex(props.mediaList)
+  getMonthlyMediaIndex(props.mediaList, props.mediaDateGetter)
 );
 
 const { initializing } = storeToRefs(useLoadingStore());
-// const initializing: Ref<boolean> | undefined = inject(initializingKey);
-// if (initializing === undefined) {
-//   throw new Error("undefined initializing");
-// }
 watch(initializing, async (newValue, oldValue) => {
   console.log("initializing changed to ", newValue);
   if (newValue === oldValue) {

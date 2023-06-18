@@ -1,5 +1,4 @@
 <script setup lang="ts">
-import router from "@/router";
 import { ref, onMounted } from "vue";
 import { useRoute } from "vue-router";
 
@@ -8,33 +7,42 @@ const route = useRoute();
 const subTitle = ref("");
 const message = ref("");
 
-onMounted(async () => {
-  await router.isReady;
-  let titleParam = router.currentRoute.value.query?.title;
+onMounted(() => {
+  let titleParam = route.query?.title;
   if (titleParam && typeof titleParam === "string") {
     subTitle.value = titleParam;
   } else {
     subTitle.value = "Received invalid error title from server";
   }
 
-  let messageParam = router.currentRoute.value.query?.message;
+  let messageParam = route.query?.message;
   if (messageParam && typeof messageParam === "string") {
     message.value = messageParam;
   } else {
     message.value = "Received invalid error message from server";
   }
-  console.log(router.currentRoute.value.query);
+  console.log(route.query);
 });
 </script>
 
 <template>
   <v-card
+    class="h-100 w-100"
     min-width="400px"
-    max-width="600px"
     min-height="300px"
     title="Error processing request"
     prepend-icon="mdi-alert"
     :subtitle="subTitle"
     :text="message"
-  />
+  >
+    <v-card-actions>
+      <v-btn
+        prepend-icon="mdi-home"
+        :to="{
+          name: 'Home',
+        }"
+        >go home</v-btn
+      >
+    </v-card-actions>
+  </v-card>
 </template>

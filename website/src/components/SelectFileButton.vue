@@ -72,6 +72,7 @@ const cancel = () => {
         </v-row>
       </v-card-text>
       <v-card-actions>
+        <!-- feature -->
         <!-- todo preview button with option to remove some files -->
         <v-row class="d-flex flex-row justify-space-around">
           <!-- move red to theme under delete names -->

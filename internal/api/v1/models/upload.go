@@ -5,7 +5,6 @@ import (
 	"mime/multipart"
 	"time"
 
-	"github.com/rishabhkailey/media-service/internal/services/media"
 	mediametadata "github.com/rishabhkailey/media-service/internal/services/mediaMetadata"
 )
 
@@ -65,5 +64,5 @@ type FinishUploadRequest struct {
 }
 
 type FinishUploadResponse struct {
-	media.GetMediaQueryResultItem
+	GetMediaResponse
 }

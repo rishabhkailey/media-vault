@@ -60,9 +60,9 @@ export class EncryptionKeyChannelWorker {
     let time = 0;
     while (time < timeout) {
       if (this.encryptionKey.length !== 0) {
-        await new Promise((r) => setTimeout(r, interval));
         return this.encryptionKey;
       }
+      await new Promise((r) => setTimeout(r, interval));
       time += interval;
     }
     throw new Error("timedout waiting for encryption key from clients");

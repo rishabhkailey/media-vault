@@ -6,7 +6,7 @@ import { storeToRefs } from "pinia";
 const mediaStore = useMediaStore();
 const { mediaList, allMediaLoaded } = storeToRefs(mediaStore);
 console.log(mediaStore);
-const { loadMoreMedia } = mediaStore;
+const { loadMoreMedia, getMediaDateAccordingToOrderBy } = mediaStore;
 const authStore = useAuthStore();
 const { accessToken } = storeToRefs(authStore);
 
@@ -32,5 +32,6 @@ async function loadAllMediaOfDate(date: Date): Promise<boolean> {
     :all-media-loaded="allMediaLoaded"
     :load-more-media="() => loadMoreMedia(accessToken)"
     :load-all-media-of-date="loadAllMediaOfDate"
+    :media-date-getter="getMediaDateAccordingToOrderBy"
   />
 </template>

@@ -57,7 +57,7 @@ func (server *Server) MediaList(c *gin.Context) {
 		return
 	}
 	var err error
-	mediaList, err := server.Media.GetByUserID(c.Request.Context(), media.GetByUserIDQuery2{
+	mediaList, err := server.Media.GetByUserID(c.Request.Context(), media.GetByUserIDQuery{
 		UserID:      userID,
 		OrderBy:     requestBody.OrderBy,
 		Sort:        requestBody.Sort,

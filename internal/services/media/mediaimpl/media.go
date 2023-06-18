@@ -77,12 +77,8 @@ func (s *Service) GetTypeByFileName(ctx context.Context, query media.GetTypeByFi
 	return s.store.GetTypeByFileName(ctx, query.FileName)
 }
 
-func (s *Service) GetByMediaIDs(ctx context.Context, query media.GetByMediaIDsQuery) (result []media.GetMediaQueryResultItem, err error) {
-	mediaList, err := s.store.GetByMediaIDs(ctx, query)
-	if err != nil {
-		return
-	}
-	return NewGetMediaQueryResult(mediaList)
+func (s *Service) GetByMediaIDs(ctx context.Context, query media.GetByMediaIDsQuery) (result []media.Model, err error) {
+	return s.store.GetByMediaIDs(ctx, query)
 }
 func (s *Service) GetByMediaID(ctx context.Context, query media.GetByMediaIDQuery) (media.Model, error) {
 	return s.store.GetByMediaID(ctx, query)

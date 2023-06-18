@@ -47,7 +47,10 @@ export const monthShort = [
   "Dec",
 ];
 
-export function getMonthlyMediaIndex(mediaList: Array<Media>) {
+export function getMonthlyMediaIndex(
+  mediaList: Array<Media>,
+  mediaDateGetter: (media: Media) => Date
+) {
   const monthlyMediaList: Array<MonthlyMedia> = [];
   const getKey = (month: number, year: number) => {
     return `${month} ${year}`;
@@ -59,8 +62,9 @@ export function getMonthlyMediaIndex(mediaList: Array<Media>) {
   const monthlyMediaMap = new Map<string, Array<IndexMedia>>();
   mediaList.forEach((media, index) => {
     let key: string;
+    const date = mediaDateGetter(media);
     try {
-      key = getKey(media.date.getMonth(), media.date.getFullYear());
+      key = getKey(date.getMonth(), date.getFullYear());
     } catch (err) {
       key = getKey(UNKNOWN_DATE.getMonth(), UNKNOWN_DATE.getFullYear());
     }
@@ -90,7 +94,10 @@ export function getMonthlyMediaIndex(mediaList: Array<Media>) {
   return monthlyMediaList;
 }
 
-export function getDailyMediaIndex(mediaList: Array<IndexMedia>) {
+export function getDailyMediaIndex(
+  mediaList: Array<IndexMedia>,
+  mediaDateGetter: (media: Media) => Date
+) {
   const dailyMediaList: Array<DailyMedia> = [];
   const getKey = (day: number, date: number, month: number, year: number) => {
     return `${day} ${date} ${month} ${year}`;
@@ -107,12 +114,13 @@ export function getDailyMediaIndex(mediaList: Array<IndexMedia>) {
   const dailyMediaMap = new Map<string, Array<IndexMedia>>();
   mediaList.forEach((indexMedia) => {
     let key: string;
+    const date = mediaDateGetter(indexMedia.media);
     try {
       key = getKey(
-        indexMedia.media.date.getDay(),
-        indexMedia.media.date.getDate(),
-        indexMedia.media.date.getMonth(),
-        indexMedia.media.date.getFullYear()
+        date.getDay(),
+        date.getDate(),
+        date.getMonth(),
+        date.getFullYear()
       );
     } catch (err) {
       key = getKey(

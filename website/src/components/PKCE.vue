@@ -3,25 +3,11 @@ import type { UserManager, User } from "oidc-client-ts";
 import { onMounted, inject } from "vue";
 import { useRouter, type LocationQueryRaw } from "vue-router";
 import { userManagerKey } from "@/symbols/injectionSymbols";
-import {
-  handlePostLoginUsingUserManager,
-  signinUsingUserManager,
-} from "@/utils/auth";
+import { handlePostLoginUsingUserManager } from "@/utils/auth";
 import { useAuthStore } from "@/piniaStore/auth";
 const authStore = useAuthStore();
-// todo make this a component with slot for ui and callback methods as props, onSuccess, onError, getUserinfo: bool, onGetUserInfoSuccess, onGetUserInfoError
-// button type signIn or singOut?
-
-// const oidcClient = new OidcClient({
-//   client_id: "spa-test",
-//   authority: "http://localhost:8080",
-//   redirect_uri: window.location.origin + "/pkce",
-//   metadataUrl:
-//     "http://localhost:8080/v1/spa-test/.well-known/openid-configuration",
-// });
-
 const userManager: UserManager | undefined = inject(userManagerKey);
-
+const router = useRouter();
 // not oidc state but state to persist some data after redirect, data will be stored in browser local storage
 interface InternalState {
   internalRedirectPath: string;
@@ -29,15 +15,6 @@ interface InternalState {
   nonce: string;
 }
 
-const login = () => {
-  if (userManager === undefined) {
-    console.error("userManager not defined");
-    return;
-  }
-  signinUsingUserManager(userManager);
-};
-
-// todo remove code and state from the url
 const handlePostLogin = async () => {
   if (userManager === undefined) {
     console.error("userManager not defined");
@@ -71,37 +48,27 @@ const handlePostLogin = async () => {
       }
     })
     .catch((err) => {
+      router.push({
+        name: "errorscreen",
+        query: {
+          title: "Sign in Failed",
+          message: err,
+        },
+      });
       console.log(err);
-      // todo redirect to error page
     });
 };
 
-const logout = () => {
-  if (userManager === undefined) {
-    console.error("userManager not defined");
-    return;
-  }
-  userManager
-    ?.revokeTokens(["access_token", "refresh_token"])
-    .then(() => {
-      console.log("token revoked");
-    })
-    .catch((err) => {
-      console.log(err);
-    });
-
-  // requires end session endpoint
-  // userManager?.signoutPopup();
-};
 onMounted(() => {
-  // handlePostLoginUsingOidcClient();
   handlePostLogin();
 });
 </script>
 
 <template>
-  <div>
-    <v-btn @click.stop="login"> login </v-btn>
-    <v-btn @click.stop="logout"> logout </v-btn>
-  </div>
+  <v-card
+    style="height: 100%"
+    title="Sign In"
+    subtitle="in progress"
+    text="this is a placeholder component"
+  />
 </template>

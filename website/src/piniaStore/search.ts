@@ -8,6 +8,28 @@ export const useSearchStore = defineStore("search", () => {
   const mediaList = ref<Array<Media>>([]);
   const allMediaLoaded = ref(false);
   const query = ref("");
+  const orderByUploadDateKey = "uploaded_at";
+  const orderByDateKey = "date";
+  const orderBy = ref(orderByUploadDateKey);
+
+  function orderByUploadDate() {
+    if (orderBy.value !== orderByUploadDateKey) {
+      reset();
+    }
+    orderBy.value = orderByUploadDateKey;
+  }
+  function orderByMediaDate() {
+    if (orderBy.value !== orderByDateKey) {
+      reset();
+    }
+    orderBy.value = orderByDateKey;
+  }
+  function getMediaDateAccordingToOrderBy(media: Media): Date {
+    if (orderBy.value === orderByUploadDateKey) {
+      return media.uploaded_at;
+    }
+    return media.date;
+  }
 
   function reset() {
     nextPageNumber.value = 1;
@@ -25,6 +47,13 @@ export const useSearchStore = defineStore("search", () => {
               media.date = new Date(media.date);
             } catch (err) {
               media.date = UNKNOWN_DATE;
+            }
+          }
+          if (typeof media.uploaded_at === "string") {
+            try {
+              media.uploaded_at = new Date(media.uploaded_at);
+            } catch (err) {
+              media.uploaded_at = UNKNOWN_DATE;
             }
           }
           return media;
@@ -70,7 +99,7 @@ export const useSearchStore = defineStore("search", () => {
       query.value = _query;
       axios
         .get<Array<Media>>(
-          `/v1/search?query=${_query}&page=${nextPageNumber.value}&perPage=30&order=date&sort=desc`,
+          `/v1/search?query=${_query}&page=${nextPageNumber.value}&perPage=30&order=${orderBy.value}&sort=desc`,
           {
             headers: {
               Authorization: `Bearer ${accessToken}`,
@@ -111,5 +140,8 @@ export const useSearchStore = defineStore("search", () => {
     loadMoreSearchResults,
     reset,
     setQuery,
+    getMediaDateAccordingToOrderBy,
+    orderByUploadDate,
+    orderByMediaDate,
   };
 });

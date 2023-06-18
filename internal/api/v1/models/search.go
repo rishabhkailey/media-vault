@@ -3,7 +3,6 @@ package v1models
 import (
 	"fmt"
 
-	"github.com/rishabhkailey/media-service/internal/services/media"
 	mediasearch "github.com/rishabhkailey/media-service/internal/services/mediaSearch"
 	"github.com/sirupsen/logrus"
 )
@@ -33,4 +32,4 @@ func (request *SearchRequest) Validate() error {
 	return nil
 }
 
-type SearchResponse []media.GetMediaQueryResultItem
+type SearchResponse []GetMediaResponse

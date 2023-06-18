@@ -16,6 +16,6 @@ type Service interface {
 	GetByFileName(context.Context, GetByFileNameQuery) (Model, error)
 	GetByUserID(context.Context, GetByUserIDQuery) ([]Model, error)
 	GetByMediaID(context.Context, GetByMediaIDQuery) (Model, error)
-	GetByMediaIDs(context.Context, GetByMediaIDsQuery) ([]GetMediaQueryResultItem, error)
+	GetByMediaIDs(context.Context, GetByMediaIDsQuery) ([]Model, error)
 	GetTypeByFileName(context.Context, GetTypeByFileNameQuery) (string, error)
 }

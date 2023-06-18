@@ -214,24 +214,6 @@ const encryptionKeyChannel = new EncryptionKeyChannelClient(
 watch(usableEncryptionKey, () => {
   encryptionKeyChannel.encryptionKey = usableEncryptionKey.value;
 });
-// const init = () => {
-//   updateOrRegisterServiceWorker()
-//     .then(() => {
-//       userInit()
-//         .then(() => {
-//           setInitializing(false);
-//           // initializingRef.value = false;
-//           // setTimeout(() => {
-//           // }, 3000);
-//         })
-//         .catch((err) => {
-//           console.log("user init failed ", err);
-//         });
-//     })
-//     .catch((err) => {
-//       console.log("worker registeration failed ", err);
-//     });
-// };
 
 onMounted(() => {
   init()

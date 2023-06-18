@@ -1,7 +1,8 @@
 <script setup lang="ts">
-import { computed } from "vue";
+import { computed, inject } from "vue";
 import { getDailyMediaIndex, monthLong } from "@/utils/date";
 import DailyThumbnailPreview from "./DailyThumbnailPreview.vue";
+import { mediaDateGetterKey } from "@/symbols/injectionSymbols";
 const props = defineProps<{
   month: number;
   year: number;
@@ -9,9 +10,13 @@ const props = defineProps<{
   indexOffset: number;
   loadAllMediaOfDate: (date: Date) => Promise<any>;
 }>();
-
+const mediaDateGetter = inject<(media: Media) => Date>(mediaDateGetterKey);
+if (mediaDateGetter === undefined) {
+  // todo error message
+  throw new Error();
+}
 const dailyMediaList = computed<Array<DailyMedia>>(() =>
-  getDailyMediaIndex(props.indexMediaList)
+  getDailyMediaIndex(props.indexMediaList, mediaDateGetter)
 );
 </script>
 

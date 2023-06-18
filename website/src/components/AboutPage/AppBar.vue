@@ -3,10 +3,8 @@ import { inject, ref } from "vue";
 import { userManagerKey } from "@/symbols/injectionSymbols";
 import { signinUsingUserManager } from "@/utils/auth";
 import type { UserManager } from "oidc-client-ts";
-import { useRouter } from "vue-router";
 import LogoButton from "@/components/Logo/LogoButton.vue";
 
-const router = useRouter();
 // todo error and error message pop up
 const error = ref(false);
 

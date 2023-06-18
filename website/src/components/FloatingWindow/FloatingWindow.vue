@@ -14,8 +14,8 @@ const props = withDefaults(
     modelValue: boolean;
   }>(),
   {
-    height: "25vh",
-    width: "12.5vh",
+    height: "",
+    width: "",
     margin: 10,
     modelValue: false,
   }

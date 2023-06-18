@@ -34,7 +34,6 @@ export function signinUsingUserManager(
     });
 }
 
-// todo remove code and state from the url
 export async function handlePostLoginUsingUserManager(
   userManager: UserManager
 ): Promise<User> {

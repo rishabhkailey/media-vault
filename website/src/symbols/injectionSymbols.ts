@@ -5,3 +5,4 @@ export const initializingKey = Symbol();
 export const mediaListKey = Symbol();
 export const allMediaLoadedKey = Symbol();
 export const loadMoreMediaKey = Symbol();
+export const mediaDateGetterKey = Symbol();

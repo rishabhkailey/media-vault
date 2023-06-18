@@ -57,8 +57,7 @@ func (server *Server) Search(c *gin.Context) {
 		)
 		return
 	}
-	var response v1models.SearchResponse
-	response, err = server.Media.GetByMediaIDs(c.Request.Context(), media.GetByMediaIDsQuery{
+	mediaList, err := server.Media.GetByMediaIDs(c.Request.Context(), media.GetByMediaIDsQuery{
 		MediaIDs: mediaIDs,
 		OrderBy:  requestBody.OrderBy,
 		Sort:     requestBody.Sort,
@@ -71,5 +70,16 @@ func (server *Server) Search(c *gin.Context) {
 		)
 		return
 	}
-	c.JSON(http.StatusOK, &response)
+
+	response, err := v1models.NewGetMediaListResponse2(mediaList)
+	if err != nil {
+		c.Error(
+			internalErrors.NewInternalServerError(
+				fmt.Errorf("[Search] NewGetMediaListResponse failed: %w", err),
+			),
+		)
+		return
+	}
+
+	c.JSON(http.StatusOK, response)
 }

@@ -12,7 +12,7 @@ export const useMediaStore = defineStore("media", () => {
   const allMediaLoaded = ref(false);
   const orderByUploadDateKey = "uploaded_at";
   const orderByDateKey = "date";
-  const orderBy = ref(orderByDateKey);
+  const orderBy = ref(orderByUploadDateKey);
 
   function orderByUploadDate() {
     if (orderBy.value !== orderByUploadDateKey) {
@@ -103,12 +103,12 @@ export const useMediaStore = defineStore("media", () => {
 
   function loadMoreMedia(accessToken: string): Promise<boolean> {
     return new Promise<boolean>((resolve, reject) => {
-      let url = "/v1/mediaList?order=date&sort=desc&per_page=30";
+      let url = `/v1/mediaList?order=${orderBy.value}&sort=desc&per_page=30`;
       if (mediaList.value.length !== 0) {
         const lastMedia = mediaList.value[mediaList.value.length - 1];
         const lastDate =
           getMediaDateAccordingToOrderBy(lastMedia).toISOString();
-        url = `/v1/mediaList?order=date&sort=desc&per_page=30&&last_media_id=${lastMedia.id}&last_date=${lastDate}`;
+        url = `/v1/mediaList?order=${orderBy.value}&sort=desc&per_page=30&&last_media_id=${lastMedia.id}&last_date=${lastDate}`;
       }
       axios
         .get<Array<Media>>(url, {

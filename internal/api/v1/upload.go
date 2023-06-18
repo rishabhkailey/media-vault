@@ -10,7 +10,6 @@ import (
 	v1models "github.com/rishabhkailey/media-service/internal/api/v1/models"
 	internalErrors "github.com/rishabhkailey/media-service/internal/errors"
 	"github.com/rishabhkailey/media-service/internal/services/media"
-	"github.com/rishabhkailey/media-service/internal/services/media/mediaimpl"
 	mediametadata "github.com/rishabhkailey/media-service/internal/services/mediaMetadata"
 	mediasearch "github.com/rishabhkailey/media-service/internal/services/mediaSearch"
 	mediastorage "github.com/rishabhkailey/media-service/internal/services/mediaStorage"
@@ -321,17 +320,18 @@ func (server *Server) FinishChunkUpload(c *gin.Context) {
 		)
 		return
 	}
-
-	mediaApiData, err := mediaimpl.NewGetMediaQueryResultItem(uploadedMedia)
+	response, err := v1models.NewGetMediaResponse(uploadedMedia)
 	if err != nil {
-		c.Error(
-			internalErrors.NewInternalServerError(
-				fmt.Errorf("[UploadThumbnail] NewMediaApiData failed: %w", err),
-			),
-		)
-		return
+		if err != nil {
+			c.Error(
+				internalErrors.NewInternalServerError(
+					fmt.Errorf("[FinishChunkUpload] NewGetMediaResponse failed: %w", err),
+				),
+			)
+			return
+		}
 	}
 	c.JSON(http.StatusOK, &v1models.FinishUploadResponse{
-		GetMediaQueryResultItem: mediaApiData,
+		GetMediaResponse: response,
 	})
 }
