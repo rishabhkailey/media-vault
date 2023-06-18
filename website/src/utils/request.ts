@@ -11,6 +11,14 @@ export interface IResponseRange {
   size: number;
 }
 
+export function getRequestRange(headers: Headers): IRequestRange | undefined {
+  const rangeHeader = headers.get("Range");
+  if (rangeHeader === null) {
+    return undefined;
+  }
+  return parseRequestRangeHeader(rangeHeader);
+}
+
 export function parseRequestRangeHeader(range: string): IRequestRange {
   const parts = range.split("=");
   if (parts.length != 2) {

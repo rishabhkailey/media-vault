@@ -2,7 +2,7 @@
 import AppBar from "@/components/AppBar/AppBar.vue";
 import NavigationBar from "../components/NavigationBar.vue";
 import EncryptionKeyInput from "@/components/EncryptionKeyInput.vue";
-import { computed, inject, onMounted, ref } from "vue";
+import { computed, inject, onMounted, ref, onBeforeMount, watch } from "vue";
 import { userManagerKey } from "@/symbols/injectionSymbols";
 import type { UserManager } from "oidc-client-ts";
 import decryptWorker from "@/worker/dist/bundle.js?url";
@@ -14,6 +14,8 @@ import { useAuthStore } from "@/piniaStore/auth";
 import { useLoadingStore } from "@/piniaStore/loading";
 import { useUserInfoStore } from "@/piniaStore/userInfo";
 import { storeToRefs } from "pinia";
+import { EncryptionKeyChannelClient } from "@/utils/channels/encryptionKey";
+
 const authStore = useAuthStore();
 const { authenticated } = storeToRefs(authStore);
 const display = useDisplay();
@@ -204,6 +206,14 @@ function onValidationEncryptionKey() {
     });
   });
 }
+
+const encryptionKeyChannel = new EncryptionKeyChannelClient(
+  usableEncryptionKey.value
+);
+
+watch(usableEncryptionKey, () => {
+  encryptionKeyChannel.encryptionKey = usableEncryptionKey.value;
+});
 // const init = () => {
 //   updateOrRegisterServiceWorker()
 //     .then(() => {
@@ -224,12 +234,15 @@ function onValidationEncryptionKey() {
 // };
 
 onMounted(() => {
-  init().catch((err) => {
-    console.log(err);
-    // setInitializing(false);
-  });
+  init()
+    .then(() => {})
+    .catch((err) => {
+      console.log(err);
+      // setInitializing(false);
+    });
 });
 
+onBeforeMount(() => {});
 const test = (value: boolean) => {
   console.log("called", value);
 };

@@ -22,6 +22,7 @@ interface Media {
   name: string;
   type: string;
   date: Date;
+  uploaded_at: Date;
   size: number;
   thumbnail: boolean;
   url: string;

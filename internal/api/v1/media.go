@@ -56,19 +56,29 @@ func (server *Server) MediaList(c *gin.Context) {
 		)
 		return
 	}
-	var response v1models.GetMediaListResponse
 	var err error
-	response, err = server.Media.GetByUserID(c.Request.Context(), media.GetByUserIDQuery{
-		UserID:  userID,
-		OrderBy: requestBody.OrderBy,
-		Sort:    requestBody.Sort,
-		Page:    requestBody.Page,
-		PerPage: requestBody.PerPage,
+	mediaList, err := server.Media.GetByUserID(c.Request.Context(), media.GetByUserIDQuery2{
+		UserID:      userID,
+		OrderBy:     requestBody.OrderBy,
+		Sort:        requestBody.Sort,
+		LastMediaID: requestBody.LastMediaID,
+		LastDate:    requestBody.LastDate,
+		PerPage:     requestBody.PerPage,
 	})
+
 	if err != nil {
 		c.Error(
 			internalErrors.NewInternalServerError(
 				fmt.Errorf("[MediaList] db.GetUserMediaList failed: %w", err),
+			),
+		)
+		return
+	}
+	response, err := v1models.NewGetMediaListResponse2(mediaList)
+	if err != nil {
+		c.Error(
+			internalErrors.NewInternalServerError(
+				fmt.Errorf("[GetMediaList] create response failed: %w", err),
 			),
 		)
 		return

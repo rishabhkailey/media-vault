@@ -8,9 +8,10 @@ import (
 )
 
 type FakeService struct {
-	ExpectedMedia     media.Model
-	ExpectedMediaList []media.GetMediaQueryResultItem
-	ExpectedError     error
+	ExpectedMedia      media.Model
+	ExpectedMediaList  []media.GetMediaQueryResultItem
+	ExpectedMediaList2 []media.Model
+	ExpectedError      error
 }
 
 func NewFakeService() media.Service {
@@ -47,8 +48,8 @@ func (s *FakeService) GetByFileName(ctx context.Context, cmd media.GetByFileName
 	return s.ExpectedMedia, s.ExpectedError
 }
 
-func (s *FakeService) GetByUserID(ctx context.Context, cmd media.GetByUserIDQuery) ([]media.GetMediaQueryResultItem, error) {
-	return s.ExpectedMediaList, s.ExpectedError
+func (s *FakeService) GetByUserID(ctx context.Context, cmd media.GetByUserIDQuery) ([]media.Model, error) {
+	return s.ExpectedMediaList2, s.ExpectedError
 }
 
 func (s *FakeService) GetByMediaIDs(ctx context.Context, query media.GetByMediaIDsQuery) ([]media.GetMediaQueryResultItem, error) {

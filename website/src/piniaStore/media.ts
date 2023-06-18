@@ -3,13 +3,41 @@ import axios from "axios";
 import { defineStore } from "pinia";
 import { ref } from "vue";
 
-// we will need lock or something else
+// todo we will need lock or something else
 // to prevent duplicates if the same request is called twice
 
 export const useMediaStore = defineStore("media", () => {
   const nextPageNumber = ref(1);
   const mediaList = ref<Array<Media>>([]);
   const allMediaLoaded = ref(false);
+  const orderByUploadDateKey = "uploaded_at";
+  const orderByDateKey = "date";
+  const orderBy = ref(orderByDateKey);
+
+  function orderByUploadDate() {
+    if (orderBy.value !== orderByUploadDateKey) {
+      reset();
+    }
+    orderBy.value = orderByUploadDateKey;
+  }
+  function orderByMediaDate() {
+    if (orderBy.value !== orderByDateKey) {
+      reset();
+    }
+    orderBy.value = orderByDateKey;
+  }
+  function getMediaDateAccordingToOrderBy(media: Media): Date {
+    if (orderBy.value === orderByUploadDateKey) {
+      return media.uploaded_at;
+    }
+    return media.date;
+  }
+
+  function reset() {
+    nextPageNumber.value = 1;
+    mediaList.value = [];
+    allMediaLoaded.value = false;
+  }
 
   function appendMedia(_mediaList: Array<Media>) {
     if (_mediaList.length > 0) {
@@ -22,26 +50,72 @@ export const useMediaStore = defineStore("media", () => {
               media.date = UNKNOWN_DATE;
             }
           }
+          if (typeof media.uploaded_at === "string") {
+            try {
+              media.uploaded_at = new Date(media.uploaded_at);
+            } catch (err) {
+              media.uploaded_at = UNKNOWN_DATE;
+            }
+          }
           return media;
         })
         .sort((m1, m2) => {
           return m1.date > m2.date ? -1 : 1;
         });
-      mediaList.value = [...mediaList.value, ...newMediaList];
+      mediaList.value = sortAndRemoveDuplicateMedia([
+        ...mediaList.value,
+        ...newMediaList,
+      ]);
     }
+  }
+
+  function sortAndRemoveDuplicateMedia(mediaList: Array<Media>): Array<Media> {
+    if (mediaList.length <= 1) {
+      return mediaList;
+    }
+    let compare: (m1: Media, m2: Media) => number;
+    switch (orderBy.value) {
+      case "uploaded_at": {
+        compare = (m1: Media, m2: Media) => {
+          return m1.uploaded_at > m2.uploaded_at ? -1 : 1;
+        };
+        break;
+      }
+      default: {
+        compare = (m1: Media, m2: Media) => {
+          return m1.date > m2.date ? -1 : 1;
+        };
+        break;
+      }
+    }
+    mediaList = mediaList.sort((m1, m2) => compare(m1, m2));
+    const uniqueMediaList: Array<Media> = [mediaList[0]];
+    let previousMediaID = mediaList[0].id;
+    for (let index = 1; index < mediaList.length; index++) {
+      if (mediaList[index].id === previousMediaID) {
+        continue;
+      }
+      uniqueMediaList.push(mediaList[index]);
+      previousMediaID = mediaList[index].id;
+    }
+    return uniqueMediaList;
   }
 
   function loadMoreMedia(accessToken: string): Promise<boolean> {
     return new Promise<boolean>((resolve, reject) => {
+      let url = "/v1/mediaList?order=date&sort=desc&per_page=30";
+      if (mediaList.value.length !== 0) {
+        const lastMedia = mediaList.value[mediaList.value.length - 1];
+        const lastDate =
+          getMediaDateAccordingToOrderBy(lastMedia).toISOString();
+        url = `/v1/mediaList?order=date&sort=desc&per_page=30&&last_media_id=${lastMedia.id}&last_date=${lastDate}`;
+      }
       axios
-        .get<Array<Media>>(
-          `/v1/mediaList?page=${nextPageNumber.value}&perPage=30&order=date&sort=desc`,
-          {
-            headers: {
-              Authorization: `Bearer ${accessToken}`,
-            },
-          }
-        )
+        .get<Array<Media>>(url, {
+          headers: {
+            Authorization: `Bearer ${accessToken}`,
+          },
+        })
         .then((response) => {
           console.log(response);
           if (response.status == 200) {
@@ -157,5 +231,9 @@ export const useMediaStore = defineStore("media", () => {
     loadAllMediaForDate,
     deleteMedia,
     deleteMultipleMedia,
+    appendMedia,
+    orderByMediaDate,
+    orderByUploadDate,
+    getMediaDateAccordingToOrderBy,
   };
 });

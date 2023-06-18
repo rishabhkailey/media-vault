@@ -3,6 +3,7 @@ import { computed, inject, ref } from "vue";
 import SelectFileButton from "@/components/SelectFileButton.vue";
 import UploadFilesDialog from "@/components/UploadFilesDialog.vue";
 import SearchInputField from "@/components/SearchInputField.vue";
+import FloatingWindow from "@/components/FloatingWindow/FloatingWindow.vue";
 import LogoButton from "../Logo/LogoButton.vue";
 import { useAuthStore } from "@/piniaStore/auth";
 import { userManagerKey } from "@/symbols/injectionSymbols";
@@ -166,11 +167,25 @@ const searchSubmit = () => {
       </v-row>
     </v-col>
   </v-row>
-  <UploadFilesDialog
+  <!-- <UploadFilesDialog
     :height="400"
     :width="300"
     v-if="uploadFilesDialogModel"
     v-model="uploadFilesDialogModel"
     :files="selectedFiles"
-  />
+  /> -->
+  <FloatingWindow
+    v-model="uploadFilesDialogModel"
+    :bottom="10"
+    :right="10"
+    height="40vh"
+    width="30vh"
+  >
+    <UploadFilesDialog
+      class="h-100 w-100"
+      :model-value="true"
+      :files="selectedFiles"
+      @close="() => (uploadFilesDialogModel = false)"
+    />
+  </FloatingWindow>
 </template>

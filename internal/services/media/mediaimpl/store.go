@@ -20,7 +20,8 @@ type store interface {
 	GetByUploadRequestID(context.Context, string) (media.Model, error)
 	GetByFileName(context.Context, string) (media.Model, error)
 	GetMediaWithMetadataByUploadRequestID(context.Context, string) (media.Model, error)
-	GetByUserID(context.Context, media.GetByUserIDQuery) ([]media.Model, error)
+	GetByUserIDOrderByDate(ctx context.Context, userID string, lastMediaID *uint, lastDate *time.Time, sort string, limit int) ([]media.Model, error)
+	GetByUserIDOrderByUploadDate(ctx context.Context, userID string, lastMediaID *uint, lastDate *time.Time, sort string, limit int) ([]media.Model, error)
 	GetByMediaID(context.Context, media.GetByMediaIDQuery) (media.Model, error)
 	GetByMediaIDs(context.Context, media.GetByMediaIDsQuery) ([]media.Model, error)
 	GetTypeByFileName(context.Context, string) (string, error)
@@ -94,13 +95,105 @@ func (s *sqlStore) GetByFileName(ctx context.Context, fileName string) (media me
 	return
 }
 
-func (s *sqlStore) GetByUserID(ctx context.Context, query media.GetByUserIDQuery) (mediaList []media.Model, err error) {
+func (s *sqlStore) GetByUserIDOrderByDate(ctx context.Context,
+	userID string,
+	lastMediaID *uint,
+	lastDate *time.Time,
+	sort string,
+	limit int,
+) (mediaList []media.Model, err error) {
+
 	db := s.db.WithContext(ctx)
-	mediaByUserIDQuery := db.Model(&usermediabindings.Model{}).Select("media_id").Where("user_id = ?", query.UserID)
-	orderBy := fmt.Sprintf(`"Metadata"."%s" %s`, media.OrderAttributesMapping[query.OrderBy], media.SortKeywordMapping[query.Sort])
-	limit := int(query.PerPage)
-	offset := int((query.Page - 1) * query.PerPage)
-	err = db.Joins("Metadata").Model(&media.Model{}).Where("media.id IN (?)", mediaByUserIDQuery).Limit(limit).Order(orderBy).Offset(offset).Find(&mediaList).Error
+	mediaByUserIDQuery := db.Model(&usermediabindings.Model{}).Select("media_id").Where("user_id = ?", userID)
+	// table name = media, metadata alias = Metadata
+	query := db.Joins("Metadata").Model(&media.Model{})
+	if lastMediaID != nil && lastDate != nil {
+		switch sort {
+		case "asc":
+			{
+				query = query.Where(`
+				"media"."id" IN (?) 
+				AND (
+					(
+						("Metadata"."date" = ?) AND ("media"."id" < ?)
+					) OR (
+						("Metadata"."date" > ?)
+					)
+					)`, mediaByUserIDQuery, lastDate, lastMediaID, lastDate)
+			}
+		default:
+			{
+				query = query.Where(`
+				"media"."id" IN (?) 
+				AND (
+					(
+						("Metadata"."date" = ?) AND ("media"."id" < ?)
+					) OR (
+						("Metadata"."date" < ?)
+					)
+					)`, mediaByUserIDQuery, lastDate, lastMediaID, lastDate)
+			}
+		}
+	} else {
+		query = query.Where(`
+		"media"."id" IN (?) 
+		`, mediaByUserIDQuery)
+	}
+
+	queryOrderBy := fmt.Sprintf(`"Metadata"."date" %s, "media"."id" desc`, sort)
+	query = query.Order(queryOrderBy).Limit(limit)
+	err = query.Find(&mediaList).Error
+	return
+}
+
+func (s *sqlStore) GetByUserIDOrderByUploadDate(ctx context.Context,
+	userID string,
+	lastMediaID *uint,
+	lastDate *time.Time,
+	sort string,
+	limit int,
+) (mediaList []media.Model, err error) {
+
+	db := s.db.WithContext(ctx)
+	mediaByUserIDQuery := db.Model(&usermediabindings.Model{}).Select("media_id").Where("user_id = ?", userID)
+	// table name = media, metadata alias = Metadata
+	query := db.Joins("Metadata").Model(&media.Model{})
+	if lastMediaID != nil && lastDate != nil {
+		switch sort {
+		case "asc":
+			{
+				query = query.Where(`
+				"media"."id" IN (?) 
+				AND (
+					(
+						("Metadata"."created_at" = ?) AND ("media"."id" < ?)
+					) OR (
+						("Metadata"."created_at" > ?)
+					)
+					)`, mediaByUserIDQuery, lastDate, lastMediaID, lastDate)
+			}
+		default:
+			{
+				query = query.Where(`
+				"media"."id" IN (?) 
+				AND (
+					(
+						("Metadata"."created_at" = ?) AND ("media"."id" < ?)
+					) OR (
+						("Metadata"."created_at" < ?)
+					)
+					)`, mediaByUserIDQuery, lastDate, lastMediaID, lastDate)
+			}
+		}
+	} else {
+		query = query.Where(`
+		"media"."id" IN (?) 
+		`, mediaByUserIDQuery)
+	}
+
+	queryOrderBy := fmt.Sprintf(`"Metadata"."created_at" %s, "media"."id" desc`, sort)
+	query = query.Order(queryOrderBy).Limit(limit)
+	err = query.Find(&mediaList).Error
 	return
 }
 
@@ -122,7 +215,7 @@ func (s *sqlStore) GetTypeByFileName(ctx context.Context, fileName string) (medi
 }
 
 func (s *sqlStore) GetByMediaIDs(ctx context.Context, query media.GetByMediaIDsQuery) (mediaList []media.Model, err error) {
-	orderBy := fmt.Sprintf(`"Metadata"."%s" %s`, media.OrderAttributesMapping[query.OrderBy], media.SortKeywordMapping[query.Sort])
+	orderBy := fmt.Sprintf(`"Metadata"."%s" %s`, media.OrderColumnMapping[query.OrderBy], media.SortKeywordMapping[query.Sort])
 	err = s.db.WithContext(ctx).Joins("Metadata").Model(&media.Model{}).Where("media.id IN (?)", query.MediaIDs).Order(orderBy).Find(&mediaList).Error
 	return
 }

@@ -1,6 +1,8 @@
 package media
 
 import (
+	"time"
+
 	mediametadata "github.com/rishabhkailey/media-service/internal/services/mediaMetadata"
 	uploadrequests "github.com/rishabhkailey/media-service/internal/services/uploadRequests"
 	"gorm.io/gorm"
@@ -19,7 +21,7 @@ var (
 		"descending": "desc",
 	}
 
-	OrderAttributesMapping = map[string]string{
+	OrderColumnMapping = map[string]string{
 		"date":        "date",
 		"uploaded_at": "created_at",
 	}
@@ -57,11 +59,12 @@ type GetTypeByFileNameQuery struct {
 }
 
 type GetByUserIDQuery struct {
-	UserID  string
-	OrderBy string `form:"order" json:"order,omitempty" binding:"required"`
-	Sort    string `form:"sort" json:"sort,omitempty" binding:"required"`
-	Page    int64  `form:"page" json:"page,omitempty" binding:"required"`
-	PerPage int64  `form:"perPage" json:"perPage,omitempty" binding:"required"`
+	UserID      string
+	OrderBy     string
+	Sort        string
+	LastMediaID *uint
+	LastDate    *time.Time
+	PerPage     int64
 }
 
 type GetMediaQueryResultItem struct {

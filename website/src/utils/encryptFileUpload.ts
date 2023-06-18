@@ -17,7 +17,7 @@ export function chunkUpload(
   encryptionKey: string,
   controller: AbortController,
   callback: ProgressCallback
-): Promise<ChunkUploadInfo> {
+): Promise<Media> {
   return new Promise((resolve, reject) => {
     initChunkUpload(file, bearerToken, controller)
       .then((chunkRequestInfo) => {
@@ -60,13 +60,10 @@ export function chunkUpload(
               })
               .finally(() => {
                 finishChunkUpload(chunkRequestInfo, bearerToken, controller)
-                  .then((success) => {
-                    if (success) {
-                      // todo
-                      resolve({
-                        requestID: chunkRequestInfo.requestID,
-                        uploadedBytes: uploadedBytes,
-                      });
+                  .then((media) => {
+                    if (media) {
+                      // todo validate media
+                      resolve(media);
                       return;
                     } else {
                       reject(new Error("finish chunk upload request failed"));
@@ -308,8 +305,8 @@ function finishChunkUpload(
   chunkRequestInfo: ChunkRequestInfo,
   bearerToken: string,
   controller: AbortController
-): Promise<boolean> {
-  return new Promise((resolve, reject) => {
+): Promise<Media> {
+  return new Promise<Media>((resolve, reject) => {
     // finish upload
     axios
       .post(
@@ -332,7 +329,7 @@ function finishChunkUpload(
             "upload chuck request failed with status" + res.status
           );
         }
-        resolve(true);
+        resolve(res.data);
         return;
       })
       .catch((err) => {

@@ -66,12 +66,11 @@ func (s *Service) GetByFileName(ctx context.Context, query media.GetByFileNameQu
 	return s.store.GetByFileName(ctx, query.FileName)
 }
 
-func (s *Service) GetByUserID(ctx context.Context, query media.GetByUserIDQuery) (result []media.GetMediaQueryResultItem, err error) {
-	mediaList, err := s.store.GetByUserID(ctx, query)
-	if err != nil {
-		return
+func (s *Service) GetByUserID(ctx context.Context, query media.GetByUserIDQuery) (result []media.Model, err error) {
+	if query.OrderBy == "uploaded_at" {
+		return s.store.GetByUserIDOrderByUploadDate(ctx, query.UserID, query.LastMediaID, query.LastDate, media.SortKeywordMapping[query.Sort], int(query.PerPage))
 	}
-	return NewGetMediaQueryResult(mediaList)
+	return s.store.GetByUserIDOrderByDate(ctx, query.UserID, query.LastMediaID, query.LastDate, media.SortKeywordMapping[query.Sort], int(query.PerPage))
 }
 
 func (s *Service) GetTypeByFileName(ctx context.Context, query media.GetTypeByFileNameQuery) (string, error) {

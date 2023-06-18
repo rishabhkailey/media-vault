@@ -4,25 +4,19 @@ import { chunkUpload } from "@/utils/encryptFileUpload";
 import { useAuthStore } from "@/piniaStore/auth";
 import { storeToRefs } from "pinia";
 import { useUserInfoStore } from "@/piniaStore/userInfo";
+import { useMediaStore } from "@/piniaStore/media";
 const authStore = useAuthStore();
 // todo store getter typing
 // todo check
 const { accessToken } = storeToRefs(authStore);
 const { usableEncryptionKey } = storeToRefs(useUserInfoStore());
+
+const { appendMedia } = useMediaStore();
 const props = withDefaults(
   defineProps<{
-    modelValue: boolean;
-    width?: number;
-    height?: number;
-    margin?: number;
     files: Array<File>;
   }>(),
-  {
-    width: 250,
-    height: 250,
-    margin: 25,
-    modelValue: false,
-  }
+  {}
 );
 
 interface FileUploadStatus {
@@ -47,7 +41,7 @@ const filesUploadStatus = computed<Array<FileUploadStatus>>(() => {
   return reactive<Array<FileUploadStatus>>(arr);
 });
 
-// todo move this to somewhere else on any update it reuploads the files
+// todo move this to somewhere else on any update it reuploads the files again
 onMounted(() => {
   if (
     props.files.length > 0 &&
@@ -67,7 +61,7 @@ async function uploadFiles(files: Array<File>) {
       }
       let file = files[index];
       // not waiting for upload to finish
-      let uploadInfo = await chunkUpload(
+      let media = await chunkUpload(
         file,
         accessToken.value,
         usableEncryptionKey.value,
@@ -76,7 +70,7 @@ async function uploadFiles(files: Array<File>) {
           filesUploadStatus.value[index].progress = progress;
         }
       );
-      console.log(uploadInfo);
+      appendMedia([media]);
       filesUploadStatus.value[index].done = true;
       filesUploadStatus.value[index].failed = false;
     } catch (err) {
@@ -89,190 +83,157 @@ async function uploadFiles(files: Array<File>) {
     }
   }
 }
-const attachedTo = ref<HTMLDivElement | undefined>(undefined);
 const collapsed = ref<boolean>(false);
 
-const emit = defineEmits<{
-  (e: "update:modelValue", value: boolean): void;
+const emits = defineEmits<{
   (e: "status:failed", value: boolean): void;
   (e: "status:completed", value: boolean): void;
+  (e: "close"): void;
+  (e: "collapse"): void;
 }>();
 </script>
 
 <template>
-  <div
-    :style="`position: absolute; bottom: ${
-      props.height + props.margin
-    }px; right: ${props.width + props.margin}px`"
-    ref="attachedTo"
-  ></div>
-  <!-- https://vuejs.org/guide/components/v-model.html#component-v-model -->
-  <v-menu
-    :model-value="props.modelValue"
-    @update:model-value="
-      () => {
-        /* ignore all model updates we will manually update when to close/open menu */
-      }
-    "
-    open-delay="0"
-    close-delay="0"
-    :width="props.width"
-    :height="props.height"
-    location-strategy="static"
-    :scrollable="false"
-    :location="`${collapsed ? 'top left' : 'bottom left'}`"
-    :attach="attachedTo"
-    :close-on-content-click="false"
-    :close-on-back="false"
-    style="position: absolute; bottom: 0; right: 0"
-  >
-    <v-card style="overflow-x: hidden; overflow-y: hidden" v-if="!collapsed">
-      <v-toolbar
-        class="d-flex flex-column ma-0 pa-0"
-        :style="`max-height: ${(props.height * 1.5) / 10}px;`"
-        color="primary"
+  <v-card style="overflow-x: hidden; overflow-y: hidden" v-if="!collapsed">
+    <v-col class="h-100 d-flex flex-column">
+      <v-row class="flex-grow-0">
+        <v-toolbar class="d-flex flex-column ma-0 pa-0" color="primary">
+          <v-toolbar-title class="text-center ma-0 pa-0">
+            Uploading
+          </v-toolbar-title>
+        </v-toolbar>
+      </v-row>
+      <v-row
+        class="flex-grow-1"
+        style="display: block; overflow-y: scroll; overflow-x: hidden"
       >
-        <v-toolbar-title class="text-center ma-0 pa-0">
-          Uploading
-        </v-toolbar-title>
-      </v-toolbar>
-
-      <v-card-item
-        class="flex-grow-1 ma-0 pa-0"
-        :style="`display: block; overflow-y: scroll; overflow-x: hidden; max-height: ${
-          (props.height * 7) / 10
-        }px;`"
-      >
-        <v-container class="ma-0 pa-0">
-          <v-list lines="two">
-            <v-list-item
-              v-for="(file, index) in props.files"
-              :key="file.name"
-              :title="file.name"
-              :subtitle="file.size"
-            >
-              <template v-slot:prepend>
-                <!-- todo create a separate component with simple logic -->
-                <v-avatar>
-                  <v-progress-circular
-                    :size="70"
-                    :width="7"
-                    :color="filesUploadStatus[index].failed ? 'red' : 'primary'"
-                    :model-value="
-                      filesUploadStatus[index].failed
-                        ? '100'
-                        : filesUploadStatus[index].progress
-                    "
-                  >
-                    <!-- todo text size -->
-                    {{
-                      filesUploadStatus[index].failed
-                        ? "!"
-                        : Math.round(filesUploadStatus[index].progress) + "%"
-                    }}
-                  </v-progress-circular>
-                </v-avatar>
-              </template>
-              <template v-slot:append>
-                <v-btn
-                  v-if="!filesUploadStatus[index].done"
-                  color="grey-lighten-1"
-                  icon="mdi-close"
-                  variant="text"
-                  @click.stop="
-                    () => {
-                      filesUploadStatus[index].controller.abort();
-                    }
-                  "
-                />
-                <v-btn
-                  v-if="
-                    filesUploadStatus[index].done &&
-                    !filesUploadStatus[index].failed
-                  "
-                  color="grey-lighten-1"
-                  icon="mdi-check"
-                  variant="text"
-                />
-                <!-- rotate-right -->
-                <v-tooltip
-                  location="top"
-                  text="retry"
-                  v-if="
-                    filesUploadStatus[index].done &&
+        <v-list lines="two">
+          <v-list-item
+            v-for="(file, index) in props.files"
+            :key="file.name"
+            :title="file.name"
+            :subtitle="file.size"
+          >
+            <template v-slot:prepend>
+              <!-- todo create a separate component with simple logic -->
+              <v-avatar>
+                <v-progress-circular
+                  :size="70"
+                  :width="7"
+                  :color="filesUploadStatus[index].failed ? 'red' : 'primary'"
+                  :model-value="
                     filesUploadStatus[index].failed
+                      ? '100'
+                      : filesUploadStatus[index].progress
                   "
                 >
-                  <template v-slot:activator="{ props }">
-                    <v-btn
-                      color="grey-lighten-1"
-                      icon="mdi-rotate-right"
-                      variant="text"
-                      v-bind="props"
-                    />
-                  </template>
-                </v-tooltip>
-              </template>
-            </v-list-item>
-          </v-list>
-        </v-container>
-      </v-card-item>
-      <v-bottom-navigation
-        :style="`max-height: ${(props.height * 1.5) / 10}px`"
-      >
-        <v-btn
-          @click.stop="
-            () => {
-              filesUploadStatus.forEach((status) => {
-                status.controller.abort();
-              });
-              emit('update:modelValue', false);
-            }
-          "
-        >
-          <v-icon>mdi-close</v-icon>
-          cancel
-        </v-btn>
-        <v-btn
-          @click.stop="
-            () => {
-              collapsed = true;
-            }
-          "
-        >
-          <v-icon>mdi-arrow-collapse </v-icon>
-          collapse
-        </v-btn>
-      </v-bottom-navigation>
-    </v-card>
-    <!-- todo tootip for info like click to expand or uploading in progress -->
-    <v-container
-      class="ma-0 pa-0 d-flex justify-end align-end flex-grow-1"
-      v-else
-    >
-      <v-btn
-        flat
-        rounded="pill"
-        @click.stop="
-          () => {
-            collapsed = false;
-          }
-        "
-      >
-        <v-avatar>
-          <v-progress-circular
-            :size="70"
-            :width="7"
-            color="primary"
-            indeterminate
-          >
-            <!-- todo remove this and add logic for progress -->
-            <template v-slot:default>
-              <v-icon color="grey">mdi-arrow-expand</v-icon>
+                  <!-- todo text size -->
+                  {{
+                    filesUploadStatus[index].failed
+                      ? "!"
+                      : Math.round(filesUploadStatus[index].progress) + "%"
+                  }}
+                </v-progress-circular>
+              </v-avatar>
             </template>
-          </v-progress-circular>
-        </v-avatar>
-      </v-btn>
-    </v-container>
-  </v-menu>
+            <template v-slot:append>
+              <v-btn
+                v-if="!filesUploadStatus[index].done"
+                color="grey-lighten-1"
+                icon="mdi-close"
+                variant="text"
+                @click.stop="
+                  () => {
+                    filesUploadStatus[index].controller.abort();
+                  }
+                "
+              />
+              <v-btn
+                v-if="
+                  filesUploadStatus[index].done &&
+                  !filesUploadStatus[index].failed
+                "
+                color="grey-lighten-1"
+                icon="mdi-check"
+                variant="text"
+              />
+              <!-- rotate-right -->
+              <v-tooltip
+                location="top"
+                text="retry"
+                v-if="
+                  filesUploadStatus[index].done &&
+                  filesUploadStatus[index].failed
+                "
+              >
+                <template v-slot:activator="{ props }">
+                  <v-btn
+                    color="grey-lighten-1"
+                    icon="mdi-rotate-right"
+                    variant="text"
+                    v-bind="props"
+                  />
+                </template>
+              </v-tooltip>
+            </template>
+          </v-list-item>
+        </v-list>
+      </v-row>
+      <v-row class="flex-grow-0">
+        <v-card-actions>
+          <v-btn
+            @click.stop="
+              () => {
+                filesUploadStatus.forEach((status) => {
+                  status.controller.abort();
+                });
+                emits('close');
+              }
+            "
+          >
+            <v-icon>mdi-close</v-icon>
+            cancel
+          </v-btn>
+          <v-btn
+            @click.stop="
+              () => {
+                collapsed = true;
+              }
+            "
+          >
+            <v-icon>mdi-arrow-collapse </v-icon>
+            collapse
+          </v-btn>
+        </v-card-actions>
+      </v-row>
+    </v-col>
+  </v-card>
+  <v-container
+    class="ma-0 pa-0 d-flex justify-end align-end flex-grow-1"
+    v-else
+  >
+    <v-btn
+      flat
+      rounded="pill"
+      @click.stop="
+        () => {
+          collapsed = false;
+        }
+      "
+    >
+      <v-avatar>
+        <v-progress-circular
+          :size="70"
+          :width="7"
+          color="primary"
+          indeterminate
+        >
+          <!-- todo remove this and add logic for progress -->
+          <template v-slot:default>
+            <v-icon color="grey">mdi-arrow-expand</v-icon>
+          </template>
+        </v-progress-circular>
+      </v-avatar>
+    </v-btn>
+  </v-container>
 </template>

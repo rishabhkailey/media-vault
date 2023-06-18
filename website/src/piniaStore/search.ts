@@ -32,10 +32,31 @@ export const useSearchStore = defineStore("search", () => {
         .sort((m1, m2) => {
           return m1.date > m2.date ? -1 : 1;
         });
-      mediaList.value = [...mediaList.value, ...newMediaList];
+      mediaList.value = sortAndRemoveDuplicateMedia([
+        ...mediaList.value,
+        ...newMediaList,
+      ]);
     }
   }
 
+  function sortAndRemoveDuplicateMedia(mediaList: Array<Media>): Array<Media> {
+    if (mediaList.length <= 1) {
+      return mediaList;
+    }
+    mediaList = mediaList.sort((m1, m2) => {
+      return m1.date > m2.date ? -1 : 1;
+    });
+    const uniqueMediaList: Array<Media> = [mediaList[0]];
+    let previousMediaID = mediaList[0].id;
+    for (let index = 1; index < mediaList.length; index++) {
+      if (mediaList[index].id === previousMediaID) {
+        continue;
+      }
+      uniqueMediaList.push(mediaList[index]);
+      previousMediaID = mediaList[index].id;
+    }
+    return uniqueMediaList;
+  }
   function loadMoreSearchResults(
     accessToken: string,
     _query: string
