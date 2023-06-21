@@ -67,13 +67,6 @@ type GetByUserIDQuery struct {
 	PerPage     int64
 }
 
-type GetMediaQueryResultItem struct {
-	Id           uint   `json:"id"`
-	MediaUrl     string `json:"url"`
-	ThumbnailUrl string `json:"thumbnail_url"`
-	mediametadata.Metadata
-}
-
 type GetByMediaIDsQuery struct {
 	MediaIDs []uint
 	OrderBy  string

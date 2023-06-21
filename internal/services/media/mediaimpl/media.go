@@ -3,7 +3,6 @@ package mediaimpl
 import (
 	"context"
 	"fmt"
-	"net/url"
 
 	"github.com/go-redis/redis/v8"
 	"github.com/google/uuid"
@@ -82,41 +81,4 @@ func (s *Service) GetByMediaIDs(ctx context.Context, query media.GetByMediaIDsQu
 }
 func (s *Service) GetByMediaID(ctx context.Context, query media.GetByMediaIDQuery) (media.Model, error) {
 	return s.store.GetByMediaID(ctx, query)
-}
-
-func NewGetMediaQueryResult(mediaList []media.Model) (result []media.GetMediaQueryResultItem, err error) {
-	result = []media.GetMediaQueryResultItem{} // required, if not done then we get null in json
-	for _, mediaItem := range mediaList {
-		var item media.GetMediaQueryResultItem
-		item, err = NewGetMediaQueryResultItem(mediaItem)
-		if err != nil {
-			return
-		}
-		result = append(result, item)
-	}
-	return
-}
-
-func NewGetMediaQueryResultItem(media media.Model) (item media.GetMediaQueryResultItem, err error) {
-	item.MediaUrl, err = parseMediaURL(media.FileName, false)
-	if err != nil {
-		return
-	}
-	item.Id = media.ID
-	item.Metadata = media.Metadata.Metadata
-	if media.Metadata.Thumbnail {
-		item.ThumbnailUrl, err = parseMediaURL(media.FileName, true)
-		if err != nil {
-			return
-		}
-	}
-	return
-}
-
-func parseMediaURL(fileName string, thumbnail bool) (string, error) {
-	path := "/v1/media"
-	if thumbnail {
-		path = "/v1/thumbnail"
-	}
-	return url.JoinPath(path, fileName)
 }

@@ -287,7 +287,7 @@ func (server *Server) GetAlubmMedia(c *gin.Context) {
 		)
 		return
 	}
-	response, err := server.AlbumService.GetAlbumMedia(c.Request.Context(), album.GetAlbumMediaQuery{
+	mediaList, err := server.AlbumService.GetAlbumMedia(c.Request.Context(), album.GetAlbumMediaQuery{
 		UserID:  userID,
 		AlbumID: requestBody.AlbumID,
 		OrderBy: requestBody.OrderBy,
@@ -297,6 +297,15 @@ func (server *Server) GetAlubmMedia(c *gin.Context) {
 	})
 	if err != nil {
 		c.Error(err)
+		return
+	}
+	response, err := v1models.NewGetMediaListResponse(mediaList)
+	if err != nil {
+		c.Error(
+			internalErrors.NewInternalServerError(
+				fmt.Errorf("[GetAlubmMedia] NewGetMediaListResponse failed: %w", err),
+			),
+		)
 		return
 	}
 	c.JSON(http.StatusOK, response)

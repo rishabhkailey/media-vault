@@ -15,5 +15,5 @@ type Service interface {
 	AddMedia(context.Context, AddMediaQuery) (addedMediaIDs []uint, err error)
 	RemoveAlbumMedia(context.Context, RemoveMediaCmd) (removedMediaIDs []uint, err error)
 	DeleteAlbum(context.Context, DeleteAlbumCmd) error
-	GetAlbumMedia(context.Context, GetAlbumMediaQuery) ([]media.GetMediaQueryResultItem, error)
+	GetAlbumMedia(context.Context, GetAlbumMediaQuery) ([]media.Model, error)
 }

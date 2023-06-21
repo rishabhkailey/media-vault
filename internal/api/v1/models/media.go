@@ -47,7 +47,7 @@ type GetMediaResponse struct {
 	Thumbnail    bool      `gorm:"default:false" json:"thumbnail"`
 }
 
-func NewGetMediaListResponse2(mediaList []media.Model) (result GetMediaListResponse, err error) {
+func NewGetMediaListResponse(mediaList []media.Model) (result GetMediaListResponse, err error) {
 	result = []GetMediaResponse{} // required, if not done then we get null in json
 	for _, mediaItem := range mediaList {
 		var item GetMediaResponse

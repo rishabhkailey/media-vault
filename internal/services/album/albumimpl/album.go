@@ -7,7 +7,6 @@ import (
 	internalErrors "github.com/rishabhkailey/media-service/internal/errors"
 	"github.com/rishabhkailey/media-service/internal/services/album"
 	"github.com/rishabhkailey/media-service/internal/services/media"
-	"github.com/rishabhkailey/media-service/internal/services/media/mediaimpl"
 	"github.com/rishabhkailey/media-service/internal/store"
 	albumStore "github.com/rishabhkailey/media-service/internal/store/album"
 	"golang.org/x/net/context"
@@ -105,7 +104,7 @@ func (s *Service) DeleteAlbum(ctx context.Context, cmd album.DeleteAlbumCmd) err
 	return s.store.AlbumStore.DeleteAlbum(ctx, cmd.AlbumID)
 }
 
-func (s *Service) GetAlbumMedia(ctx context.Context, query album.GetAlbumMediaQuery) (mediaListResponse []media.GetMediaQueryResultItem, err error) {
+func (s *Service) GetAlbumMedia(ctx context.Context, query album.GetAlbumMediaQuery) (mediaList []media.Model, err error) {
 	ok, err := s.store.AlbumStore.CheckAlbumBelongsToUser(ctx, query.UserID, query.AlbumID)
 	if err != nil {
 		return
@@ -114,7 +113,7 @@ func (s *Service) GetAlbumMedia(ctx context.Context, query album.GetAlbumMediaQu
 		err = internalErrors.ErrForbidden
 		return
 	}
-	mediaList, err := s.store.AlbumStore.GetMediaByAlbumId(
+	return s.store.AlbumStore.GetMediaByAlbumId(
 		ctx,
 		query.AlbumID,
 		album.AlbumMediaOrderAttributesMapping[query.OrderBy],
@@ -122,11 +121,6 @@ func (s *Service) GetAlbumMedia(ctx context.Context, query album.GetAlbumMediaQu
 		int(query.PerPage),
 		int((query.Page-1)*query.PerPage),
 	)
-	if err != nil {
-		return
-	}
-	mediaListResponse, err = mediaimpl.NewGetMediaQueryResult(mediaList)
-	return
 }
 
 func (s *Service) UpdateAlbum(ctx context.Context, cmd album.UpdateAlbumCmd) (albumStore.Album, error) {

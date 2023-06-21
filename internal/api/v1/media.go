@@ -74,7 +74,7 @@ func (server *Server) MediaList(c *gin.Context) {
 		)
 		return
 	}
-	response, err := v1models.NewGetMediaListResponse2(mediaList)
+	response, err := v1models.NewGetMediaListResponse(mediaList)
 	if err != nil {
 		c.Error(
 			internalErrors.NewInternalServerError(

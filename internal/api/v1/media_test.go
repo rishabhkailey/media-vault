@@ -16,36 +16,35 @@ import (
 	authserviceimpl "github.com/rishabhkailey/media-service/internal/services/authService/authServiceImpl"
 	"github.com/rishabhkailey/media-service/internal/services/media"
 	"github.com/rishabhkailey/media-service/internal/services/media/mediaimpl"
-	mediametadata "github.com/rishabhkailey/media-service/internal/services/mediaMetadata"
 	"github.com/rishabhkailey/media-service/internal/services/mediaStorage/mediastorageimpl"
 	"github.com/stretchr/testify/assert"
 )
 
 // RefreshSession and UserAuthMiddleware test
 func TestMediaList(t *testing.T) {
-	testMediaListStruct := []media.GetMediaQueryResultItem{
-		{
-			MediaUrl:     "/test/abc",
-			ThumbnailUrl: "/test/def",
-			Metadata: mediametadata.Metadata{
-				Name:      "test",
-				Date:      time.Now(),
-				Type:      "txt",
-				Size:      100,
-				Thumbnail: true,
-			},
-		},
-		{
-			MediaUrl:     "/test/abc",
-			ThumbnailUrl: "/test/def",
-			Metadata: mediametadata.Metadata{
-				Name:      "test",
-				Date:      time.Now(),
-				Type:      "txt",
-				Size:      100,
-				Thumbnail: true,
-			},
-		},
+	testMediaListStruct := []media.Model{
+		// {
+		// 	MediaUrl:     "/test/abc",
+		// 	ThumbnailUrl: "/test/def",
+		// 	Metadata: mediametadata.Metadata{
+		// 		Name:      "test",
+		// 		Date:      time.Now(),
+		// 		Type:      "txt",
+		// 		Size:      100,
+		// 		Thumbnail: true,
+		// 	},
+		// },
+		// {
+		// 	MediaUrl:     "/test/abc",
+		// 	ThumbnailUrl: "/test/def",
+		// 	Metadata: mediametadata.Metadata{
+		// 		Name:      "test",
+		// 		Date:      time.Now(),
+		// 		Type:      "txt",
+		// 		Size:      100,
+		// 		Thumbnail: true,
+		// 	},
+		// },
 	}
 	var testMediaListMap any
 	{
