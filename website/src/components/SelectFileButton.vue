@@ -3,10 +3,11 @@ import { ref } from "vue";
 
 const props = defineProps<{
   label: string;
-  prependIcon: string;
+  icon: string;
+  iconOnly: boolean;
 }>();
 
-const emit = defineEmits<{
+const emits = defineEmits<{
   (e: "select", value: Array<File>): void;
 }>();
 
@@ -21,76 +22,92 @@ const cancel = () => {
 </script>
 
 <template>
-  <v-dialog
-    v-model="selectFileDialog"
-    width="auto"
-    min-width="500px"
-    scrollable
+  <!-- todo common component for select file and search dialog? -->
+  <v-form
+    class="d-flex flex-grow-1 justify-center align-center"
+    @submit.prevent="(e) => emits('select', selectedFiles)"
   >
-    <template v-slot:activator>
-      <v-btn
-        class="bg-primary mx-2"
-        @click.stop="() => (selectFileDialog = true)"
+    <v-dialog v-model="selectFileDialog" scrollable>
+      <template v-slot:activator>
+        <v-btn
+          v-if="props.iconOnly"
+          :icon="props.icon"
+          color="primary"
+          @click.stop="() => (selectFileDialog = true)"
+        />
+        <v-btn
+          v-else
+          class="bg-primary mx-2"
+          :prepend-icon="props.icon"
+          :text="props.label"
+          @click.stop="() => (selectFileDialog = true)"
+        />
+      </template>
+
+      <v-container
+        class="ma-0 pa-0 justify-center align-center d-flex w-100"
+        style="max-width: 100vw"
       >
-        <v-icon :icon="props.prependIcon" />
-        {{ props.label }}
-      </v-btn>
-    </template>
-    <v-card>
-      <v-card-title> Select Files </v-card-title>
-      <v-card-text>
-        <v-row>
-          <v-file-input
-            ref="selectFileElement"
-            placeholder="select files"
-            label="select files"
-            v-model="selectedFiles"
-            counter
-            multiple
-            clearable
-          >
-            <template v-slot:selection="{ fileNames }">
-              <template v-for="(fileName, index) in fileNames" :key="fileName">
-                <v-chip
-                  v-if="index < 2"
-                  color="deep-purple-accent-4"
-                  label
-                  size="small"
-                  class="me-2"
+        <v-col cols="12" xs="12" sm="10" md="6" lg="6" xl="6" xxl="6">
+          <v-card>
+            <v-card-title> Select Files </v-card-title>
+            <v-card-text>
+              <v-file-input
+                ref="selectFileElement"
+                placeholder="select files"
+                label="select files"
+                v-model="selectedFiles"
+                counter
+                multiple
+                clearable
+              >
+                <template v-slot:selection="{ fileNames }">
+                  <template
+                    v-for="(fileName, index) in fileNames"
+                    :key="fileName"
+                  >
+                    <v-chip
+                      v-if="index < 2"
+                      color="deep-purple-accent-4"
+                      label
+                      size="small"
+                      class="me-2"
+                    >
+                      {{ fileName }}
+                    </v-chip>
+                    <span
+                      v-else-if="index === 2"
+                      class="text-overline text-grey-darken-3 mx-2"
+                    >
+                      +{{ selectedFiles.length - 2 }} File(s)
+                    </span>
+                  </template>
+                </template>
+              </v-file-input>
+            </v-card-text>
+            <v-card-actions>
+              <!-- feature -->
+              <!-- todo preview button with option to remove some files -->
+              <v-row class="d-flex flex-row justify-space-around">
+                <!-- move red to theme under delete names -->
+                <v-btn color="red" @click.stop="cancel">Cancel</v-btn>
+                <v-btn
+                  color="primary"
+                  @click.stop="
+                    () => {
+                      emits('select', selectedFiles);
+                      selectFileDialog = false;
+                      selectedFiles = [];
+                    }
+                  "
+                  :disabled="selectedFiles.length === 0"
+                  >{{ props.label }}</v-btn
                 >
-                  {{ fileName }}
-                </v-chip>
-                <span
-                  v-else-if="index === 2"
-                  class="text-overline text-grey-darken-3 mx-2"
-                >
-                  +{{ selectedFiles.length - 2 }} File(s)
-                </span>
-              </template>
-            </template>
-          </v-file-input>
-        </v-row>
-      </v-card-text>
-      <v-card-actions>
-        <!-- feature -->
-        <!-- todo preview button with option to remove some files -->
-        <v-row class="d-flex flex-row justify-space-around">
-          <!-- move red to theme under delete names -->
-          <v-btn color="red" @click.stop="cancel">Cancel</v-btn>
-          <v-btn
-            color="primary"
-            @click.stop="
-              () => {
-                emit('select', selectedFiles);
-                selectFileDialog = false;
-                selectedFiles = [];
-              }
-            "
-            :disabled="selectedFiles.length === 0"
-            >{{ props.label }}</v-btn
-          >
-        </v-row>
-      </v-card-actions>
-    </v-card>
-  </v-dialog>
+              </v-row>
+            </v-card-actions>
+          </v-card>
+        </v-col>
+      </v-container>
+    </v-dialog>
+  </v-form>
 </template>

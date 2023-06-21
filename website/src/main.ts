@@ -89,11 +89,15 @@ const vuetify = createVuetify({
   },
 });
 
+const authServiceUrl = import.meta.env.VITE_AUTH_SERVICE_URL;
+const authServiceClientID = import.meta.env.VITE_AUTH_SERVICE_CLIENT_ID;
+if (authServiceUrl === undefined || authServiceClientID === undefined) {
+  throw new Error("VITE_AUTH_SERVICE_URL, VITE_AUTH_SERVICE_CLIENT_ID not set");
+}
 const userManager = new UserManager({
-  authority: "http://localhost:8080",
-  metadataUrl:
-    "http://localhost:8080/v1/spa-test/.well-known/openid-configuration",
-  client_id: "spa-test",
+  authority: import.meta.env.VITE_AUTH_SERVICE_URL,
+  metadataUrl: import.meta.env.VITE_AUTH_SERVICE_DISCOVERY_ENDPOINT,
+  client_id: import.meta.env.VITE_AUTH_SERVICE_CLIENT_ID,
   redirect_uri: window.location.origin + "/pkce",
   response_type: "code",
   scope: "openid profile email user",

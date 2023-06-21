@@ -1,15 +1,15 @@
 <script setup lang="ts">
 import { useMediaSelectionStore } from "@/piniaStore/mediaSelection";
 import { useLoadingStore } from "@/piniaStore/loading";
-import NormalAppBar from "@/components/AppBar/NormalAppBar.vue";
-import MediaSelectionAppBar from "@/components/AppBar/MediaSelectionAppBar.vue";
+import NormalAppBar from "@/components/AppBar/NormalAppBar/NormalAppBar.vue";
+import MediaSelectionAppBar from "@/components/AppBar/MediaSelectionAppBar/MediaSelectionAppBar.vue";
 import { storeToRefs } from "pinia";
 
 const props = defineProps<{
   navigationBar: boolean;
 }>();
 
-const emit = defineEmits<{
+const emits = defineEmits<{
   (e: "update:navigationBar", value: boolean): void;
 }>();
 
@@ -43,7 +43,7 @@ const { loading, progress, indeterminate } = storeToRefs(loadingStore);
         :navigation-bar="props.navigationBar"
         @update:navigation-bar="
           (value) => {
-            emit('update:navigationBar', value);
+            emits('update:navigationBar', value);
           }
         "
       />

@@ -59,6 +59,7 @@ const { accessToken } = storeToRefs(authStore);
         color="primary"
       ></v-list-item>
       <v-list-group value="Albums">
+        <!-- todo move to separate component in navigationBar directory -->
         <template v-slot:activator="{ props, isOpen }">
           <v-list-item
             title="Albums"
@@ -96,13 +97,21 @@ const { accessToken } = storeToRefs(authStore);
           }"
           color="primary"
         >
-          <!-- <template #prepend>
-            <v-img :src="album.thumbnail_url">
-              <template #error>
-                <v-icon icon="mdi-image" />
-              </template>
-            </v-img>
-          </template> -->
+          <template #prepend>
+            <div class="mr-3">
+              <v-img
+                style="width: 1.5em; height: 1.5em"
+                cover
+                :src="album.thumbnail_url"
+                v-if="album.thumbnail_url.length > 0"
+              >
+                <template #error>
+                  <v-icon icon="mdi-image" />
+                </template>
+              </v-img>
+              <v-icon v-else icon="mdi-image" />
+            </div>
+          </template>
         </v-list-item>
         <v-list-item
           v-if="albums.length > maxNumberOfAlbums"

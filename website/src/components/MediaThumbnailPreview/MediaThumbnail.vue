@@ -1,10 +1,8 @@
 <script setup lang="ts">
-import { ref } from "vue";
+import { computed, ref } from "vue";
 
 const props = defineProps<{
   media: Media;
-  height: number;
-  width: number;
   padding: number;
   aspectRatio: number;
 }>();
@@ -12,7 +10,19 @@ const emit = defineEmits<{
   (e: "click"): void;
 }>();
 
-const imageElement = ref<HTMLElement | undefined>(undefined);
+const containerElement = ref<HTMLElement | undefined>(undefined);
+const contianerSize = computed<{
+  height: number;
+  width: number;
+}>(() => {
+  if (containerElement.value === undefined) {
+    return {
+      height: 150,
+      width: 150,
+    };
+  }
+  return containerElement.value.getBoundingClientRect();
+});
 const getIcon = (mediaType: string) => {
   switch (mediaType.split("/")[0]) {
     case "image":
@@ -25,29 +35,28 @@ const getIcon = (mediaType: string) => {
 };
 </script>
 <template>
-  <v-hover v-slot="{ isHovering, props: hoverProps }">
-    <v-card
-      class="flex-grow-1 d-flex justify-content-strech"
-      @click="
-        () => {
-          emit('click');
-        }
-      "
-      :style="`padding: ${props.padding}px`"
-      v-bind="hoverProps"
-      :elevation="isHovering ? 6 : 0"
-    >
-      <v-img
-        v-if="props.media.thumbnail"
-        :src="props.media.thumbnail_url"
-        :width="props.width - 2 * props.padding"
-        :height="props.height - 2 * props.padding"
-        :aspect-ratio="props.aspectRatio"
-        ref="imageElement"
-        transition="scale"
-        cover
+  <v-container ref="containerElement" class="pa-0 ma-0">
+    <v-hover v-slot="{ isHovering, props: hoverProps }">
+      <v-card
+        @click="
+          () => {
+            emit('click');
+          }
+        "
+        class="w-100 h-100"
+        :style="[`padding: ${props.padding}px`, 'aspec-ratio: 1']"
+        v-bind="hoverProps"
+        :elevation="isHovering ? 6 : 0"
       >
-        <!-- <template v-slot:placeholder>
+        <v-img
+          v-if="props.media.thumbnail"
+          :src="props.media.thumbnail_url"
+          class="w-100"
+          :aspect-ratio="props.aspectRatio"
+          transition="scale"
+          cover
+        >
+          <!-- <template v-slot:placeholder>
         <div class="d-flex align-center justify-center fill-height">
           <v-progress-circular
             color="grey-lighten-4"
@@ -56,23 +65,26 @@ const getIcon = (mediaType: string) => {
         </div>
       </template> -->
 
-        <template v-slot:error>
-          <div class="d-flex align-center justify-center fill-height">
-            <v-icon
-              :icon="getIcon(props.media.type)"
-              :style="`font-size: ${props.width - 2 * props.padding}px`"
-            />
-          </div>
-        </template>
-      </v-img>
-      <div v-else>
-        <div class="d-flex align-center justify-center fill-height">
+          <template v-slot:error>
+            <div class="d-flex align-center justify-center fill-height">
+              <v-icon
+                :style="`aspect-ratio: 1; font-size: ${contianerSize.height}px`"
+                :icon="getIcon(props.media.type)"
+              />
+            </div>
+          </template>
+        </v-img>
+        <!-- this container -->
+        <v-container
+          v-else
+          class="pa-0 ma-0 w-100 h-100 d-flex align-center justify-center fill-height"
+        >
           <v-icon
+            :style="`aspect-ratio: 1; font-size: ${contianerSize.height}px`"
             :icon="getIcon(props.media.type)"
-            :style="`font-size: ${props.width - 2 * props.padding}px`"
           />
-        </div>
-      </div>
-    </v-card>
-  </v-hover>
+        </v-container>
+      </v-card>
+    </v-hover>
+  </v-container>
 </template>

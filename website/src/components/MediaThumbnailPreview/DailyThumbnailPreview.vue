@@ -54,7 +54,7 @@ const prviewOverlay = ref<boolean>(false);
 </script>
 
 <template>
-  <v-card class="bg-secondary-background">
+  <v-card class="bg-secondary-background w-100">
     <v-card-subtitle>
       <SelectWrapper
         :loading="selectDayMediaLoading"
@@ -63,6 +63,7 @@ const prviewOverlay = ref<boolean>(false);
         @change="selectDayMedia"
         selectIconSize="small"
         :always-show-select-button="selectedMediaIDsCount > 0"
+        :always-show-select-on-mobile="true"
         :show-select-button-on-hover="true"
         :select-on-content-click="selectedMediaIDsCount > 0"
       >
@@ -76,16 +77,30 @@ const prviewOverlay = ref<boolean>(false);
     </v-card-subtitle>
     <div>
       <div class="d-flex flex-row flex-wrap">
-        <div
+        <v-col
+          cols="6"
+          sm="4"
+          md="3"
+          lg="2"
+          xl="2"
+          xxl="1"
           :key="`${index}+${media.name}`"
           v-for="{ media, index } in props.indexMediaList"
           class="d-flex child-flex pa-2"
         >
+          <!-- sizing -->
+          <!-- width will be decided by above breakpoints and cols -->
+          <!-- select wrapper w-100 h-100 aspect-ratio: 1 -->
+          <!-- inside select wrapper, wrapper of the slot will have w-100 -->
+          <!-- inside the wrapper slot MediaThumbnail will have w-100 h-100 aspect-ratio: 1 -->
           <SelectWrapper
+            class="h-100 w-100"
+            style="aspect-ratio: 1"
             :loading="false"
             :absolute-position="true"
             :model-value="getSelection(media.id)"
             :always-show-select-button="selectedMediaIDsCount > 0"
+            :always-show-select-on-mobile="true"
             :show-select-button-on-hover="true"
             :select-on-content-click="selectedMediaIDsCount > 0"
             @change="
@@ -96,9 +111,9 @@ const prviewOverlay = ref<boolean>(false);
             selectIconSize="large"
           >
             <MediaThumbnail
+              class="h-100 w-100"
+              style="aspect-ratio: 1"
               :aspect-ratio="1"
-              :height="175"
-              :width="175"
               :padding="getSelection(media.id) ? 10 : 0"
               :media="media"
               @click="
@@ -109,7 +124,7 @@ const prviewOverlay = ref<boolean>(false);
               "
             />
           </SelectWrapper>
-        </div>
+        </v-col>
       </div>
       <!-- todo move this to media thumbnail? -->
       <v-overlay

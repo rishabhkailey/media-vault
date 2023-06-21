@@ -1,6 +1,5 @@
 <script setup lang="ts">
 import { ref, watch } from "vue";
-import type { SubmitEventPromise } from "vuetify/lib/framework.mjs";
 
 const props = withDefaults(
   defineProps<{
@@ -11,7 +10,7 @@ const props = withDefaults(
 );
 const emits = defineEmits<{
   (e: "update:modelValue", value: string): void;
-  (e: "submit", value: SubmitEventPromise): void;
+  (e: "submit", value: string): void;
 }>();
 const searchInputRules: Array<any> = [];
 const searchDialog = ref(false);
@@ -32,7 +31,7 @@ watch(searchElement, (newValue) => {
 <template>
   <v-form
     class="d-flex flex-grow-1"
-    @submit.prevent="(e) => emits('submit', e)"
+    @submit.prevent="(e) => emits('submit', props.modelValue)"
   >
     <v-text-field
       v-if="!props.collapsed"
@@ -49,49 +48,59 @@ watch(searchElement, (newValue) => {
       :hide-details="true"
     >
       <template #append-inner>
-        <v-icon icon="mdi-magnify" @click="(e) => emits('submit', e)" />
+        <v-icon
+          icon="mdi-magnify"
+          @click="() => emits('submit', props.modelValue)"
+        />
       </template>
     </v-text-field>
     <v-dialog v-else v-model="searchDialog" location="top">
       <template v-slot:activator="{ props }">
         <v-btn color="primary" v-bind="props" icon="mdi-magnify"> </v-btn>
       </template>
-      <v-card>
-        <v-card-text>
-          <v-text-field
-            :clearable="true"
-            clear-icon="mdi-close"
-            :model-value="props.modelValue"
-            @update:model-value="
-              (value) => {
-                emits('update:modelValue', value);
-              }
-            "
-            :rules="searchInputRules"
-            label="search"
-            ref="searchElement"
-            focused
-            hide-details
-          >
-            <template #append-inner>
-              <v-icon
-                icon="mdi-magnify"
-                @click="
-                  (e) => {
-                    searchDialog = false;
-                    emits('submit', e);
+      <v-container
+        class="ma-0 pa-0 justify-center align-center d-flex w-100"
+        style="max-width: 100vw"
+      >
+        <v-col cols="12" xs="12" sm="10" md="6" lg="6" xl="6" xxl="6">
+          <v-card>
+            <v-card-text>
+              <v-text-field
+                :clearable="true"
+                clear-icon="mdi-close"
+                :model-value="props.modelValue"
+                @update:model-value="
+                  (value) => {
+                    emits('update:modelValue', value);
                   }
                 "
-              />
-            </template>
-          </v-text-field>
-        </v-card-text>
-        <v-card-actions>
-          <v-btn color="primary" block @click="searchDialog = false"
-            >Close Dialog</v-btn
-          >
-        </v-card-actions>
-      </v-card>
+                :rules="searchInputRules"
+                label="search"
+                ref="searchElement"
+                focused
+                hide-details
+              >
+                <template #append-inner>
+                  <v-icon
+                    icon="mdi-magnify"
+                    @click="
+                      (e) => {
+                        searchDialog = false;
+                        emits('submit', props.modelValue);
+                      }
+                    "
+                  />
+                </template>
+              </v-text-field>
+            </v-card-text>
+            <v-card-actions>
+              <v-btn color="primary" block @click="searchDialog = false"
+                >Close Dialog</v-btn
+              >
+            </v-card-actions>
+          </v-card>
+        </v-col>
+      </v-container>
     </v-dialog>
   </v-form>
 </template>

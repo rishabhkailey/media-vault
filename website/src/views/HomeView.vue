@@ -166,9 +166,20 @@ function registerServiceWorker(): Promise<ServiceWorker> {
   });
 }
 async function init(): Promise<boolean> {
-  // todo try catch
-  await updateOrRegisterServiceWorker();
-  await userInit();
+  try {
+    // todo try catch
+    await updateOrRegisterServiceWorker();
+    await userInit();
+  } catch (error) {
+    console.log(error);
+    router.push({
+      name: "errorscreen",
+      query: {
+        title: "init failed",
+        message: "error message - " + error,
+      },
+    });
+  }
   if (!authenticated.value) {
     // route to about page
     router.push({

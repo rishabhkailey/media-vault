@@ -132,6 +132,7 @@ onMounted(() => {
         :all-media-loaded="allMediaLoaded"
         :load-more-media="() => loadMoreMedia(accessToken)"
         :load-all-media-of-date="loadAllMediaOfDate"
+        :media-date-getter="(media: Media) => media.uploaded_at"
       />
     </v-row>
   </v-col>

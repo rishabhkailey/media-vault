@@ -71,12 +71,19 @@ function onDeleteConfirm(albumID: number) {
     </v-row>
     <v-row>
       <div class="d-flex flex-row flex-wrap">
-        <div
+        <v-col
+          cols="6"
+          sm="4"
+          md="3"
+          lg="2"
+          xl="2"
+          xxl="1"
           :key="`${index}+${album.id}`"
           v-for="(album, index) in albums"
           class="d-flex child-flex pa-2"
         >
           <KebabMenuWrapper
+            class="w-100"
             :show-select-button-on-hover="true"
             :select-on-content-click="false"
             :always-show-select-button="false"
@@ -85,8 +92,7 @@ function onDeleteConfirm(albumID: number) {
             <AlbumTitleThumbnail
               :padding="0"
               :aspect-ratio="1"
-              :height="175"
-              :width="175"
+              class="w-100 h-100"
               :album="album"
               @click="
                 () => {
@@ -109,7 +115,7 @@ function onDeleteConfirm(albumID: number) {
               </v-list>
             </template>
           </KebabMenuWrapper>
-        </div>
+        </v-col>
       </div>
       <ConfirmationPopupVue
         title="Delete album?"

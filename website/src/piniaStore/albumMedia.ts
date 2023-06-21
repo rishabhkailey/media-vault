@@ -35,6 +35,13 @@ export const useAlbumMediaStore = defineStore("albumMedia", () => {
               media.date = UNKNOWN_DATE;
             }
           }
+          if (typeof media.uploaded_at === "string") {
+            try {
+              media.uploaded_at = new Date(media.uploaded_at);
+            } catch (err) {
+              media.uploaded_at = UNKNOWN_DATE;
+            }
+          }
           return media;
         })
         .sort((m1, m2) => {
