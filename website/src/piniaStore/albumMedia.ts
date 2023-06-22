@@ -1,7 +1,8 @@
 import { UNKNOWN_DATE } from "@/utils/date";
 import axios from "axios";
-import { defineStore } from "pinia";
+import { defineStore, storeToRefs } from "pinia";
 import { ref } from "vue";
+import { useAuthStore } from "./auth";
 
 // we will need lock or something else
 // to prevent duplicates if the same request is called twice
@@ -11,6 +12,7 @@ export const useAlbumMediaStore = defineStore("albumMedia", () => {
   const mediaList = ref<Array<Media>>([]);
   const allMediaLoaded = ref(false);
   const albumID = ref(0);
+  const { accessToken } = storeToRefs(useAuthStore());
 
   function reset() {
     nextPageNumber.value = 1;
@@ -51,14 +53,14 @@ export const useAlbumMediaStore = defineStore("albumMedia", () => {
     }
   }
 
-  function loadMoreMedia(accessToken: string): Promise<boolean> {
+  function loadMoreMedia(): Promise<boolean> {
     return new Promise<boolean>((resolve, reject) => {
       axios
         .get<Array<Media>>(
           `/v1/album/${albumID.value}/media?page=${nextPageNumber.value}&perPage=30&order=added_at&sort=desc`,
           {
             headers: {
-              Authorization: `Bearer ${accessToken}`,
+              Authorization: `Bearer ${accessToken.value}`,
             },
           }
         )
@@ -81,10 +83,7 @@ export const useAlbumMediaStore = defineStore("albumMedia", () => {
     });
   }
 
-  function loadAllMediaForDate(
-    accessToken: string,
-    date: Date
-  ): Promise<boolean> {
+  function loadAllMediaForDate(date: Date): Promise<boolean> {
     return new Promise((resolve, reject) => {
       let lastMedia = mediaList.value[mediaList.value.length - 1];
       if (lastMedia.date > date) {
@@ -92,7 +91,7 @@ export const useAlbumMediaStore = defineStore("albumMedia", () => {
         return;
       }
       while (lastMedia.date > date && !allMediaLoaded.value) {
-        loadMoreMedia(accessToken)
+        loadMoreMedia()
           .then(() => {
             lastMedia = mediaList.value[mediaList.value.length - 1];
           })

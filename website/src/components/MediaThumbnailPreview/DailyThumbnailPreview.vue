@@ -6,6 +6,7 @@ import { daysShort, monthShort } from "@/utils/date";
 import { useMediaSelectionStore } from "@/piniaStore/mediaSelection";
 import { storeToRefs } from "pinia";
 import SelectWrapper from "@/components/SelectWrapper/SelectWrapper.vue";
+import { useDisplay } from "vuetify";
 // interface doesn't work https://github.com/vuejs/core/issues/4294
 // const props = defineProps<DailyMedia>();
 const props = defineProps<{
@@ -17,6 +18,26 @@ const props = defineProps<{
   loadAllMediaOfDate: (date: Date) => Promise<any>;
   // todo load all day media function
 }>();
+
+const display = useDisplay();
+const width = computed<number>(() => {
+  switch (display.name.value) {
+    case "xs":
+      return display.width.value / 2.2;
+    case "sm":
+      return display.width.value / 4.2;
+    case "md":
+      return display.width.value / 6.2;
+    case "lg":
+      return display.width.value / 6.2;
+    case "xl":
+      return display.width.value / 6.2;
+    case "xxl":
+      return display.width.value / 12;
+    default:
+      return display.width.value / 2.2;
+  }
+});
 
 const selectDayMediaLoading = ref(false);
 const mediaSelectionStore = useMediaSelectionStore();
@@ -54,7 +75,7 @@ const prviewOverlay = ref<boolean>(false);
 </script>
 
 <template>
-  <v-card class="bg-secondary-background w-100">
+  <v-card class="bg-secondary-background">
     <v-card-subtitle>
       <SelectWrapper
         :loading="selectDayMediaLoading"
@@ -76,17 +97,11 @@ const prviewOverlay = ref<boolean>(false);
       </SelectWrapper>
     </v-card-subtitle>
     <div>
-      <div class="d-flex flex-row flex-wrap">
-        <v-col
-          cols="6"
-          sm="4"
-          md="3"
-          lg="2"
-          xl="2"
-          xxl="1"
+      <div class="d-flex flex-row flex-wrap justify-start">
+        <div
           :key="`${index}+${media.name}`"
           v-for="{ media, index } in props.indexMediaList"
-          class="d-flex child-flex pa-2"
+          class="d-flex pa-0"
         >
           <!-- sizing -->
           <!-- width will be decided by above breakpoints and cols -->
@@ -94,8 +109,6 @@ const prviewOverlay = ref<boolean>(false);
           <!-- inside select wrapper, wrapper of the slot will have w-100 -->
           <!-- inside the wrapper slot MediaThumbnail will have w-100 h-100 aspect-ratio: 1 -->
           <SelectWrapper
-            class="h-100 w-100"
-            style="aspect-ratio: 1"
             :loading="false"
             :absolute-position="true"
             :model-value="getSelection(media.id)"
@@ -111,9 +124,9 @@ const prviewOverlay = ref<boolean>(false);
             selectIconSize="large"
           >
             <MediaThumbnail
-              class="h-100 w-100"
-              style="aspect-ratio: 1"
+              :width="width"
               :aspect-ratio="1"
+              :height="width"
               :padding="getSelection(media.id) ? 10 : 0"
               :media="media"
               @click="
@@ -124,7 +137,7 @@ const prviewOverlay = ref<boolean>(false);
               "
             />
           </SelectWrapper>
-        </v-col>
+        </div>
       </div>
       <!-- todo move this to media thumbnail? -->
       <v-overlay

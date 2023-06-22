@@ -5,6 +5,7 @@ const props = defineProps<{
   album: Album;
   padding: number;
   aspectRatio: number;
+  width: number;
 }>();
 const emit = defineEmits<{
   (e: "click"): void;
@@ -43,7 +44,7 @@ const imageElement = ref<HTMLElement | undefined>(undefined);
         <v-img
           v-if="props.album.thumbnail_url.length > 0"
           :src="props.album.thumbnail_url"
-          class="w-100"
+          :width="props.width"
           :aspect-ratio="props.aspectRatio"
           ref="imageElement"
           transition="scale"
@@ -62,7 +63,7 @@ const imageElement = ref<HTMLElement | undefined>(undefined);
             <div class="d-flex align-center justify-center fill-height">
               <v-icon
                 icon="mdi-image-broken-variant"
-                :style="`aspect-ratio: 1; font-size: ${contianerSize.height}px`"
+                :style="`aspect-ratio: 1; font-size: ${props.width}px`"
               />
             </div>
           </template>
@@ -71,7 +72,7 @@ const imageElement = ref<HTMLElement | undefined>(undefined);
           <div class="d-flex align-center justify-center fill-height">
             <v-icon
               icon="mdi-image-album"
-              :style="`aspect-ratio: 1; font-size: ${contianerSize.height}px`"
+              :style="`aspect-ratio: 1; font-size: ${props.width}px`"
             />
           </div>
         </div>

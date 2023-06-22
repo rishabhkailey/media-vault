@@ -1,7 +1,5 @@
-<script setup lang="ts">
-import Test from "@/components/SelectWrapper/SelectWrapper.vue";
-</script>
+<script setup lang="ts"></script>
 
 <template>
-  <Test />
+  <div class="d-flex flex-row flex-wrap"></div>
 </template>

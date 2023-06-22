@@ -95,7 +95,6 @@ watch(
           <div
             :class="{
               'pointer-cursor': props.selectOnContentClick,
-              'w-100': true,
             }"
             ref="contentWrapper"
           >
