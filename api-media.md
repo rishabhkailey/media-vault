@@ -49,3 +49,7 @@
     }
   }
   ```
+
+* /media/:mediaID/delete
+multiple
+response multiple failed and success

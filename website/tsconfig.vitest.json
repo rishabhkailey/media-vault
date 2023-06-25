@@ -3,7 +3,9 @@
   "exclude": [],
   "compilerOptions": {
     "composite": true,
-    "lib": [],
+    "lib": [
+      "ES2022"
+    ],
     "types": ["node", "jsdom", "serviceworker"],
   },
 }

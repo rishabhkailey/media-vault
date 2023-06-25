@@ -2,23 +2,47 @@
 import LazyLoading from "@/components/LazyLoading/LazyLoading.vue";
 import { useAlbumStore } from "@/piniaStore/album";
 import CreateAlbumOverlay from "./CreateAlbumOverlay.vue";
-import { ref } from "vue";
+import SizeWrapper from "../SizeWrapper.vue";
+import { computed, ref } from "vue";
 import { storeToRefs } from "pinia";
-import { useAuthStore } from "@/piniaStore/auth";
 import { useLoadingStore } from "@/piniaStore/loading";
 import AlbumTitleThumbnail from "./AlbumTitleThumbnail.vue";
 import { useRouter } from "vue-router";
 import KebabMenuWrapper from "../KebabMenuWrapper/KebabMenuWrapper.vue";
 import ConfirmationPopupVue from "../ConfirmationPopup.vue";
+import { useDisplay } from "vuetify";
+
+// cols="6"
+// sm="4"
+// md="3"
+// lg="2"
+// xl="2"
+// xxl="1"
+// const display = useDisplay();
+// const width = computed<number>(() => {
+//   switch (display.name.value) {
+//     case "xs":
+//       return display.width.value / 2;
+//     case "sm":
+//       return display.width.value / 3;
+//     case "md":
+//       return display.width.value / 4;
+//     case "lg":
+//       return display.width.value / 6;
+//     case "xl":
+//       return display.width.value / 6;
+//     case "xxl":
+//       return display.width.value / 12;
+//     default:
+//       return display.width.value / 2;
+//   }
+// });
 
 const router = useRouter();
 
 const albumStore = useAlbumStore();
 const { albums, allAlbumsLoaded } = storeToRefs(albumStore);
 const { loadMoreAlbums, deleteAlbum } = albumStore;
-
-const authStore = useAuthStore();
-const { accessToken } = storeToRefs(authStore);
 
 const { initializing } = storeToRefs(useLoadingStore());
 
@@ -36,7 +60,7 @@ const deleteErrorMessage = ref("");
 function onDeleteConfirm(albumID: number) {
   deleteInProgress.value = true;
   deleteErrorMessage.value = "";
-  deleteAlbum(accessToken.value, albumID)
+  deleteAlbum(albumID)
     .then(() => {
       deleteInProgress.value = false;
       deleteConfirmationOverlay.value = false;
@@ -70,20 +94,14 @@ function onDeleteConfirm(albumID: number) {
       <v-divider class="border-opacity-25"></v-divider>
     </v-row>
     <v-row>
-      <div class="d-flex flex-row flex-wrap">
-        <v-col
-          cols="6"
-          sm="4"
-          md="3"
-          lg="2"
-          xl="2"
-          xxl="1"
+      <div class="d-flex flex-row flex-wrap justify-start w-100">
+        <!-- <SizeWrapper v-slot="{ width }"> -->
+        <div
           :key="`${index}+${album.id}`"
           v-for="(album, index) in albums"
-          class="d-flex child-flex pa-2"
+          class="d-flex pa-2"
         >
           <KebabMenuWrapper
-            class="w-100"
             :show-select-button-on-hover="true"
             :select-on-content-click="false"
             :always-show-select-button="false"
@@ -92,7 +110,6 @@ function onDeleteConfirm(albumID: number) {
             <AlbumTitleThumbnail
               :padding="0"
               :aspect-ratio="1"
-              class="w-100 h-100"
               :album="album"
               @click="
                 () => {
@@ -115,7 +132,8 @@ function onDeleteConfirm(albumID: number) {
               </v-list>
             </template>
           </KebabMenuWrapper>
-        </v-col>
+        </div>
+        <!-- </SizeWrapper> -->
       </div>
       <ConfirmationPopupVue
         title="Delete album?"
@@ -140,7 +158,7 @@ function onDeleteConfirm(albumID: number) {
       />
       <LazyLoading
         v-if="!allAlbumsLoaded"
-        :on-threshold-reach="() => loadMoreAlbums(accessToken)"
+        :on-threshold-reach="() => loadMoreAlbums()"
         :threshold="0.1"
         :min-height="100"
         :min-width="100"

@@ -10,3 +10,12 @@ __debug_bin
 **/*.dat
 tempEncryptedStorage/
 .devcontainer/certs/
+website/modified-ts-chacha20/
+cpu.pprof
+heap.pprof
+kernel.svg
+heap-delta
+out.folded
+perf.data
+out.perf
+test-files/test

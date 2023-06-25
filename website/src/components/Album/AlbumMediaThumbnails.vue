@@ -3,7 +3,6 @@ import { onMounted, ref } from "vue";
 import { useRoute, useRouter } from "vue-router";
 import { useAlbumStore } from "@/piniaStore/album";
 import { storeToRefs } from "pinia";
-import { useAuthStore } from "@/piniaStore/auth";
 import { useAlbumMediaStore } from "@/piniaStore/albumMedia";
 import LazyMediaThumbnailsPreviewVue from "../MediaThumbnailPreview/LazyMediaThumbnailsPreview.vue";
 import ConfirmationPopup from "../ConfirmationPopup.vue";
@@ -25,13 +24,11 @@ async function loadAllMediaOfDate(date: Date): Promise<boolean> {
     date.getMonth() === lastMediaDate.getMonth() &&
     !allMediaLoaded.value
   ) {
-    await loadMoreMedia(accessToken.value);
+    await loadMoreMedia();
     lastMediaDate = mediaList.value[mediaList.value.length - 1].date;
   }
   return true;
 }
-
-const { accessToken } = storeToRefs(useAuthStore());
 
 const route = useRoute();
 const albumID = Array.isArray(route.params.album_id)
@@ -59,7 +56,7 @@ const deleteErrorMessage = ref("");
 function onDeleteConfirm() {
   deleteInProgress.value = true;
   deleteErrorMessage.value = "";
-  deleteAlbum(accessToken.value, Number(albumID))
+  deleteAlbum(Number(albumID))
     .then(() => {
       deleteInProgress.value = false;
       deleteConfirmationOverlay.value = false;
@@ -77,7 +74,7 @@ function onDeleteConfirm() {
 onMounted(() => {
   loading.value = true;
   setAlbumID(Number(albumID));
-  getAlbumByID(accessToken.value, Number(albumID))
+  getAlbumByID(Number(albumID))
     .then((_album) => {
       album.value = _album;
       loading.value = false;
@@ -130,7 +127,7 @@ onMounted(() => {
         class="flex-grow-1"
         :media-list="mediaList"
         :all-media-loaded="allMediaLoaded"
-        :load-more-media="() => loadMoreMedia(accessToken)"
+        :load-more-media="() => loadMoreMedia()"
         :load-all-media-of-date="loadAllMediaOfDate"
         :media-date-getter="(media: Media) => media.uploaded_at"
       />

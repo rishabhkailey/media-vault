@@ -23,6 +23,7 @@ const dailyMediaList = computed<Array<DailyMedia>>(() =>
 <template>
   <v-card class="bg-secondary-background">
     <v-card-title>{{ `${monthLong[props.month]} ${props.year}` }}</v-card-title>
+    <v-divider :thickness="2" />
     <div class="d-flex flex-row flex-wrap">
       <DailyThumbnailPreview
         v-for="(dailyMedia, index) in dailyMediaList"

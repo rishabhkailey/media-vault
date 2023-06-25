@@ -478,10 +478,15 @@
   resolved "https://registry.yarnpkg.com/@types/libsodium-wrappers/-/libsodium-wrappers-0.7.10.tgz#a6ebde70d3b4af960fd802af8d0e3c7cfe281eb2"
   integrity sha512-BqI9B92u+cM3ccp8mpHf+HzJ8fBlRwdmyd6+fz3p99m3V6ifT5O3zmOMi612PGkpeFeG/G6loxUnzlDNhfjPSA==
 
-"@types/node@*", "@types/node@^18.11.12":
+"@types/node@*":
   version "18.15.11"
   resolved "https://registry.yarnpkg.com/@types/node/-/node-18.15.11.tgz#b3b790f09cb1696cffcec605de025b088fa4225f"
   integrity sha512-E5Kwq2n4SbMzQOn6wnmBjuK9ouqlURrcZDVfbo9ftDDTFt3nk7ZKK4GMOzoYgnpQJKcxwQw+lGaBvvlMo0qN/Q==
+
+"@types/node@^20.3.1":
+  version "20.3.1"
+  resolved "https://registry.yarnpkg.com/@types/node/-/node-20.3.1.tgz#e8a83f1aa8b649377bb1fb5d7bac5cb90e784dfe"
+  integrity sha512-EhcH/wvidPy1WeML3TtYFGR83UzjxeWRen9V402T8aUGYsCHOmfoisV3ZSg03gAFIbLq8TnWOJ0f4cALtnSEUg==
 
 "@types/semver@^7.3.12":
   version "7.3.13"
@@ -507,6 +512,11 @@
   version "9.0.1"
   resolved "https://registry.yarnpkg.com/@types/uuid/-/uuid-9.0.1.tgz#98586dc36aee8dacc98cc396dbca8d0429647aa6"
   integrity sha512-rFT3ak0/2trgvp4yYZo5iKFEPsET7vKydKF+VRCxlQ9bpheehyAJH89dAkaLEq/j/RZXJIqcgsmPJKUP1Z28HA==
+
+"@types/xhook@^1.5.0":
+  version "1.5.0"
+  resolved "https://registry.yarnpkg.com/@types/xhook/-/xhook-1.5.0.tgz#cfd6a3680d389dec49dee10a0e99d2c6abdca439"
+  integrity sha512-4gjZvetNo+5Gv2bEYHs6GDl15QXAX+kWXCUKNMeOM+Rrh5dh4X28DrSag9Qwzc0fkR11SJO3h0iUaze6MO/KzA==
 
 "@typescript-eslint/eslint-plugin@^5.0.0":
   version "5.57.0"
@@ -3710,10 +3720,10 @@ videojs-vtt.js@^0.15.4:
   dependencies:
     global "^4.3.1"
 
-vite-plugin-mkcert@^1.11.0:
-  version "1.14.0"
-  resolved "https://registry.yarnpkg.com/vite-plugin-mkcert/-/vite-plugin-mkcert-1.14.0.tgz#e3b09c6cc3d177f969626412076eddda0403c762"
-  integrity sha512-TXLqRYeKKv2kGIpDVMXPLAlTQLXfZ5/VtC4VVhV0ky2vKt5W/TDvFKpmelQPmn0IB7uz9KXvQj8Op+pkT9Ln9A==
+vite-plugin-mkcert@^1.15.0:
+  version "1.15.0"
+  resolved "https://registry.yarnpkg.com/vite-plugin-mkcert/-/vite-plugin-mkcert-1.15.0.tgz#629da7cf77f15af65ebd8d476d1f68af901874d4"
+  integrity sha512-0Pz7iExvo7pS2HsxMe6Y/HIrsFJidXN8Sju7tsL1XYQdbUKb/D0L5Wkj3UoGQmbbWZUFf8nHHa0XYbd4FH6ZrA==
   dependencies:
     "@octokit/rest" "^19.0.5"
     axios "^1.2.2"
@@ -3809,10 +3819,10 @@ vue@3.3.4:
     "@vue/server-renderer" "3.3.4"
     "@vue/shared" "3.3.4"
 
-vuetify@^3.3.0:
-  version "3.3.0"
-  resolved "https://registry.yarnpkg.com/vuetify/-/vuetify-3.3.0.tgz#9d85e528cc6829f0a005b60c5636484370df034a"
-  integrity sha512-4jQRZ6O4vUDlu3+/NZbbrv8dyVtvB5BnLc+NEusYjdj7+27GJSRJoDkkzJMmuM9XkZYFiTgq1vizK/vMSkB+2Q==
+vuetify@3.3.4:
+  version "3.3.4"
+  resolved "https://registry.yarnpkg.com/vuetify/-/vuetify-3.3.4.tgz#e4cbf3ae1d4f22a61bf5fe5a753c9e3e50cd6ff2"
+  integrity sha512-B05DX+xxzmA3HkSf8FMyhGIb1eCcwDsnaUl+kfNgsMcNnGVBhugmBpslK7O6gOzb1VGttsll5yGuHm7rh0rxzA==
 
 vuex@^4.0.2:
   version "4.1.0"
@@ -3997,6 +4007,11 @@ ws@^8.11.0:
   version "8.13.0"
   resolved "https://registry.yarnpkg.com/ws/-/ws-8.13.0.tgz#9a9fb92f93cf41512a0735c8f4dd09b8a1211cd0"
   integrity sha512-x9vcZYTrFPC7aSIbj7sRCYo7L/Xb8Iy+pW0ng0wt2vCJv7M9HOMy0UoN3rr+IFC7hb7vXoqS+P9ktyLLLhO+LA==
+
+xhook@^1.6.0:
+  version "1.6.0"
+  resolved "https://registry.yarnpkg.com/xhook/-/xhook-1.6.0.tgz#dfcc0f40cba47ad9de1cc7f15b9a389bb1b38135"
+  integrity sha512-r/urufZx/xMRmC6G5a2o0TceIHvkw0sJb4IQcNbrH1YvwoJSb2N9fg10FkbqsbI5+lyNW9TpB5LxegKMjX40OQ==
 
 xml-name-validator@^4.0.0:
   version "4.0.0"

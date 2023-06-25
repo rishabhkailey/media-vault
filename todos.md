@@ -169,3 +169,21 @@ curl -v -X GET 'http://localhost:8090/v1/media?file=8379ada2-e309-4d3a-b4b8-18d4
 * Try https://vuetifyjs.com/en/api/v-img/#props-gradient for hover effect
 * change encryption algo to AES-CBC (no nonce required)
 * fix media deleting (before this we can also move all stores to store package)
+* https://mysql.rjweb.org/doc.php/pagination
+* fix media count on delete
+* https://gorm.io/docs/composite_primary_key.html (makes sense for few tables)
+* for server encryptionKeyChecksum is also like a password, client will send checksum and we will validate (it doesn't mean anything but still). does it make sense to store checksum of checksum on server?
+* define a base url and use it for API calls and login redirects
+
+## About page
+### Images
+* https://pixabay.com/photos/dogs-beach-wet-play-summer-pet-1642410/
+* https://pixabay.com/photos/beach-dog-ball-cockapoo-puppy-2430741/
+* https://www.pexels.com/photo/photo-of-two-schnauzer-playing-on-grass-3609287/
+* https://www.pexels.com/photo/two-kittens-playing-together-12970155/
+* https://www.pexels.com/photo/retriver-dogs-playing-with-plush-monkey-14084426/
+
+
+* merge 
+    * https://github.com/rishabhkailey/media-service/commit/b9d23c65ec2807fc6aab197c6c117dfb3bf6f1a2#diff-c93cdc9123acfbab049ad28728f9e16b93c5aa7b2474bd6e1ee9a75b1f02857e
+    * https://github.com/rishabhkailey/media-service/commit/64c7f11#diff-c93cdc9123acfbab049ad28728f9e16b93c5aa7b2474bd6e1ee9a75b1f02857e

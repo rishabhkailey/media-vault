@@ -4,6 +4,7 @@ import { defineStore, storeToRefs } from "pinia";
 import { ref } from "vue";
 import { useAlbumMediaStore } from "./albumMedia";
 import { useMediaStore } from "./media";
+import { useAuthStore } from "./auth";
 
 // we will need lock or something else
 // to prevent duplicates if the same request is called twice
@@ -12,12 +13,12 @@ import { useMediaStore } from "./media";
 export const useAlbumStore = defineStore("album", () => {
   const albumMediaStore = useAlbumMediaStore();
   const { mediaList } = storeToRefs(useMediaStore());
-
+  const { accessToken } = storeToRefs(useAuthStore());
   const nextPageNumber = ref(1);
   const albums = ref<Array<Album>>([]);
   const allAlbumsLoaded = ref(false);
 
-  function getAlbumByID(accessToken: string, albumID: number): Promise<Album> {
+  function getAlbumByID(albumID: number): Promise<Album> {
     return new Promise<Album>((resolve, reject) => {
       const album = albums.value.find((album) => album.id === albumID);
       if (album !== undefined) {
@@ -27,7 +28,7 @@ export const useAlbumStore = defineStore("album", () => {
       axios
         .get<Album>(`/v1/album/${albumID}`, {
           headers: {
-            Authorization: `Bearer ${accessToken}`,
+            Authorization: `Bearer ${accessToken.value}`,
           },
         })
         .then((res) => {
@@ -109,14 +110,14 @@ export const useAlbumStore = defineStore("album", () => {
     }
   }
 
-  function loadMoreAlbums(accessToken: string): Promise<boolean> {
+  function loadMoreAlbums(): Promise<boolean> {
     return new Promise<boolean>((resolve, reject) => {
       axios
         .get<Array<Album>>(
           `/v1/albums?page=${nextPageNumber.value}&perPage=30&order=updated_at&sort=desc`,
           {
             headers: {
-              Authorization: `Bearer ${accessToken}`,
+              Authorization: `Bearer ${accessToken.value}`,
             },
           }
         )
@@ -139,11 +140,7 @@ export const useAlbumStore = defineStore("album", () => {
     });
   }
   // create album
-  function createAlbum(
-    accessToken: string,
-    name: string,
-    thumbnailUrl: string
-  ): Promise<boolean> {
+  function createAlbum(name: string, thumbnailUrl: string): Promise<boolean> {
     return new Promise<boolean>((resolve, reject) => {
       axios
         .post<Album>(
@@ -155,7 +152,7 @@ export const useAlbumStore = defineStore("album", () => {
           {
             headers: {
               "Content-Type": "application/json",
-              Authorization: `Bearer ${accessToken}`,
+              Authorization: `Bearer ${accessToken.value}`,
             },
           }
         )
@@ -180,12 +177,12 @@ export const useAlbumStore = defineStore("album", () => {
     albums.value = albums.value.filter((album) => !albumIDs.includes(album.id));
   }
 
-  function deleteAlbum(accessToken: string, albumID: number): Promise<boolean> {
+  function deleteAlbum(albumID: number): Promise<boolean> {
     return new Promise<boolean>((resolve, reject) => {
       axios
         .delete(`/v1/album/${albumID}`, {
           headers: {
-            Authorization: `Bearer ${accessToken}`,
+            Authorization: `Bearer ${accessToken.value}`,
           },
         })
         .then((resp) => {
@@ -206,7 +203,6 @@ export const useAlbumStore = defineStore("album", () => {
   // returns failed album ids
   // reject only in case of unexpected/unhandeled error
   async function deleteMultipleAlbums(
-    accessToken: string,
     albumIDs: Array<number>
   ): Promise<Array<number>> {
     const failedAlbumIDs = new Set<number>();
@@ -216,7 +212,7 @@ export const useAlbumStore = defineStore("album", () => {
       try {
         const resp = await axios.delete(`/v1/album/${albumID}`, {
           headers: {
-            Authorization: `Bearer ${accessToken}`,
+            Authorization: `Bearer ${accessToken.value}`,
           },
         });
         if (resp.status !== 200) {
@@ -233,15 +229,12 @@ export const useAlbumStore = defineStore("album", () => {
     return Array.from(failedAlbumIDs);
   }
 
-  async function updateAlbumByID(
-    accessToken: string,
-    albumID: number
-  ): Promise<boolean> {
-    const album = await getAlbumByID(accessToken, albumID);
+  async function updateAlbumByID(albumID: number): Promise<boolean> {
+    const album = await getAlbumByID(albumID);
     try {
       removeAlbumByIDFromLocalState(albumID);
       // this will get and add the album to list
-      await getAlbumByID(accessToken, albumID);
+      await getAlbumByID(albumID);
     } catch (err) {
       addAlbumsInLocalState([album]);
       throw err;
@@ -250,7 +243,6 @@ export const useAlbumStore = defineStore("album", () => {
   }
 
   function removeMediaFromAlbum(
-    accessToken: string,
     albumID: number,
     mediaIDs: Array<number>
   ): Promise<boolean> {
@@ -258,7 +250,7 @@ export const useAlbumStore = defineStore("album", () => {
       axios
         .delete<{ media_ids: Array<number> }>(`/v1/album/${albumID}/media`, {
           headers: {
-            Authorization: `Bearer ${accessToken}`,
+            Authorization: `Bearer ${accessToken.value}`,
           },
           data: { media_ids: mediaIDs },
         })
@@ -267,7 +259,7 @@ export const useAlbumStore = defineStore("album", () => {
             reject(new Error("non 200 status code"));
             return;
           }
-          updateAlbumByID(accessToken, albumID);
+          updateAlbumByID(albumID);
           albumMediaStore.removeMediaByIDsFromLocalState(res.data.media_ids);
           resolve(true);
         })
@@ -278,12 +270,11 @@ export const useAlbumStore = defineStore("album", () => {
   }
 
   async function addMediaToAlbum(
-    accessToken: string,
     albumID: number,
     mediaIDs: Array<number>
   ): Promise<boolean> {
     // will call api if not present in local store
-    let album = await getAlbumByID(accessToken, albumID);
+    let album = await getAlbumByID(albumID);
     const res = await axios.post<{ media_ids: Array<number> }>(
       `/v1/album/${albumID}/media`,
       {
@@ -291,25 +282,24 @@ export const useAlbumStore = defineStore("album", () => {
       },
       {
         headers: {
-          Authorization: `Bearer ${accessToken}`,
+          Authorization: `Bearer ${accessToken.value}`,
         },
       }
     );
     if (album.media_count == 0) {
       const thumbnailUrl = getFirstThumbnail(mediaIDs);
       if (thumbnailUrl.length != 0) {
-        album = await updateAlbumThumbnail(accessToken, albumID, thumbnailUrl);
+        album = await updateAlbumThumbnail(albumID, thumbnailUrl);
       }
     }
     if (res.status != 200) {
       throw new Error("non 200 status code");
     }
-    updateAlbumByID(accessToken, albumID);
+    updateAlbumByID(albumID);
     return true;
   }
 
   function updateAlbumThumbnail(
-    accessToken: string,
     albumID: number,
     thumbnailUrl: string
   ): Promise<Album> {
@@ -322,7 +312,7 @@ export const useAlbumStore = defineStore("album", () => {
           },
           {
             headers: {
-              Authorization: `Bearer ${accessToken}`,
+              Authorization: `Bearer ${accessToken.value}`,
             },
           }
         )

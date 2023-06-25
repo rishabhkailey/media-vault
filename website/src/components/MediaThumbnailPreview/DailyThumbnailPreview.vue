@@ -6,6 +6,7 @@ import { daysShort, monthShort } from "@/utils/date";
 import { useMediaSelectionStore } from "@/piniaStore/mediaSelection";
 import { storeToRefs } from "pinia";
 import SelectWrapper from "@/components/SelectWrapper/SelectWrapper.vue";
+import { useDisplay } from "vuetify";
 // interface doesn't work https://github.com/vuejs/core/issues/4294
 // const props = defineProps<DailyMedia>();
 const props = defineProps<{
@@ -17,6 +18,26 @@ const props = defineProps<{
   loadAllMediaOfDate: (date: Date) => Promise<any>;
   // todo load all day media function
 }>();
+
+// const display = useDisplay();
+// const width = computed<number>(() => {
+//   switch (display.name.value) {
+//     case "xs":
+//       return display.width.value / 2.2;
+//     case "sm":
+//       return display.width.value / 4.2;
+//     case "md":
+//       return display.width.value / 6.2;
+//     case "lg":
+//       return display.width.value / 6.2;
+//     case "xl":
+//       return display.width.value / 6.2;
+//     case "xxl":
+//       return display.width.value / 12;
+//     default:
+//       return display.width.value / 2.2;
+//   }
+// });
 
 const selectDayMediaLoading = ref(false);
 const mediaSelectionStore = useMediaSelectionStore();
@@ -86,7 +107,7 @@ const prviewOverlay = ref<boolean>(false);
           xxl="1"
           :key="`${index}+${media.name}`"
           v-for="{ media, index } in props.indexMediaList"
-          class="d-flex child-flex pa-2"
+          class="d-flex child-flex pa-1"
         >
           <!-- sizing -->
           <!-- width will be decided by above breakpoints and cols -->
