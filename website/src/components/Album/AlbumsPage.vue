@@ -2,41 +2,13 @@
 import LazyLoading from "@/components/LazyLoading/LazyLoading.vue";
 import { useAlbumStore } from "@/piniaStore/album";
 import CreateAlbumOverlay from "./CreateAlbumOverlay.vue";
-import SizeWrapper from "../SizeWrapper.vue";
-import { computed, ref } from "vue";
+import { ref } from "vue";
 import { storeToRefs } from "pinia";
 import { useLoadingStore } from "@/piniaStore/loading";
 import AlbumTitleThumbnail from "./AlbumTitleThumbnail.vue";
 import { useRouter } from "vue-router";
 import KebabMenuWrapper from "../KebabMenuWrapper/KebabMenuWrapper.vue";
 import ConfirmationPopupVue from "../ConfirmationPopup.vue";
-import { useDisplay } from "vuetify";
-
-// cols="6"
-// sm="4"
-// md="3"
-// lg="2"
-// xl="2"
-// xxl="1"
-// const display = useDisplay();
-// const width = computed<number>(() => {
-//   switch (display.name.value) {
-//     case "xs":
-//       return display.width.value / 2;
-//     case "sm":
-//       return display.width.value / 3;
-//     case "md":
-//       return display.width.value / 4;
-//     case "lg":
-//       return display.width.value / 6;
-//     case "xl":
-//       return display.width.value / 6;
-//     case "xxl":
-//       return display.width.value / 12;
-//     default:
-//       return display.width.value / 2;
-//   }
-// });
 
 const router = useRouter();
 
@@ -94,47 +66,53 @@ function onDeleteConfirm(albumID: number) {
       <v-divider class="border-opacity-25"></v-divider>
     </v-row>
     <v-row>
-      <div class="d-flex flex-row flex-wrap justify-start w-100">
-        <!-- <SizeWrapper v-slot="{ width }"> -->
-        <div
-          :key="`${index}+${album.id}`"
-          v-for="(album, index) in albums"
-          class="d-flex pa-2"
+      <!-- <SizeWrapper v-slot="{ width }"> -->
+      <!-- cols = 12 (default will only work for xs) -->
+      <v-col
+        :xxl="2"
+        :xl="2"
+        :lg="2"
+        :md="3"
+        :sm="6"
+        :xs="12"
+        :cols="12"
+        :key="`${index}+${album.id}`"
+        v-for="(album, index) in albums"
+      >
+        <KebabMenuWrapper
+          :show-select-button-on-hover="true"
+          :select-on-content-click="false"
+          :always-show-select-button="false"
+          :always-show-select-on-mobile="true"
+          selectIconSize="large"
         >
-          <KebabMenuWrapper
-            :show-select-button-on-hover="true"
-            :select-on-content-click="false"
-            :always-show-select-button="false"
-            selectIconSize="large"
-          >
-            <AlbumTitleThumbnail
-              :padding="0"
-              :aspect-ratio="1"
-              :album="album"
-              @click="
-                () => {
-                  router.push({
-                    name: 'Album',
-                    params: {
-                      album_id: album.id,
-                    },
-                  });
-                }
-              "
-            />
-            <template #options>
-              <v-list>
-                <v-list-item>
-                  <v-btn @click.stop="() => onDeleteButtonClick(album.id)">
-                    Delete Album
-                  </v-btn>
-                </v-list-item>
-              </v-list>
-            </template>
-          </KebabMenuWrapper>
-        </div>
-        <!-- </SizeWrapper> -->
-      </div>
+          <AlbumTitleThumbnail
+            :padding="0"
+            :aspect-ratio="1"
+            :album="album"
+            @click="
+              () => {
+                router.push({
+                  name: 'Album',
+                  params: {
+                    album_id: album.id,
+                  },
+                });
+              }
+            "
+          />
+          <template #options>
+            <v-list>
+              <v-list-item>
+                <v-btn @click.stop="() => onDeleteButtonClick(album.id)">
+                  Delete Album
+                </v-btn>
+              </v-list-item>
+            </v-list>
+          </template>
+        </KebabMenuWrapper>
+      </v-col>
+      <!-- </SizeWrapper> -->
       <ConfirmationPopupVue
         title="Delete album?"
         message="Deleting an album is permanent. Photos and videos that were in a

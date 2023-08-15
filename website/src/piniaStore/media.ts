@@ -11,6 +11,8 @@ export const useMediaStore = defineStore("media", () => {
   const nextPageNumber = ref(1);
   const mediaList = ref<Array<Media>>([]);
   const allMediaLoaded = ref(false);
+  // todo move this to different store
+  // config store?
   const orderByUploadDateKey = "uploaded_at";
   const orderByDateKey = "date";
   const orderBy = ref(orderByUploadDateKey);

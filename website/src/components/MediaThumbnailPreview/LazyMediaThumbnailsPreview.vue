@@ -1,13 +1,7 @@
 <script setup lang="ts">
 import axios from "axios";
-import { computed, watch, provide, onBeforeUnmount } from "vue";
+import { computed, watch, onBeforeUnmount } from "vue";
 import { useAuthStore } from "@/piniaStore/auth";
-import {
-  loadMoreMediaKey,
-  allMediaLoadedKey,
-  mediaListKey,
-  mediaDateGetterKey,
-} from "@/symbols/injectionSymbols";
 import MonthlyThumbnailPreview from "./MonthlyThumbnailPreview.vue";
 import LazyLoading from "@/components/LazyLoading/LazyLoading.vue";
 import { getMonthlyMediaIndex } from "@/js/date";
@@ -23,16 +17,9 @@ const props = defineProps<{
   mediaDateGetter: (media: Media) => Date;
 }>();
 
-provide(
-  mediaListKey,
-  computed(() => props.mediaList)
-);
-provide(
-  allMediaLoadedKey,
-  computed(() => props.allMediaLoaded)
-);
-provide(loadMoreMediaKey, props.loadMoreMedia);
-provide(mediaDateGetterKey, props.mediaDateGetter);
+const emits = defineEmits<{
+  (e: "thumbnailClick", mediaID: number, index: number): void;
+}>();
 
 const authStore = useAuthStore();
 const { accessToken } = storeToRefs(authStore);
@@ -79,6 +66,11 @@ onBeforeUnmount(() => {
           :index-media-list="monthlyMedia.media"
           :index-offset="0"
           :load-all-media-of-date="props.loadAllMediaOfDate"
+          :media-date-getter="props.mediaDateGetter"
+          @thumbnail-click="
+            (clickedMediaID, clickedIndex) =>
+              emits('thumbnailClick', clickedMediaID, clickedIndex)
+          "
         />
         <v-divider />
       </div>

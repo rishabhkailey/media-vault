@@ -35,7 +35,7 @@
     "vue": "3.3.4",
     "vue-axios": "^3.5.2",
     "vue-router": "^4.1.6",
-    "vuetify": "3.3.9",
+    "vuetify": "3.3.12",
     "vuex": "^4.0.2",
     "web-streams-polyfill": "^3.2.1",
     "xhook": "^1.6.0"

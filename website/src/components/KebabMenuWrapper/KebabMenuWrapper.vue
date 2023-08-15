@@ -1,12 +1,22 @@
 <script setup lang="ts">
-import { ref } from "vue";
+import { computed, ref } from "vue";
+import { useDisplay } from "vuetify/lib/framework.mjs";
 
 const props = defineProps<{
   selectIconSize: string | number;
   showSelectButtonOnHover: boolean;
   alwaysShowSelectButton: boolean;
   selectOnContentClick: boolean;
+  alwaysShowSelectOnMobile: boolean;
 }>();
+
+const { mobile: mobileDevice } = useDisplay();
+const allwaysShowSelectButton = computed<boolean>(() => {
+  return (
+    props.alwaysShowSelectButton ||
+    (mobileDevice.value && props.alwaysShowSelectOnMobile)
+  );
+});
 
 const clicked = ref(false);
 const clickHandler = () => {
@@ -28,7 +38,7 @@ const contentWrapper = ref<HTMLElement | undefined>(undefined);
         <div v-bind="hoverProps" class="d-flex child-flex pa-2">
           <!-- <v-scale-transition> -->
           <div
-            v-if="props.alwaysShowSelectButton || isHovering || clicked"
+            v-if="allwaysShowSelectButton || isHovering || clicked"
             class="check-button-absolute"
           >
             <v-card class="pa-0 ma-0" v-click-outside="onClickOutside">

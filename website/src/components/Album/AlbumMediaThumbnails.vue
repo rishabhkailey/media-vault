@@ -130,6 +130,18 @@ onMounted(() => {
         :load-more-media="() => loadMoreMedia()"
         :load-all-media-of-date="loadAllMediaOfDate"
         :media-date-getter="(media: Media) => media.uploaded_at"
+        @thumbnail-click="
+          (clickedMediaID, clickedIndex) => {
+            router.push({
+              name: `AlbumMediaPreview`,
+              params: {
+                index: clickedIndex,
+                media_id: clickedMediaID,
+                album: albumID,
+              },
+            });
+          }
+        "
       />
     </v-row>
   </v-col>
