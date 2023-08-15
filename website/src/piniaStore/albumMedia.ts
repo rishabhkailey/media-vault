@@ -115,6 +115,7 @@ export const useAlbumMediaStore = defineStore("albumMedia", () => {
     nextPageNumber,
     mediaList,
     allMediaLoaded,
+    albumID,
     reset,
     setAlbumID,
     loadMoreMedia,

@@ -1,14 +1,10 @@
 <script setup lang="ts">
-import MediaThumbnail from "./MediaThumbnail.vue";
-import MediaPreview from "@/components/MediaPreview.vue";
-import { computed, ref, toRef, watch } from "vue";
+import { computed, ref, watch } from "vue";
 import { daysShort, monthShort } from "@/js/date";
 import { useMediaSelectionStore } from "@/piniaStore/mediaSelection";
 import { storeToRefs } from "pinia";
 import SelectWrapper from "@/components/SelectWrapper/SelectWrapper.vue";
-import { useDisplay } from "vuetify";
 import createJustifiedLayout from "justified-layout";
-import { useRouter } from "vue-router";
 // interface doesn't work https://github.com/vuejs/core/issues/4294
 // const props = defineProps<DailyMedia>();
 const props = defineProps<{
@@ -20,41 +16,18 @@ const props = defineProps<{
   loadAllMediaOfDate: (date: Date) => Promise<any>;
   // todo load all day media function
 }>();
-const router = useRouter();
 
-// const display = useDisplay();
-// const width = computed<number>(() => {
-//   switch (display.name.value) {
-//     case "xs":
-//       return display.width.value / 2.2;
-//     case "sm":
-//       return display.width.value / 4.2;
-//     case "md":
-//       return display.width.value / 6.2;
-//     case "lg":
-//       return display.width.value / 6.2;
-//     case "xl":
-//       return display.width.value / 6.2;
-//     case "xxl":
-//       return display.width.value / 12;
-//     default:
-//       return display.width.value / 2.2;
-//   }
-// });
+const emits = defineEmits<{
+  (e: "thumbnailClick", mediaID: number, index: number): void;
+}>();
+
 console.log(props.indexMediaList);
 const containerRef = ref<HTMLElement | undefined>(undefined);
 let widowsCount = 0;
-// const justifiedLayout = computed<Array<WidthHeight>>(() => {
-//   if (containerRef.value === undefined) {
-//     return [];
-//   }
-
-//   return [];
-// });
 const justifiedLayout = ref<Array<WidthHeight>>([]);
 watch(
   [() => props.indexMediaList, containerRef],
-  ([newIndexMediaList, newContainerRef], [oldIndexMediaList]) => {
+  ([newIndexMediaList, newContainerRef]) => {
     console.log("in watch", newContainerRef, containerRef.value);
     if (newContainerRef === undefined) {
       console.error("containerRef undefined");
@@ -130,9 +103,6 @@ async function selectDayMedia(value: boolean) {
   });
   selectDayMediaLoading.value = false;
 }
-
-const selectedMediaIndex = ref<number | undefined>(undefined);
-const prviewOverlay = ref<boolean>(false);
 </script>
 
 <template>
@@ -169,13 +139,11 @@ const prviewOverlay = ref<boolean>(false);
         class="bg-surface thumbnail-container"
         @click.stop="
           () => {
-            router.push({
-              name: `MediaPreview`,
-              params: {
-                index: props.indexMediaList[index].index,
-                media_id: props.indexMediaList[index].media.id,
-              },
-            });
+            emits(
+              'thumbnailClick',
+              props.indexMediaList[index].media.id,
+              props.indexMediaList[index].index
+            );
           }
         "
       >
@@ -207,84 +175,6 @@ const prviewOverlay = ref<boolean>(false);
           />
         </SelectWrapper>
       </div>
-      <!-- <MediaThumbnail
-          class="h-100 w-100"
-          style="aspect-ratio: 1"
-          :aspect-ratio="1"
-          :padding="getSelection(media.id) ? 10 : 0"
-          :media="media"
-          @click="
-            () => {
-              prviewOverlay = true;
-              selectedMediaIndex = index;
-            }
-          "
-        /> -->
-      <!-- <div class="d-flex flex-row flex-wrap">
-        <v-col
-          cols="6"
-          sm="4"
-          md="3"
-          lg="2"
-          xl="2"
-          xxl="1"
-          :key="`${index}+${media.name}`"
-          v-for="{ media, index } in props.indexMediaList"
-          class="d-flex child-flex pa-1"
-        >
-          <SelectWrapper
-            class="h-100 w-100"
-            style="aspect-ratio: 1"
-            :loading="false"
-            :absolute-position="true"
-            :model-value="getSelection(media.id)"
-            :always-show-select-button="selectedMediaIDsCount > 0"
-            :always-show-select-on-mobile="true"
-            :show-select-button-on-hover="true"
-            :select-on-content-click="selectedMediaIDsCount > 0"
-            @change="
-              (value) => {
-                updateSelection(media.id, value);
-              }
-            "
-            selectIconSize="large"
-          >
-            <MediaThumbnail
-              class="h-100 w-100"
-              style="aspect-ratio: 1"
-              :aspect-ratio="1"
-              :padding="getSelection(media.id) ? 10 : 0"
-              :media="media"
-              @click="
-                () => {
-                  prviewOverlay = true;
-                  selectedMediaIndex = index;
-                }
-              "
-            />
-          </SelectWrapper>
-        </v-col>
-      </div> -->
-      <!-- todo move this to media thumbnail? -->
-      <!-- <v-overlay
-        v-model="prviewOverlay"
-        transition="fade-transition"
-        :close-on-content-click="false"
-        :close-delay="0"
-        :open-delay="0"
-        class="d-flex justify-center align-center"
-        :z-index="2000"
-      >
-        <MediaPreview
-          v-if="selectedMediaIndex !== undefined"
-          :index="selectedMediaIndex"
-          @close="
-            () => {
-              prviewOverlay = false;
-            }
-          "
-        />
-      </v-overlay> -->
     </div>
   </v-card>
 </template>

@@ -73,7 +73,10 @@ export const useSearchStore = defineStore("search", () => {
       return mediaList;
     }
     mediaList = mediaList.sort((m1, m2) => {
-      return m1.date > m2.date ? -1 : 1;
+      return getMediaDateAccordingToOrderBy(m1) >
+        getMediaDateAccordingToOrderBy(m2)
+        ? -1
+        : 1;
     });
     const uniqueMediaList: Array<Media> = [mediaList[0]];
     let previousMediaID = mediaList[0].id;
@@ -86,6 +89,7 @@ export const useSearchStore = defineStore("search", () => {
     }
     return uniqueMediaList;
   }
+
   function loadMoreSearchResults(
     accessToken: string,
     _query: string
@@ -137,6 +141,7 @@ export const useSearchStore = defineStore("search", () => {
     nextPageNumber,
     mediaList,
     allMediaLoaded,
+    query,
     loadMoreSearchResults,
     reset,
     setQuery,

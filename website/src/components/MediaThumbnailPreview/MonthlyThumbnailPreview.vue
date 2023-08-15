@@ -1,22 +1,22 @@
 <script setup lang="ts">
-import { computed, inject } from "vue";
+import { computed } from "vue";
 import { getDailyMediaIndex, monthLong } from "@/js/date";
 import DailyThumbnailPreview from "./DailyThumbnailPreview.vue";
-import { mediaDateGetterKey } from "@/symbols/injectionSymbols";
 const props = defineProps<{
   month: number;
   year: number;
   indexMediaList: Array<IndexMedia>;
   indexOffset: number;
   loadAllMediaOfDate: (date: Date) => Promise<any>;
+  mediaDateGetter: (media: Media) => Date;
 }>();
-const mediaDateGetter = inject<(media: Media) => Date>(mediaDateGetterKey);
-if (mediaDateGetter === undefined) {
-  // todo error message
-  throw new Error();
-}
+
+const emits = defineEmits<{
+  (e: "thumbnailClick", mediaID: number, index: number): void;
+}>();
+
 const dailyMediaList = computed<Array<DailyMedia>>(() =>
-  getDailyMediaIndex(props.indexMediaList, mediaDateGetter)
+  getDailyMediaIndex(props.indexMediaList, props.mediaDateGetter)
 );
 </script>
 
@@ -34,6 +34,10 @@ const dailyMediaList = computed<Array<DailyMedia>>(() =>
         :date="dailyMedia.date"
         :index-media-list="dailyMedia.media"
         :load-all-media-of-date="props.loadAllMediaOfDate"
+        @thumbnail-click="
+          (clickedMediaID, clickedIndex) =>
+            emits('thumbnailClick', clickedMediaID, clickedIndex)
+        "
       />
     </div>
   </v-card>

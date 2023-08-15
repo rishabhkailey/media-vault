@@ -1,10 +1,9 @@
 <script setup lang="ts">
-import { useSearchStore } from "@/piniaStore/search";
 import MediaPreview from "./MediaPreview.vue";
 import { storeToRefs } from "pinia";
 import { ref } from "vue";
 import { useRoute, useRouter } from "vue-router";
-import { useAuthStore } from "@/piniaStore/auth";
+import { useAlbumMediaStore } from "@/piniaStore/albumMedia";
 
 const router = useRouter();
 const route = useRoute();
@@ -12,7 +11,7 @@ const route = useRoute();
 // params
 const index = ref(0);
 const mediaID = ref(0);
-const query = ref("");
+const albumID = ref(0);
 
 initParams();
 function initParams() {
@@ -32,21 +31,21 @@ function initParams() {
   }
   mediaID.value = Number(mediaIdParam);
 
-  // query
-  let queryParam = Array.isArray(route.params.query)
-    ? route.params.query[0]
-    : route.params.query;
-  if (queryParam.length === 0) {
+  // album_id
+  let albumIdParam = Array.isArray(route.params.album_id)
+    ? route.params.album_id[0]
+    : route.params.album_id;
+  if (Number.isNaN(mediaIdParam)) {
     router.replace({
       name: "errorscreen",
       query: {
-        title: "Invalid Search Query",
-        message: `got search query "${queryParam}", expected a number.`,
+        title: "Invalid Album ID",
+        message: `got album id "${albumIdParam}", expected a number.`,
       },
     });
     return;
   }
-  query.value = queryParam;
+  albumID.value = Number(albumIdParam);
 
   // media index
   let indexParam = Array.isArray(route.params.index)
@@ -63,20 +62,20 @@ let loadMoreMedia: () => Promise<boolean>;
 initMediaPreviewRefsAndStore();
 
 function initMediaPreviewRefsAndStore() {
-  const searchStore = useSearchStore();
-  if (searchStore.query !== query.value) {
-    searchStore.setQuery(query.value);
+  const albumMediaStore = useAlbumMediaStore();
+  if (albumMediaStore.albumID !== albumID.value) {
+    albumMediaStore.setAlbumID(albumID.value);
   }
   if (
-    searchStore.mediaList.findIndex((m) => m.id === mediaID.value) !==
+    albumMediaStore.mediaList.findIndex((m) => m.id === mediaID.value) !==
     index.value
   ) {
     initSingleMediaPreviewRefsAndStore();
     return;
   }
-  ({ allMediaLoaded, mediaList } = storeToRefs(searchStore));
-  loadMoreMedia = () =>
-    searchStore.loadMoreSearchResults(useAuthStore().accessToken, query.value);
+
+  ({ allMediaLoaded, mediaList } = storeToRefs(albumMediaStore));
+  ({ loadMoreMedia } = albumMediaStore);
 }
 
 function initSingleMediaPreviewRefsAndStore() {
@@ -89,11 +88,11 @@ function updateIndex(newIndex: number) {
   console.log(newIndex);
   index.value = newIndex;
   router.push({
-    name: `SearchMediaPreview`,
+    name: `AlbumMediaPreview`,
     params: {
       index: newIndex,
       media_id: mediaList.value[newIndex].id,
-      query: query.value,
+      album: albumID.value,
     },
   });
 }
@@ -109,9 +108,9 @@ function updateIndex(newIndex: number) {
     @close="
       () => {
         router.push({
-          name: `search`,
+          name: `Album`,
           params: {
-            query: query,
+            album_id: albumID,
           },
         });
       }

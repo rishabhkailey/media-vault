@@ -1,10 +1,13 @@
 <script setup lang="ts">
 import LazyMediaThumbnailsPreview from "@/components/MediaThumbnailPreview/LazyMediaThumbnailsPreview.vue";
 import { onBeforeMount } from "vue";
-import { useRoute } from "vue-router";
+import { useRoute, useRouter } from "vue-router";
 import { useSearchStore } from "@/piniaStore/search";
 import { useAuthStore } from "@/piniaStore/auth";
 import { storeToRefs } from "pinia";
+
+const router = useRouter();
+
 const route = useRoute();
 const searchQuery = Array.isArray(route.params.query)
   ? route.params.query[0]
@@ -47,6 +50,18 @@ function loadAllMediaOfDate(date: Date): Promise<boolean> {
     :load-more-media="() => loadMoreSearchResults(accessToken, searchQuery)"
     :load-all-media-of-date="loadAllMediaOfDate"
     :media-date-getter="getMediaDateAccordingToOrderBy"
+    @thumbnail-click="
+      (clickedMediaID, clickedIndex) => {
+        router.push({
+          name: `SearchMediaPreview`,
+          params: {
+            index: clickedIndex,
+            media_id: clickedMediaID,
+            query: searchQuery,
+          },
+        });
+      }
+    "
   />
   <!-- :load-more-media="() => loadMoreSearchResults(accessToken, searchQuery)" -->
 </template>

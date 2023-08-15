@@ -12,6 +12,7 @@ import AboutPage from "@/views/AboutPage.vue";
 import UserOnboarding from "@/views/UserOnboarding.vue";
 import AllMediaPreviewVue from "@/components/MediaPreview/AllMediaPreview.vue";
 import SearchMediaPreviewVue from "@/components/MediaPreview/SearchMediaPreview.vue";
+import AlbumMediaPreviewVue from "@/components/MediaPreview/AlbumMediaPreview.vue";
 // todo pages without redirect from vue should be lazy loaded on external/server redirect
 const router = createRouter({
   history: createWebHistory(import.meta.env.BASE_URL),
@@ -145,7 +146,7 @@ const router = createRouter({
     {
       path: "/album/:album_id/media/:media_id/index/:index",
       name: "AlbumMediaPreview",
-      component: AllMediaPreviewVue,
+      component: AlbumMediaPreviewVue,
     },
     {
       path: "/test",
