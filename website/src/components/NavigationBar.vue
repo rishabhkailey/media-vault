@@ -128,7 +128,7 @@ const { accessToken } = storeToRefs(authStore);
         >
           <LazyLoading
             v-if="!allAlbumsLoaded"
-            :on-threshold-reach="() => loadMoreAlbums(accessToken)"
+            :on-threshold-reach="loadMoreAlbums"
             :threshold="0.1"
             :min-height="100"
             :min-width="100"

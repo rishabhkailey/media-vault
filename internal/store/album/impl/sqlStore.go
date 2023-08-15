@@ -7,8 +7,9 @@ import (
 
 	"github.com/go-redis/redis/v8"
 	"github.com/jackc/pgconn"
-	"github.com/rishabhkailey/media-service/internal/services/media"
+	mediametadata "github.com/rishabhkailey/media-service/internal/services/mediaMetadata"
 	"github.com/rishabhkailey/media-service/internal/store/album"
+	"github.com/rishabhkailey/media-service/internal/store/media"
 	"github.com/rishabhkailey/media-service/internal/utils"
 	"github.com/sirupsen/logrus"
 	"gorm.io/gorm"
@@ -82,10 +83,10 @@ func (s *sqlStore) GetByID(ctx context.Context, albumID uint) (result album.Albu
 	return
 }
 
-func (s *sqlStore) GetMediaByAlbumId(ctx context.Context, albumID uint, orderBy string, sort string, limit int, offset int) (mediaList []media.Model, err error) {
+func (s *sqlStore) GetMediaByAlbumId(ctx context.Context, albumID uint, orderBy string, sort string, limit int, offset int) (mediaList []media.Media, err error) {
 	db := s.db.WithContext(ctx)
 	mediaIDsByAlbumQuery := db.Model(&album.AlbumMediaBindings{}).Select("media_id").Where("album_id = ?", albumID)
-	err = db.Joins("Metadata").Model(&media.Model{}).
+	err = db.Joins("Metadata").Model(&media.Media{}).
 		Where("media.id IN (?)", mediaIDsByAlbumQuery).
 		Limit(limit).
 		Order(fmt.Sprintf("%s %s", orderBy, sort)).
@@ -128,14 +129,14 @@ func (s *sqlStore) AddMediaInAlbum(ctx context.Context, albumID uint, mediaIDs [
 	}
 	err = s.db.WithContext(ctx).CreateInBatches(albumMediaBindings, 100).Error
 	if isUniqueConstraintError(err) {
-		logrus.Warnf("[AddMediaInAlbum] duplicate constraint ignoring some rows: %w", err)
+		logrus.Warnf("[AddMediaInAlbum] duplicate constraint ignoring some rows: %v", err)
 		err = nil
 	}
 	if err != nil {
 		return
 	}
 	if _, err := s.UpdateAlbumMediaCount(ctx, albumID, len(newMediaIDs)); err != nil {
-		logrus.Warnf("[AddMediaInAlbum] album updatedAt failed: %w", err)
+		logrus.Warnf("[AddMediaInAlbum] album updatedAt failed: %v", err)
 	}
 	return
 }
@@ -154,7 +155,7 @@ func (s *sqlStore) RemoveMediaFromAlbum(ctx context.Context, albumID uint, media
 	db.Commit()
 	removedMediaIDs = mediaIDs
 	if _, err := s.UpdateAlbumMediaCount(ctx, albumID, len(removedMediaIDs)*-1); err != nil {
-		logrus.Warnf("[AddMediaInAlbum] album updatedAt failed: %w", err)
+		logrus.Warnf("[AddMediaInAlbum] album updatedAt failed: %v", err)
 	}
 	return
 }
@@ -218,6 +219,18 @@ func (s *sqlStore) UpdateAlbumMediaCount(ctx context.Context, albumID uint, chan
 	}
 	err = s.db.WithContext(ctx).Save(&updatedAlbum).Error
 	return
+}
+
+func (s *sqlStore) UpdateThumbnail(ctx context.Context, mediaID uint, thumbnail bool, thumbnailAspectRatio float32) error {
+	mediaMetadataIdSubQuery := s.db.Model(&media.Media{}).Select("metadata_id").Where("id = ?", mediaID).Limit(1)
+	return s.db.Model(&mediametadata.Model{}).Where("id = ?", mediaMetadataIdSubQuery).Select("thumbnail", "thumbnail_aspect_ratio").Updates(
+		mediametadata.Model{
+			Metadata: mediametadata.Metadata{
+				Thumbnail:            thumbnail,
+				ThumbnailAspectRatio: thumbnailAspectRatio,
+			},
+		},
+	).Error
 }
 
 func isUniqueConstraintError(err error) bool {

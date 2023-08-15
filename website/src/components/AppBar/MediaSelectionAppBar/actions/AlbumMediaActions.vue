@@ -4,7 +4,6 @@ import { useMediaSelectionStore } from "@/piniaStore/mediaSelection";
 import { useMediaStore } from "@/piniaStore/media";
 import { useLoadingStore } from "@/piniaStore/loading";
 import { storeToRefs } from "pinia";
-import { useAuthStore } from "@/piniaStore/auth";
 import ConfirmationPopup from "@/components/ConfirmationPopup.vue";
 import { useRoute } from "vue-router";
 import { useAlbumStore } from "@/piniaStore/album";
@@ -13,9 +12,6 @@ import { useAlbumMediaStore } from "@/piniaStore/albumMedia";
 const mediaSelectionStore = useMediaSelectionStore();
 const { reset: resetMediaSelection, updateSelection } = mediaSelectionStore;
 const { selectedMediaIDs } = storeToRefs(mediaSelectionStore);
-
-const authStore = useAuthStore();
-const { accessToken } = storeToRefs(authStore);
 
 const { removeMediaByIDsFromLocalState } = useAlbumMediaStore();
 const { deleteMultipleMedia } = useMediaStore();
@@ -37,10 +33,7 @@ async function deleteSelectedMedia() {
     let end = Math.min(index + batchSize, mediaIDs.length);
     let mediaIDsToDelete = mediaIDs.slice(index, end);
     try {
-      let failedMediaIDs = await deleteMultipleMedia(
-        accessToken.value,
-        mediaIDsToDelete
-      );
+      let failedMediaIDs = await deleteMultipleMedia(mediaIDsToDelete);
       failedIDs.push(...failedMediaIDs);
       setProgress((100 * (index + batchSize)) / count);
     } catch (err) {
@@ -67,9 +60,7 @@ const { removeMediaFromAlbum } = useAlbumStore();
 
 function removeSelectedMedia() {
   removeSelectedMediaInProgress.value = true;
-  removeMediaFromAlbum(accessToken.value, Number(albumID), [
-    ...selectedMediaIDs.value,
-  ])
+  removeMediaFromAlbum(Number(albumID), [...selectedMediaIDs.value])
     .then(() => {
       removeSelectedMediaInProgress.value = false;
       removedMediaFromAlbumPopUp.value = false;

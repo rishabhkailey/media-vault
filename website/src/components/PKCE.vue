@@ -3,7 +3,7 @@ import type { UserManager, User } from "oidc-client-ts";
 import { onMounted, inject } from "vue";
 import { useRouter, type LocationQueryRaw } from "vue-router";
 import { userManagerKey } from "@/symbols/injectionSymbols";
-import { handlePostLoginUsingUserManager } from "@/utils/auth";
+import { handlePostLoginUsingUserManager } from "@/js/auth";
 import { useAuthStore } from "@/piniaStore/auth";
 const authStore = useAuthStore();
 const userManager: UserManager | undefined = inject(userManagerKey);
@@ -72,3 +72,4 @@ onMounted(() => {
     text="this is a placeholder component"
   />
 </template>
+@/js/auth

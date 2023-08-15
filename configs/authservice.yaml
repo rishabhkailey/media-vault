@@ -38,9 +38,9 @@ minio:
     customRootCAPath: "./.devcontainer/certs/public.crt"
     skipVerify: false
 auth-service:
-  url: http://192.168.1.49:8080/v1/media-service-2
+  url: http://localhost:8080/v1/media-service
   client:
-    ID: media-service-2
+    ID: media-service
     secret: aslkjfdalksdfjlksadfjlkasjlkfjasdfjlkasjd
 meiliSearch:
   host: http://localhost:7700

@@ -255,7 +255,8 @@ func (server *Server) DeleteMedia(c *gin.Context) {
 		}
 
 		tx := server.Services.CreateTransaction()
-		err = server.Media.WithTransaction(tx).DeleteOne(c.Request.Context(), media.DeleteOneCommand{
+		// todo redo delete with transaction
+		err = server.Media.DeleteOne(c.Request.Context(), media.DeleteOneCommand{
 			ID: deletingMedia.ID,
 		})
 		if err != nil {

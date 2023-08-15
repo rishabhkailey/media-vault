@@ -1,5 +1,5 @@
-import { EncryptionKeyChannelWorker } from "../utils/channels/encryptionKey";
-import { internalFetch } from "../utils/crypto/fetchInterceptor";
+import { EncryptionKeyChannelWorker } from "../js/channels/encryptionKey";
+import { internalFetch } from "../js/crypto/fetchInterceptor";
 // stream saver worker code + our custom code for decryption
 
 declare let self: ServiceWorkerGlobalScope;

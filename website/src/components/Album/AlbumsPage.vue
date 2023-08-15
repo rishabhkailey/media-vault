@@ -158,7 +158,7 @@ function onDeleteConfirm(albumID: number) {
       />
       <LazyLoading
         v-if="!allAlbumsLoaded"
-        :on-threshold-reach="() => loadMoreAlbums()"
+        :on-threshold-reach="loadMoreAlbums"
         :threshold="0.1"
         :min-height="100"
         :min-width="100"

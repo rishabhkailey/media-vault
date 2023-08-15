@@ -1,7 +1,7 @@
 import axios, { type AxiosResponse } from "axios";
 import { Chacha20 } from "ts-chacha20";
 import { fileType } from "./file";
-import { generateThumbnailAsArrayBuffer } from "./thumbnail";
+import { generateThumbnailAsArrayBuffer } from "./thumbnail/thumbnail";
 
 type ProgressCallback = (percentage: number) => void;
 // todo update promise<any> to request info or something
@@ -350,8 +350,10 @@ function uploadThumbnail(
     // finish upload
     generateThumbnailAsArrayBuffer(file, {
       maxHeightWidth: 300,
+      preserveAspectRatio: true,
     })
-      .then((thumbnail) => {
+      .then(({ thumbnail, resolution }) => {
+        console.log(resolution);
         // todo try catch
         const encryptedThumbnail = encryptor.encrypt(thumbnail);
         const encryptedThumbnailBlob = new Blob([encryptedThumbnail]);
@@ -362,6 +364,7 @@ function uploadThumbnail(
               requestID: chunkRequestInfo.requestID,
               size: encryptedThumbnail.length,
               thumbnail: encryptedThumbnailBlob,
+              thumbnail_aspect_ratio: resolution.width / resolution.height,
             },
             {
               headers: {

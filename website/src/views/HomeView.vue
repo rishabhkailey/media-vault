@@ -14,7 +14,7 @@ import { useAuthStore } from "@/piniaStore/auth";
 import { useLoadingStore } from "@/piniaStore/loading";
 import { useUserInfoStore } from "@/piniaStore/userInfo";
 import { storeToRefs } from "pinia";
-import { EncryptionKeyChannelClient } from "@/utils/channels/encryptionKey";
+import { EncryptionKeyChannelClient } from "@/js/channels/encryptionKey";
 
 const authStore = useAuthStore();
 const { authenticated } = storeToRefs(authStore);
@@ -278,3 +278,4 @@ const test = (value: boolean) => {
 //
 https://stackoverflow.com/questions/48859119/why-my-service-worker-is-always-waiting-to-activate
 // https://web.dev/service-worker-lifecycle/
+@/js/channels/encryptionKey

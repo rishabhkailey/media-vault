@@ -48,9 +48,10 @@ type UploadChunkResponse struct {
 }
 
 type UploadThumbnailRequest struct {
-	RequestID string                `form:"requestID" binding:"required"`
-	Size      int64                 `form:"size" binding:"required"`
-	Thumbnail *multipart.FileHeader `form:"thumbnail" binding:"required"` //change to thumbnailData
+	RequestID            string                `form:"requestID" binding:"required"`
+	Size                 int64                 `form:"size" binding:"required"`
+	Thumbnail            *multipart.FileHeader `form:"thumbnail" binding:"required"` //change to thumbnailData
+	ThumbnailAspectRatio float32               `form:"thumbnail_aspect_ratio"`
 }
 
 type UploadThumbnailResponse struct {

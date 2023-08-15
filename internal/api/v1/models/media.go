@@ -6,6 +6,7 @@ import (
 	"time"
 
 	"github.com/rishabhkailey/media-service/internal/services/media"
+	mediaStore "github.com/rishabhkailey/media-service/internal/store/media"
 	"github.com/sirupsen/logrus"
 )
 
@@ -18,7 +19,7 @@ type GetMediaListRequest struct {
 }
 
 func (request *GetMediaListRequest) Validate() error {
-	if _, ok := media.OrderColumnMapping[request.OrderBy]; !ok {
+	if _, ok := media.OrderKeywordMapping[request.OrderBy]; !ok {
 		return fmt.Errorf("[MediaSearchQueryValidator] invalid param: OrderBy")
 	}
 	if _, ok := media.SortKeywordMapping[request.Sort]; !ok {
@@ -36,18 +37,19 @@ func (request *GetMediaListRequest) Validate() error {
 
 type GetMediaListResponse []GetMediaResponse
 type GetMediaResponse struct {
-	Id           uint      `json:"id"`
-	MediaUrl     string    `json:"url"`
-	ThumbnailUrl string    `json:"thumbnail_url"`
-	UploadedAt   time.Time `json:"uploaded_at"`
-	Name         string    `json:"name"`
-	Date         time.Time `json:"date"`
-	Type         string    `json:"type"`
-	Size         uint64    `json:"size"`
-	Thumbnail    bool      `gorm:"default:false" json:"thumbnail"`
+	Id                   uint      `json:"id"`
+	MediaUrl             string    `json:"url"`
+	ThumbnailUrl         string    `json:"thumbnail_url"`
+	UploadedAt           time.Time `json:"uploaded_at"`
+	Name                 string    `json:"name"`
+	Date                 time.Time `json:"date"`
+	Type                 string    `json:"type"`
+	Size                 uint64    `json:"size"`
+	Thumbnail            bool      `json:"thumbnail"`
+	ThumbnailAspectRatio float32   `json:"thumbnail_aspect_ratio"`
 }
 
-func NewGetMediaListResponse(mediaList []media.Model) (result GetMediaListResponse, err error) {
+func NewGetMediaListResponse(mediaList []mediaStore.Media) (result GetMediaListResponse, err error) {
 	result = []GetMediaResponse{} // required, if not done then we get null in json
 	for _, mediaItem := range mediaList {
 		var item GetMediaResponse
@@ -60,7 +62,7 @@ func NewGetMediaListResponse(mediaList []media.Model) (result GetMediaListRespon
 	return
 }
 
-func NewGetMediaResponse(media media.Model) (item GetMediaResponse, err error) {
+func NewGetMediaResponse(media mediaStore.Media) (item GetMediaResponse, err error) {
 	item.MediaUrl, err = parseMediaURL(media.FileName, false)
 	if err != nil {
 		return
@@ -69,9 +71,10 @@ func NewGetMediaResponse(media media.Model) (item GetMediaResponse, err error) {
 	item.Date = media.Metadata.Date
 	item.Name = media.Metadata.Name
 	item.Size = media.Metadata.Size
-	item.Thumbnail = media.Metadata.Thumbnail
 	item.Type = media.Metadata.Type
 	item.UploadedAt = media.Metadata.CreatedAt
+	item.Thumbnail = media.Metadata.Thumbnail
+	item.ThumbnailAspectRatio = media.Metadata.ThumbnailAspectRatio
 	if media.Metadata.Thumbnail {
 		item.ThumbnailUrl, err = parseMediaURL(media.FileName, true)
 		if err != nil {

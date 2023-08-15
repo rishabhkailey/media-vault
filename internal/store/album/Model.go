@@ -1,7 +1,7 @@
 package album
 
 import (
-	"github.com/rishabhkailey/media-service/internal/services/media"
+	"github.com/rishabhkailey/media-service/internal/store/media"
 	"gorm.io/gorm"
 )
 
@@ -37,7 +37,7 @@ type AlbumMediaBindings struct {
 	gorm.Model
 	AlbumID uint        `gorm:"index:,unique,composite:album_id_media_id"`
 	MediaID uint        `gorm:"index:,unique,composite:album_id_media_id"`
-	Media   media.Model `gorm:"foreignKey:MediaID"`
+	Media   media.Media `gorm:"foreignKey:MediaID"`
 	Album   Album       `gorm:"foreignKey:AlbumID"`
 }
 

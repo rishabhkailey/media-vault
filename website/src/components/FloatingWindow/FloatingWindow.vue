@@ -4,13 +4,13 @@ import { computed } from "vue";
 
 const props = withDefaults(
   defineProps<{
-    height: string;
-    width: string;
+    height?: string;
+    width?: string;
     top?: number;
     bottom?: number;
     left?: number;
     right?: number;
-    margin: number;
+    margin?: number;
     modelValue: boolean;
   }>(),
   {

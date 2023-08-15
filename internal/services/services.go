@@ -54,10 +54,6 @@ func NewServices(
 	if err != nil {
 		return nil, err
 	}
-	mediaService, err := mediaimpl.NewService(db, redis)
-	if err != nil {
-		return nil, err
-	}
 	mediaMetadataService, err := mediametadataimpl.NewService(db)
 	if err != nil {
 		return nil, err
@@ -74,7 +70,7 @@ func NewServices(
 	if err != nil {
 		return nil, err
 	}
-	store, err := store.NewStore(db, redis)
+	store, err := store.NewStore(db, redis, minio)
 	if err != nil {
 		return nil, err
 	}
@@ -83,6 +79,10 @@ func NewServices(
 		return nil, err
 	}
 	userInfoService, err := userinfoimpl.NewService(*store)
+	if err != nil {
+		return nil, err
+	}
+	mediaService, err := mediaimpl.NewService(*store)
 	if err != nil {
 		return nil, err
 	}

@@ -10,7 +10,7 @@ import {
 } from "@/symbols/injectionSymbols";
 import MonthlyThumbnailPreview from "./MonthlyThumbnailPreview.vue";
 import LazyLoading from "@/components/LazyLoading/LazyLoading.vue";
-import { getMonthlyMediaIndex } from "@/utils/date";
+import { getMonthlyMediaIndex } from "@/js/date";
 import { storeToRefs } from "pinia";
 import { useLoadingStore } from "@/piniaStore/loading";
 import { useMediaSelectionStore } from "@/piniaStore/mediaSelection";
@@ -83,7 +83,7 @@ onBeforeUnmount(() => {
         <v-divider />
       </div>
       <LazyLoading
-        v-if="!allMediaLoaded"
+        v-if="allMediaLoaded === false"
         :on-threshold-reach="loadMoreMedia"
         :threshold="0.1"
         :min-height="100"
@@ -93,3 +93,4 @@ onBeforeUnmount(() => {
     </div>
   </div>
 </template>
+@/js/date

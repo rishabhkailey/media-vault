@@ -16,11 +16,12 @@ const (
 )
 
 type Metadata struct {
-	Name      string    `json:"name"`
-	Date      time.Time `json:"date"`
-	Type      string    `json:"type"`
-	Size      uint64    `json:"size"`
-	Thumbnail bool      `gorm:"default:false" json:"thumbnail"`
+	Name                 string    `json:"name"`
+	Date                 time.Time `json:"date"`
+	Type                 string    `json:"type"`
+	Size                 uint64    `json:"size"`
+	Thumbnail            bool      `gorm:"default:false" json:"thumbnail"`
+	ThumbnailAspectRatio float32   `json:"thumbnail_aspect_ratio"`
 }
 
 type Model struct {
@@ -37,8 +38,9 @@ type CreateCommand struct {
 }
 
 type UpdateThumbnailCommand struct {
-	ID        uint
-	Thumbnail bool
+	ID                   uint
+	Thumbnail            bool
+	ThumbnailAspectRatio float32
 }
 
 type DeleteOneCommand struct {

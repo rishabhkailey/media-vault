@@ -7,7 +7,7 @@ import FloatingWindow from "@/components/FloatingWindow/FloatingWindow.vue";
 import LogoButton from "@/components/Logo/LogoButton.vue";
 import { useAuthStore } from "@/piniaStore/auth";
 import { userManagerKey } from "@/symbols/injectionSymbols";
-import { signinUsingUserManager } from "@/utils/auth";
+import { signinUsingUserManager } from "@/js/auth";
 import type { UserManager } from "oidc-client-ts";
 import axios from "axios";
 import { useDisplay } from "vuetify/lib/framework.mjs";
@@ -133,3 +133,4 @@ const searchSubmit = (query: string) => {
     />
   </FloatingWindow>
 </template>
+@/js/auth

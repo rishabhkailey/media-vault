@@ -3,7 +3,7 @@ package usermediabindings
 import (
 	"context"
 
-	"github.com/rishabhkailey/media-service/internal/services/media"
+	mediaStore "github.com/rishabhkailey/media-service/internal/store/media"
 	"gorm.io/gorm"
 )
 
@@ -16,5 +16,5 @@ type Service interface {
 	GetByMediaID(context.Context, GetByMediaIDQuery) (Model, error)
 	CheckFileBelongsToUser(context.Context, CheckFileBelongsToUserQuery) (bool, error)
 	CheckMediaBelongsToUser(context.Context, CheckMediaBelongsToUserQuery) (bool, error)
-	GetUserMedia(context.Context, GetUserMediaQuery) ([]media.Model, error)
+	GetUserMedia(context.Context, GetUserMediaQuery) ([]mediaStore.Media, error)
 }

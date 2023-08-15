@@ -473,6 +473,11 @@
   resolved "https://registry.yarnpkg.com/@types/json-schema/-/json-schema-7.0.11.tgz#d421b6c527a3037f7c84433fd2c4229e016863d3"
   integrity sha512-wOuvG1SN4Us4rez+tylwwwCV1psiNVOkJeM3AUWUNWg/jDQY2+HE/444y5gc+jBmRqASOm2Oeh5c1axHobwRKQ==
 
+"@types/justified-layout@^4.1.0":
+  version "4.1.0"
+  resolved "https://registry.yarnpkg.com/@types/justified-layout/-/justified-layout-4.1.0.tgz#c581c249a80ece26ceb21c86742e3ffaa9605271"
+  integrity sha512-D8u3yfJjx1xjRJxWUVJlTmFxSN0ph5BpkQo9dTIO1LpYFu0WS1XcWJoNAKJZql+jyiZB5eHt0UKxC1wsmO3/LQ==
+
 "@types/libsodium-wrappers@^0.7.10":
   version "0.7.10"
   resolved "https://registry.yarnpkg.com/@types/libsodium-wrappers/-/libsodium-wrappers-0.7.10.tgz#a6ebde70d3b4af960fd802af8d0e3c7cfe281eb2"
@@ -2488,6 +2493,11 @@ json-stable-stringify-without-jsonify@^1.0.1:
   resolved "https://registry.yarnpkg.com/json-stable-stringify-without-jsonify/-/json-stable-stringify-without-jsonify-1.0.1.tgz#9db7b59496ad3f3cfef30a75142d2d930ad72651"
   integrity sha512-Bdboy+l7tA3OGW6FjyFHWkP5LuByj1Tk33Ljyq0axyzdk9//JSi2u3fP1QSmd1KNwq6VOKYGlAu87CisVir6Pw==
 
+justified-layout@^4.1.0:
+  version "4.1.0"
+  resolved "https://registry.yarnpkg.com/justified-layout/-/justified-layout-4.1.0.tgz#0584091b45e69f19ac97a54539f0a03eebe7bcfe"
+  integrity sha512-M5FimNMXgiOYerVRGsXZ2YK9YNCaTtwtYp7Hb2308U1Q9TXXHx5G0p08mcVR5O53qf8bWY4NJcPBxE6zuayXSg==
+
 jwt-decode@^3.1.2:
   version "3.1.2"
   resolved "https://registry.yarnpkg.com/jwt-decode/-/jwt-decode-3.1.2.tgz#3fb319f3675a2df0c2895c8f5e9fa4b67b04ed59"
@@ -3819,10 +3829,10 @@ vue@3.3.4:
     "@vue/server-renderer" "3.3.4"
     "@vue/shared" "3.3.4"
 
-vuetify@3.3.4:
-  version "3.3.4"
-  resolved "https://registry.yarnpkg.com/vuetify/-/vuetify-3.3.4.tgz#e4cbf3ae1d4f22a61bf5fe5a753c9e3e50cd6ff2"
-  integrity sha512-B05DX+xxzmA3HkSf8FMyhGIb1eCcwDsnaUl+kfNgsMcNnGVBhugmBpslK7O6gOzb1VGttsll5yGuHm7rh0rxzA==
+vuetify@3.3.9:
+  version "3.3.9"
+  resolved "https://registry.yarnpkg.com/vuetify/-/vuetify-3.3.9.tgz#31c097738ef5d13bcf3ab329536a2a298d382d9e"
+  integrity sha512-Oh7iLYvhd99MyVqH8nrK5rai7t2R9ivuiZAZKE0sfP4x0MSYthXRPBqXi4Vy98R7MggNFaoMBDJ/hPscuRxnQA==
 
 vuex@^4.0.2:
   version "4.1.0"

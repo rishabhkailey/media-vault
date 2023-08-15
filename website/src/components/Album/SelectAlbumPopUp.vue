@@ -23,8 +23,6 @@ const emits = defineEmits<{
   (e: "update:modelValue", value: boolean): void;
 }>();
 
-const { accessToken } = storeToRefs(useAuthStore());
-
 const selectedAlbums = ref<Array<number>>([]);
 const albumStore = useAlbumStore();
 const { loadMoreAlbums } = albumStore;
@@ -67,7 +65,7 @@ const { albums, allAlbumsLoaded } = storeToRefs(albumStore);
         <v-row class="justify-center">
           <LazyLoading
             v-if="!allAlbumsLoaded"
-            :on-threshold-reach="() => loadMoreAlbums(accessToken)"
+            :on-threshold-reach="loadMoreAlbums"
             :threshold="0.1"
             :min-height="100"
             :min-width="100"

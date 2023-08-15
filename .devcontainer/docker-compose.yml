@@ -62,13 +62,6 @@ services:
       - ./certs:/root/.minio/certs
     network_mode: host
 
-  auth-service:
-    image: ghcr.io/rishabhkailey/authservice:intial-setup
-    restart: unless-stopped
-    env_file:
-      - .env
-    network_mode: host
-
   meilisearch:
     image: getmeili/meilisearch:v1.1
     restart: unless-stopped
@@ -77,3 +70,42 @@ services:
     network_mode: host
     volumes:
       - meilisearch-data:/meili_data
+  
+  auth-service:
+    image: ghcr.io/rishabhkailey/authservice:intial-setup
+    restart: unless-stopped
+    env_file:
+      - .env
+    network_mode: host
+  
+  hydra-sql-migration:
+    image: oryd/hydra:v1.10.6
+    env_file:
+      - .env.hydra
+    # todo get dsn from env
+    # command: migrate sql --yes $$DSN
+    command: migrate sql --yes 'postgres://postgres:postgres@localhost:5432/postgres?sslmode=disable'
+    network_mode: host
+    depends_on:
+      postgres:
+        condition: service_completed_successfully
+  
+  hydra:
+    image: oryd/hydra:v1.10.6
+    network_mode: host
+    command: serve all
+    env_file:
+      - .env.hydra
+    depends_on:
+      hydra-sql-migration:
+        condition: service_completed_successfully
+    # ports 4444, 4445
+
+  hydra-login-consent:
+    image: oryd/hydra-login-consent-node:v1.10.6
+    network_mode: host
+    env_file:
+      - .env.hydra
+    # ports 3000
+
+  

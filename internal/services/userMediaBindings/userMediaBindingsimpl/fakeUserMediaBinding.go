@@ -3,8 +3,8 @@ package usermediabindingsimpl
 import (
 	"context"
 
-	"github.com/rishabhkailey/media-service/internal/services/media"
 	usermediabindings "github.com/rishabhkailey/media-service/internal/services/userMediaBindings"
+	mediaStore "github.com/rishabhkailey/media-service/internal/store/media"
 	"gorm.io/gorm"
 )
 
@@ -49,6 +49,6 @@ func (s *FakeService) CheckMediaBelongsToUser(context.Context, usermediabindings
 	return s.ExpectedMediaBelongsToUser, s.ExpectedError
 }
 
-func (s *FakeService) GetUserMedia(ctx context.Context, query usermediabindings.GetUserMediaQuery) ([]media.Model, error) {
-	return []media.Model{}, s.ExpectedError
+func (s *FakeService) GetUserMedia(ctx context.Context, query usermediabindings.GetUserMediaQuery) ([]mediaStore.Media, error) {
+	return []mediaStore.Media{}, s.ExpectedError
 }

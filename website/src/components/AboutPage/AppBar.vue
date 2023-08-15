@@ -1,7 +1,7 @@
 <script setup lang="ts">
 import { inject, ref } from "vue";
 import { userManagerKey } from "@/symbols/injectionSymbols";
-import { signinUsingUserManager } from "@/utils/auth";
+import { signinUsingUserManager } from "@/js/auth";
 import type { UserManager } from "oidc-client-ts";
 import LogoButton from "@/components/Logo/LogoButton.vue";
 
@@ -48,3 +48,4 @@ const logIn = () => {
     </v-row>
   </v-app-bar>
 </template>
+@/js/auth

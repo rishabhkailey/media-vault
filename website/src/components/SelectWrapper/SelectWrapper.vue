@@ -62,36 +62,36 @@ watch(
   <v-container class="pa-0 ma-0">
     <v-hover>
       <template v-slot:default="{ isHovering, props: hoverProps }">
-        <div v-bind="hoverProps" class="d-flex child-flex pa-2">
-          <v-scale-transition>
-            <div
-              v-if="
-                allwaysShowSelectButton ||
-                isHovering ||
-                props.modelValue ||
-                props.loading
-              "
-              :class="{
-                'check-button-absolute': props.absolutePosition,
-              }"
-            >
-              <v-icon
-                v-if="props.loading"
-                icon="mdi-loading"
-                class="mr-2 loading"
-                color="grey"
-                :size="props.selectIconSize"
-              />
-              <v-icon
-                v-else
-                icon="mdi-check-circle"
-                class="mr-2"
-                @click.stop="clickHandler"
-                :color="props.modelValue ? 'primary' : 'grey  '"
-                :size="props.selectIconSize"
-              />
-            </div>
-          </v-scale-transition>
+        <div v-bind="hoverProps" class="d-flex child-flex">
+          <!-- <v-scale-transition> -->
+          <div
+            v-if="
+              allwaysShowSelectButton ||
+              isHovering ||
+              props.modelValue ||
+              props.loading
+            "
+            :class="{
+              'check-button-absolute': props.absolutePosition,
+            }"
+          >
+            <v-icon
+              v-if="props.loading"
+              icon="mdi-loading"
+              class="mr-2 loading"
+              color="grey"
+              :size="props.selectIconSize"
+            />
+            <v-icon
+              v-else
+              icon="mdi-check-circle"
+              class="mr-2"
+              @click.stop="clickHandler"
+              :color="props.modelValue ? 'primary' : 'grey  '"
+              :size="props.selectIconSize"
+            />
+          </div>
+          <!-- </v-scale-transition> -->
           <div
             :class="{
               'pointer-cursor': props.selectOnContentClick,
@@ -118,6 +118,13 @@ watch(
 
 .loading {
   animation: rotation 2s infinite linear;
+}
+
+.shrink-transition {
+  transition: all 0.2s ease-in-out;
+}
+.shrink {
+  transform: scale(0.9);
 }
 
 @keyframes rotation {

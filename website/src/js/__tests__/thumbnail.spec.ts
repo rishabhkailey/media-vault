@@ -1,6 +1,6 @@
 import { describe, expect, it, test } from "vitest";
-import { proccessThumbnailConstraints } from "@/utils/thumbnail";
-import type { thumbnailConstraints } from "@/utils/thumbnail";
+import { proccessThumbnailConstraints } from "@/js/thumbnail/thumbnail";
+import type { thumbnailConstraints } from "@/js/thumbnail/thumbnail";
 
 const RESOLUTION_16_X_9 = 16 / 9;
 const RESOLUTION_9_X_16 = 9 / 16;

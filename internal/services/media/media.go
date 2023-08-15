@@ -3,19 +3,19 @@ package media
 import (
 	"context"
 
-	"gorm.io/gorm"
+	"github.com/rishabhkailey/media-service/internal/store/media"
 )
 
 type Service interface {
-	WithTransaction(tx *gorm.DB) Service
-	Create(context.Context, CreateMediaCommand) (Model, error)
+	Create(context.Context, CreateMediaCommand) (media.Media, error)
 	DeleteOne(context.Context, DeleteOneCommand) error
 	DeleteMany(context.Context, DeleteManyCommand) error
-	GetByUploadRequestID(context.Context, GetByUploadRequestQuery) (Model, error)
-	GetMediaWithMetadataByUploadRequestID(context.Context, GetByUploadRequestQuery) (Model, error)
-	GetByFileName(context.Context, GetByFileNameQuery) (Model, error)
-	GetByUserID(context.Context, GetByUserIDQuery) ([]Model, error)
-	GetByMediaID(context.Context, GetByMediaIDQuery) (Model, error)
-	GetByMediaIDs(context.Context, GetByMediaIDsQuery) ([]Model, error)
+	GetByUploadRequestID(context.Context, GetByUploadRequestQuery) (media.Media, error)
+	GetMediaWithMetadataByUploadRequestID(context.Context, GetByUploadRequestQuery) (media.Media, error)
+	GetByFileName(context.Context, GetByFileNameQuery) (media.Media, error)
+	GetByUserID(context.Context, GetByUserIDQuery) ([]media.Media, error)
+	GetByMediaID(context.Context, GetByMediaIDQuery) (media.Media, error)
+	GetUserMediaByID(context.Context, UserMediaByIDQuery) (media.Media, error)
+	GetByMediaIDs(context.Context, GetByMediaIDsQuery) ([]media.Media, error)
 	GetTypeByFileName(context.Context, GetTypeByFileNameQuery) (string, error)
 }

@@ -11,15 +11,15 @@ import (
 
 	authservice "github.com/rishabhkailey/media-service/internal/services/authService"
 	authserviceimpl "github.com/rishabhkailey/media-service/internal/services/authService/authServiceImpl"
-	"github.com/rishabhkailey/media-service/internal/services/media"
 	"github.com/rishabhkailey/media-service/internal/services/media/mediaimpl"
 	mediasearchimpl "github.com/rishabhkailey/media-service/internal/services/mediaSearch/mediaSearchimpl"
+	mediaStore "github.com/rishabhkailey/media-service/internal/store/media"
 	"github.com/stretchr/testify/assert"
 )
 
 func TestSearch(t *testing.T) {
 	testMediaIds := []uint{1, 2}
-	testMediaListStruct := []media.Model{
+	testMediaListStruct := []mediaStore.Media{
 		// {
 		// 	MediaUrl:     "/test/abc",
 		// 	ThumbnailUrl: "/test/def",

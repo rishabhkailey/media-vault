@@ -8,7 +8,6 @@ const { mediaList, allMediaLoaded } = storeToRefs(mediaStore);
 console.log(mediaStore);
 const { loadMoreMedia, getMediaDateAccordingToOrderBy } = mediaStore;
 const authStore = useAuthStore();
-const { accessToken } = storeToRefs(authStore);
 
 async function loadAllMediaOfDate(date: Date): Promise<boolean> {
   let lastMediaDate = mediaList.value[mediaList.value.length - 1].date;
@@ -19,7 +18,7 @@ async function loadAllMediaOfDate(date: Date): Promise<boolean> {
     date.getMonth() === lastMediaDate.getMonth() &&
     !allMediaLoaded.value
   ) {
-    await loadMoreMedia(accessToken.value);
+    await loadMoreMedia();
     lastMediaDate = mediaList.value[mediaList.value.length - 1].date;
   }
   return true;
@@ -30,7 +29,7 @@ async function loadAllMediaOfDate(date: Date): Promise<boolean> {
   <LazyMediaThumbnailsPreview
     :media-list="mediaList"
     :all-media-loaded="allMediaLoaded"
-    :load-more-media="() => loadMoreMedia(accessToken)"
+    :load-more-media="() => loadMoreMedia()"
     :load-all-media-of-date="loadAllMediaOfDate"
     :media-date-getter="getMediaDateAccordingToOrderBy"
   />

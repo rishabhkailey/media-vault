@@ -1,17 +1,12 @@
 <script setup lang="ts">
 import { ref } from "vue";
 import { useAlbumStore } from "@/piniaStore/album";
-import { storeToRefs } from "pinia";
-import { useAuthStore } from "@/piniaStore/auth";
 const props = defineProps<{
   modelValue: boolean;
 }>();
 const emit = defineEmits<{
   (e: "update:modelValue", value: boolean): void;
 }>();
-
-const authStore = useAuthStore();
-const { accessToken } = storeToRefs(authStore);
 
 const albumStore = useAlbumStore();
 const { createAlbum } = albumStore;
@@ -33,7 +28,7 @@ function createAlbumSubmit() {
     return;
   }
   albumCreationInProgress.value = true;
-  createAlbum(accessToken.value, albumName.value, "")
+  createAlbum(albumName.value, "")
     .then(() => {
       emit("update:modelValue", false);
       albumCreationInProgress.value = false;

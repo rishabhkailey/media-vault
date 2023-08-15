@@ -37,14 +37,14 @@ type StoreCacheWrapper struct {
 	store store
 }
 
-func NewStoreCacheWrapper(service store) (*StoreCacheWrapper, error) {
+func NewStoreCacheWrapper(store store) (*StoreCacheWrapper, error) {
 	// todo object size/memory usage?
 	arcCache, err := lru.NewARC[string, FileCacheWrapper](1000)
 	if err != nil {
 		return nil, err
 	}
 	return &StoreCacheWrapper{
-		store: service,
+		store: store,
 		cache: arcCache,
 	}, err
 }

@@ -3,44 +3,26 @@ package media
 import (
 	"time"
 
-	mediametadata "github.com/rishabhkailey/media-service/internal/services/mediaMetadata"
-	uploadrequests "github.com/rishabhkailey/media-service/internal/services/uploadRequests"
-	"gorm.io/gorm"
+	"github.com/rishabhkailey/media-service/internal/store/media"
 )
 
 const (
-	TABLE_NAME               = "media"
 	MAX_PER_PAGE_VALUE int64 = 100
 )
 
 var (
-	SortKeywordMapping = map[string]string{
-		"asc":        "asc",
-		"desc":       "desc",
-		"ascending":  "asc",
-		"descending": "desc",
+	SortKeywordMapping = map[string]media.Sort{
+		"asc":        media.Ascending,
+		"desc":       media.Descending,
+		"ascending":  media.Ascending,
+		"descending": media.Descending,
 	}
-
-	OrderColumnMapping = map[string]string{
-		"date":        "date",
-		"uploaded_at": "created_at",
+	OrderKeywordMapping = map[string]media.OrderBy{
+		"date":        media.Date,
+		"uploaded_at": media.UploadedAt,
 	}
 )
 
-type Model struct {
-	gorm.Model
-	FileName        string `gorm:"index,unique"`
-	UploadRequestID string `gorm:"index"`
-	UploadRequest   uploadrequests.Model
-	Metadata        mediametadata.Model
-	MetadataID      uint
-}
-
-func (Model) TableName() string {
-	return TABLE_NAME
-}
-
-// will be used by upload request service
 type CreateMediaCommand struct {
 	UploadRequestID string
 	MetadataID      uint
@@ -74,6 +56,11 @@ type GetByMediaIDsQuery struct {
 }
 
 type GetByMediaIDQuery struct {
+	MediaID uint
+}
+
+type UserMediaByIDQuery struct {
+	UserID  string
 	MediaID uint
 }
 

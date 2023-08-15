@@ -1,6 +1,6 @@
 <script setup lang="ts">
 import { ref, onMounted, computed, reactive } from "vue";
-import { chunkUpload } from "@/utils/encryptFileUpload";
+import { chunkUpload } from "@/js/encryptFileUpload";
 import { useAuthStore } from "@/piniaStore/auth";
 import { storeToRefs } from "pinia";
 import { useUserInfoStore } from "@/piniaStore/userInfo";
@@ -175,3 +175,4 @@ onMounted(() => {
     :progress="overallProgress"
   />
 </template>
+@/js/encryptFileUpload

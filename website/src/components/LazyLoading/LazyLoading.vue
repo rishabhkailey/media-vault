@@ -72,11 +72,14 @@ watch(lazyApiLoadObserverTarget, (newValue, oldvalue) => {
 });
 
 onBeforeUnmount(() => {
+  console.log("observer unmounting");
   if (lazyApiLoadObserverTarget.value !== undefined) {
     try {
       observer.unobserve(lazyApiLoadObserverTarget.value);
+      lazyApiLoadObserverTarget.value = undefined;
     } catch (err) {
       /* ignore error */
+      console.error("unbserve failed", err);
     }
   }
 });

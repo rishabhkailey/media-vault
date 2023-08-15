@@ -114,6 +114,9 @@ func (client *OidcClient) IntrospectToken(token string) (*TokenInfo, error) {
 	if err != nil {
 		return nil, fmt.Errorf("introspect token request failed: %w", err)
 	}
+	// todo how to differentiate between client auth issue and token issue
+	// we get 401 if either token is invalid or client id/secret is invalid
+	// maybe we can validate client creds at app start?
 	if resp.StatusCode == http.StatusUnauthorized {
 		return nil, authservice.ErrUnauthorized
 	}

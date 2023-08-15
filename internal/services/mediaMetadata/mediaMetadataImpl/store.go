@@ -55,6 +55,13 @@ func (s *sqlStore) DeleteMany(ctx context.Context, IDs []uint) error {
 }
 
 func (s *sqlStore) UpdateThumbnail(ctx context.Context, cmd mediametadata.UpdateThumbnailCommand) (err error) {
-	err = s.db.Model(&mediametadata.Model{}).Where("id = ?", cmd.ID).Update("thumbnail", cmd.Thumbnail).Error
+	err = s.db.Model(&mediametadata.Model{}).Where("id = ?", cmd.ID).Select("thumbnail", "thumbnail_aspect_ratio").Updates(
+		mediametadata.Model{
+			Metadata: mediametadata.Metadata{
+				Thumbnail:            cmd.Thumbnail,
+				ThumbnailAspectRatio: cmd.ThumbnailAspectRatio,
+			},
+		},
+	).Error
 	return
 }

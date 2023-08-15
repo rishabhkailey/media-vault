@@ -5,8 +5,8 @@ import (
 	"errors"
 	"fmt"
 
-	"github.com/rishabhkailey/media-service/internal/services/media"
 	usermediabindings "github.com/rishabhkailey/media-service/internal/services/userMediaBindings"
+	mediaStore "github.com/rishabhkailey/media-service/internal/store/media"
 	"gorm.io/gorm"
 )
 
@@ -18,7 +18,7 @@ type store interface {
 	DeleteMany(ctx context.Context, userID string, MediaIDs []uint) error
 	GetByMediaID(context.Context, uint) (usermediabindings.Model, error)
 	CheckFileBelongsToUser(context.Context, usermediabindings.CheckFileBelongsToUserQuery) (bool, error)
-	GetUserMedia(context.Context, usermediabindings.GetUserMediaQuery) ([]media.Model, error)
+	GetUserMedia(context.Context, usermediabindings.GetUserMediaQuery) ([]mediaStore.Media, error)
 }
 
 type sqlStore struct {
@@ -70,7 +70,7 @@ func (s *sqlStore) GetByMediaID(ctx context.Context, mediaID uint) (userMediaBin
 // and service should check the userID
 func (s *sqlStore) CheckFileBelongsToUser(ctx context.Context, cmd usermediabindings.CheckFileBelongsToUserQuery) (ok bool, err error) {
 	db := s.db.WithContext(ctx)
-	getMediaByFileNameQuery := db.Model(&media.Model{}).Select("id").Where("file_name = ?", cmd.FileName).Limit(1)
+	getMediaByFileNameQuery := db.Model(&mediaStore.Media{}).Select("id").Where("file_name = ?", cmd.FileName).Limit(1)
 	userMediaBinding := usermediabindings.Model{}
 	err = db.Model(&usermediabindings.Model{}).Where("media_id = (?)", getMediaByFileNameQuery).First(&userMediaBinding).Error
 	if errors.Is(err, gorm.ErrRecordNotFound) {
@@ -82,14 +82,14 @@ func (s *sqlStore) CheckFileBelongsToUser(ctx context.Context, cmd usermediabind
 	return userMediaBinding.UserID == cmd.UserID, nil
 }
 
-func (s *sqlStore) GetUserMedia(ctx context.Context, query usermediabindings.GetUserMediaQuery) (mediaList []media.Model, err error) {
+func (s *sqlStore) GetUserMedia(ctx context.Context, query usermediabindings.GetUserMediaQuery) (mediaList []mediaStore.Media, err error) {
 	db := s.db.WithContext(ctx)
 	mediaByUserIDQuery := db.Model(&usermediabindings.Model{}).Select("media_id").Where("user_id = ?", query.UserID)
 	orderBy := fmt.Sprintf(`"Metadata"."%s"`, query.OrderBy)
 	if query.Sort == usermediabindings.SORT_DESCENDING {
 		orderBy = fmt.Sprintf("%s desc", orderBy)
 	}
-	err = db.Joins("Metadata").Model(&media.Model{}).Where("media.id IN (?)", mediaByUserIDQuery).Limit(query.Limit).Order(orderBy).Offset(query.Offset).Find(&mediaList).Error
+	err = db.Joins("Metadata").Model(&mediaStore.Media{}).Where("media.id IN (?)", mediaByUserIDQuery).Limit(query.Limit).Order(orderBy).Offset(query.Offset).Find(&mediaList).Error
 	return
 
 }

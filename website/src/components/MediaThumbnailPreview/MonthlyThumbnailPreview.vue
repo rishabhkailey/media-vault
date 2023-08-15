@@ -1,6 +1,6 @@
 <script setup lang="ts">
 import { computed, inject } from "vue";
-import { getDailyMediaIndex, monthLong } from "@/utils/date";
+import { getDailyMediaIndex, monthLong } from "@/js/date";
 import DailyThumbnailPreview from "./DailyThumbnailPreview.vue";
 import { mediaDateGetterKey } from "@/symbols/injectionSymbols";
 const props = defineProps<{
@@ -38,3 +38,4 @@ const dailyMediaList = computed<Array<DailyMedia>>(() =>
     </div>
   </v-card>
 </template>
+@/js/date

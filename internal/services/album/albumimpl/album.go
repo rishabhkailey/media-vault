@@ -6,9 +6,9 @@ import (
 
 	internalErrors "github.com/rishabhkailey/media-service/internal/errors"
 	"github.com/rishabhkailey/media-service/internal/services/album"
-	"github.com/rishabhkailey/media-service/internal/services/media"
 	"github.com/rishabhkailey/media-service/internal/store"
 	albumStore "github.com/rishabhkailey/media-service/internal/store/album"
+	"github.com/rishabhkailey/media-service/internal/store/media"
 	"golang.org/x/net/context"
 	"gorm.io/gorm"
 )
@@ -104,7 +104,7 @@ func (s *Service) DeleteAlbum(ctx context.Context, cmd album.DeleteAlbumCmd) err
 	return s.store.AlbumStore.DeleteAlbum(ctx, cmd.AlbumID)
 }
 
-func (s *Service) GetAlbumMedia(ctx context.Context, query album.GetAlbumMediaQuery) (mediaList []media.Model, err error) {
+func (s *Service) GetAlbumMedia(ctx context.Context, query album.GetAlbumMediaQuery) (mediaList []media.Media, err error) {
 	ok, err := s.store.AlbumStore.CheckAlbumBelongsToUser(ctx, query.UserID, query.AlbumID)
 	if err != nil {
 		return

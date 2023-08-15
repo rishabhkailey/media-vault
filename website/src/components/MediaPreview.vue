@@ -2,7 +2,7 @@
 import { inject, ref, type Ref } from "vue";
 import ImagePreview from "./ImagePreview.vue";
 import VideoPreview from "./VideoPreview.vue";
-import { download } from "@/utils/encryptedFileDownload";
+import { download } from "@/js/encryptedFileDownload";
 import {
   loadMoreMediaKey,
   allMediaLoadedKey,

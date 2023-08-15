@@ -1,5 +1,7 @@
 package utils
 
+/*
+
 import (
 	"fmt"
 	"io"
@@ -185,3 +187,4 @@ func encode(cc *gmf.CodecCtx, frames []*gmf.Frame, drain int) (b []byte) {
 
 	return
 }
+*/

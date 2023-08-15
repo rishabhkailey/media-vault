@@ -1,12 +1,13 @@
-import { fileType } from "./file";
+import { fileType } from "../file";
+import { calculateThumbnailResolution } from "./resolution";
 
 export function generateThumbnailAsArrayBuffer(
   file: File,
   constraints: thumbnailConstraints
-): Promise<Uint8Array> {
+): Promise<{ thumbnail: Uint8Array; resolution: WidthHeight }> {
   return new Promise((resolve, reject) => {
     generateThumbnail(file, constraints)
-      .then((blob) => {
+      .then(({ thumbnail, resolution }) => {
         const fileReader = new FileReader();
         fileReader.onload = function (event) {
           if (
@@ -18,10 +19,10 @@ export function generateThumbnailAsArrayBuffer(
             return;
           }
           const arrayBuffer: ArrayBuffer = event.target.result;
-          resolve(new Uint8Array(arrayBuffer));
+          resolve({ thumbnail: new Uint8Array(arrayBuffer), resolution });
           return;
         };
-        fileReader.readAsArrayBuffer(blob);
+        fileReader.readAsArrayBuffer(thumbnail);
       })
       .catch((err) => {
         reject(err);
@@ -30,10 +31,10 @@ export function generateThumbnailAsArrayBuffer(
   });
 }
 
-export function generateThumbnail(
+function generateThumbnail(
   file: File,
   constraints: thumbnailConstraints
-): Promise<Blob> {
+): Promise<{ thumbnail: Blob; resolution: WidthHeight }> {
   if (fileType(file).startsWith("image")) {
     return generateImageThumbnail(file, constraints);
   }
@@ -48,7 +49,7 @@ export function generateThumbnail(
 function generateImageThumbnail(
   originalImage: Blob,
   constraints: thumbnailConstraints
-): Promise<Blob> {
+): Promise<{ thumbnail: Blob; resolution: WidthHeight }> {
   return new Promise((resolve, reject) => {
     const fileReader: FileReader = new FileReader();
     const canvas = document.createElement("canvas");
@@ -70,7 +71,7 @@ function generateImageThumbnail(
       image.src = e.target.result;
       image.onload = () => {
         const { destinationResolution, sourceResolution, offset } =
-          proccessThumbnailConstraints(constraints, {
+          calculateThumbnailResolution(constraints, {
             width: image.width,
             height: image.height,
           });
@@ -93,12 +94,14 @@ function generateImageThumbnail(
             res
               .blob()
               .then((scaledImage: Blob) => {
-                resolve(scaledImage);
+                resolve({
+                  thumbnail: scaledImage,
+                  resolution: destinationResolution,
+                });
               })
               .catch((err) => {
                 reject(err);
               });
-
             return;
           })
           .catch((err) => {
@@ -119,9 +122,6 @@ function generateImageThumbnail(
   });
 }
 
-export type thumbnailConstraints = {
-  maxHeightWidth: number;
-};
 // test cases
 // 16/9 > maxHeightWidth
 // 9/16 > maxHeightWidth
@@ -159,86 +159,10 @@ if thumbnail resolution < source resolution
   widht will be cropped
 */
 
-// todo don't change the aspect ratio for thumbnail as we are not able to use the correct aspect ratio anyway
-export const proccessThumbnailConstraints = (
-  constraints: thumbnailConstraints,
-  imageResolution: WidthHeight
-) => {
-  // sourceResolution + offset will be used to crop
-  // check diagram here - https://developer.mozilla.org/en-US/docs/Web/API/CanvasRenderingContext2D/drawImage
-  const sourceResolution: WidthHeight = {
-    height: 0,
-    width: 0,
-  };
-  const offset: point = {
-    x: 0,
-    y: 0,
-  };
-
-  // source image will be scaled to destinationResolution
-  const destinationResolution: WidthHeight = {
-    height: 0,
-    width: 0,
-  };
-  let requiredAspectRatio: number = 1;
-  let maxDimention = constraints.maxHeightWidth;
-  if (imageResolution.height > imageResolution.width) {
-    requiredAspectRatio = 9 / 16;
-    // we don't want thumbnail bigger than image
-    maxDimention = Math.min(maxDimention, imageResolution.height);
-    destinationResolution.height = maxDimention;
-    destinationResolution.width =
-      destinationResolution.height * requiredAspectRatio;
-  } else if (imageResolution.width > imageResolution.height) {
-    requiredAspectRatio = 16 / 9;
-    // we don't want thumbnail bigger than image
-    maxDimention = Math.min(maxDimention, imageResolution.width);
-    destinationResolution.width = maxDimention;
-    destinationResolution.height =
-      destinationResolution.width / requiredAspectRatio;
-  } else {
-    requiredAspectRatio = 1;
-    maxDimention = Math.min(maxDimention, imageResolution.width);
-    destinationResolution.width = maxDimention;
-    destinationResolution.height = maxDimention;
-  }
-  const imageAspectRatio: number =
-    imageResolution.width / imageResolution.height;
-  if (imageAspectRatio > requiredAspectRatio) {
-    // image is longer in the horizontal direction then reqruired
-    // we will be ignoring horizontal sides
-    // source image height will remain same only width will be cropped
-    sourceResolution.height = imageResolution.height;
-    sourceResolution.width = Math.floor(
-      sourceResolution.height * requiredAspectRatio
-    );
-
-    // offset.y = actualImageWidth - actualImageWidthused / 2
-    // eslint-disable-next-line prettier/prettier
-    offset.x = Math.abs((imageResolution.width - (imageResolution.height * requiredAspectRatio))/2);
-    offset.y = 0;
-  } else {
-    // source image width will remain same only height will be cropped
-    sourceResolution.width = imageResolution.width;
-    sourceResolution.height = Math.floor(
-      sourceResolution.width / requiredAspectRatio
-    );
-    // offset.y = actualImageHeight - actualImageHeightUsed / 2
-    // eslint-disable-next-line prettier/prettier
-    offset.y = Math.abs((imageResolution.height - (imageResolution.width / requiredAspectRatio))/2);
-    offset.x = 0;
-  }
-  offset.x = Math.floor(offset.x);
-  offset.y = Math.floor(offset.y);
-  destinationResolution.width = Math.floor(destinationResolution.width);
-  destinationResolution.height = Math.floor(destinationResolution.height);
-  return { offset, destinationResolution, sourceResolution };
-};
-
 function getnerateVideoThumbnail(
   file: File,
   constraints: thumbnailConstraints
-): Promise<Blob> {
+): Promise<{ thumbnail: Blob; resolution: WidthHeight }> {
   return new Promise((resolve, reject) => {
     const video = document.createElement("video");
 
@@ -252,7 +176,6 @@ function getnerateVideoThumbnail(
       // console.log(video.fastSeek);
     };
     let requestVideoFrameCallbackCalled = false;
-    let thumbnailGenerated = false;
     video.oncanplay = async (event) => {
       if (requestVideoFrameCallbackCalled) {
         return;
@@ -270,32 +193,30 @@ function getnerateVideoThumbnail(
     };
     video.requestVideoFrameCallback(async (now, metadata) => {
       console.log(now, metadata);
-      thumbnailGenerated = true;
       requestVideoFrameCallbackCalled = true;
       let thumbnail: Blob | undefined;
-      // thumbnailGenerated = true;
+      let resolution: WidthHeight | undefined;
       try {
         // video.height, width will be the html element width, height
         // which will always be 0, 0 as we are not rendering it on display
-        thumbnail = await generateThumbnailOfCurrentFrame(
+        ({ thumbnail, resolution } = await generateThumbnailOfCurrentFrame(
           video,
           {
             width: metadata.width,
             height: metadata.height,
           },
           constraints
-        );
+        ));
       } catch (err) {
         reject(err);
         video.remove();
         return;
       }
-      console.log("thumbnail", thumbnail);
       if (thumbnail === undefined) {
         reject("got empty blob");
         return;
       }
-      resolve(thumbnail);
+      resolve({ thumbnail, resolution });
       return;
     });
   });
@@ -305,7 +226,7 @@ function generateThumbnailOfCurrentFrame(
   video: HTMLVideoElement,
   resolution: WidthHeight,
   constraints: thumbnailConstraints
-): Promise<Blob> {
+): Promise<{ thumbnail: Blob; resolution: WidthHeight }> {
   return new Promise((resolve, reject) => {
     const canvas = document.createElement("canvas");
     const ctx: CanvasRenderingContext2D | null = canvas.getContext("2d");
@@ -314,7 +235,7 @@ function generateThumbnailOfCurrentFrame(
       return;
     }
     const { destinationResolution, sourceResolution, offset } =
-      proccessThumbnailConstraints(constraints, {
+      calculateThumbnailResolution(constraints, {
         width: resolution.width,
         height: resolution.height,
       });
@@ -336,7 +257,7 @@ function generateThumbnailOfCurrentFrame(
         reject(new Error("got null"));
         return;
       }
-      resolve(thumbnail);
+      resolve({ thumbnail, resolution: destinationResolution });
       return;
     }, "image/jpeg");
   });

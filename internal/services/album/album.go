@@ -3,8 +3,8 @@ package album
 import (
 	"context"
 
-	"github.com/rishabhkailey/media-service/internal/services/media"
 	albumStore "github.com/rishabhkailey/media-service/internal/store/album"
+	"github.com/rishabhkailey/media-service/internal/store/media"
 )
 
 type Service interface {
@@ -15,5 +15,5 @@ type Service interface {
 	AddMedia(context.Context, AddMediaQuery) (addedMediaIDs []uint, err error)
 	RemoveAlbumMedia(context.Context, RemoveMediaCmd) (removedMediaIDs []uint, err error)
 	DeleteAlbum(context.Context, DeleteAlbumCmd) error
-	GetAlbumMedia(context.Context, GetAlbumMediaQuery) ([]media.Model, error)
+	GetAlbumMedia(context.Context, GetAlbumMediaQuery) ([]media.Media, error)
 }

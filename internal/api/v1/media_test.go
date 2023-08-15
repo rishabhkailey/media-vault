@@ -14,15 +14,15 @@ import (
 
 	authservice "github.com/rishabhkailey/media-service/internal/services/authService"
 	authserviceimpl "github.com/rishabhkailey/media-service/internal/services/authService/authServiceImpl"
-	"github.com/rishabhkailey/media-service/internal/services/media"
 	"github.com/rishabhkailey/media-service/internal/services/media/mediaimpl"
 	"github.com/rishabhkailey/media-service/internal/services/mediaStorage/mediastorageimpl"
+	"github.com/rishabhkailey/media-service/internal/store/media"
 	"github.com/stretchr/testify/assert"
 )
 
 // RefreshSession and UserAuthMiddleware test
 func TestMediaList(t *testing.T) {
-	testMediaListStruct := []media.Model{
+	testMediaListStruct := []media.Media{
 		// {
 		// 	MediaUrl:     "/test/abc",
 		// 	ThumbnailUrl: "/test/def",

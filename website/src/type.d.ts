@@ -27,6 +27,7 @@ interface Media {
   thumbnail: boolean;
   url: string;
   thumbnail_url: string;
+  thumbnail_aspect_ratio: number;
 }
 
 interface IndexMedia {

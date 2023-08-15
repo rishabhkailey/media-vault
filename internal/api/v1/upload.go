@@ -15,6 +15,7 @@ import (
 	mediastorage "github.com/rishabhkailey/media-service/internal/services/mediaStorage"
 	uploadrequests "github.com/rishabhkailey/media-service/internal/services/uploadRequests"
 	usermediabindings "github.com/rishabhkailey/media-service/internal/services/userMediaBindings"
+	mediaStore "github.com/rishabhkailey/media-service/internal/store/media"
 	"gorm.io/gorm"
 )
 
@@ -49,7 +50,7 @@ func (server *Server) InitChunkUpload(c *gin.Context) {
 		return
 	}
 	var uploadRequest uploadrequests.Model
-	var uploadingMedia media.Model
+	var uploadingMedia mediaStore.Media
 	{
 		tx := server.Services.CreateTransaction()
 		uploadRequest, err = server.UploadRequests.Create(c.Request.Context(), uploadrequests.CreateUploadRequestCommand{
@@ -63,7 +64,7 @@ func (server *Server) InitChunkUpload(c *gin.Context) {
 			)
 			return
 		}
-		mediaMetadata, err := server.MediaMetadata.WithTransaction(tx).Create(c.Request.Context(), mediametadata.CreateCommand{
+		mediaMetadata, err := server.MediaMetadata.Create(c.Request.Context(), mediametadata.CreateCommand{
 			Metadata: mediametadata.Metadata{
 				Name: requestBody.FileName,
 				Date: time.UnixMilli(requestBody.Date),
@@ -80,7 +81,9 @@ func (server *Server) InitChunkUpload(c *gin.Context) {
 			)
 			return
 		}
-		uploadingMedia, err = server.Media.WithTransaction(tx).Create(c.Request.Context(), media.CreateMediaCommand{
+		// todo how to do this wihtout transaction
+		// do this in a service where we have access to store?
+		uploadingMedia, err = server.Media.Create(c.Request.Context(), media.CreateMediaCommand{
 			UploadRequestID: uploadRequest.ID,
 			MetadataID:      mediaMetadata.ID,
 		})
@@ -93,7 +96,7 @@ func (server *Server) InitChunkUpload(c *gin.Context) {
 			)
 			return
 		}
-		_, err = server.UserMediaBindings.WithTransaction(tx).Create(c.Request.Context(), usermediabindings.CreateCommand{
+		_, err = server.UserMediaBindings.Create(c.Request.Context(), usermediabindings.CreateCommand{
 			UserID:  userID,
 			MediaID: uploadingMedia.ID,
 		})
@@ -240,8 +243,9 @@ func (server *Server) UploadThumbnail(c *gin.Context) {
 		return
 	}
 	err = server.MediaMetadata.UpdateThumbnail(c.Request.Context(), mediametadata.UpdateThumbnailCommand{
-		Thumbnail: true,
-		ID:        media.MetadataID,
+		Thumbnail:            true,
+		ID:                   media.MetadataID,
+		ThumbnailAspectRatio: requestBody.ThumbnailAspectRatio,
 	})
 	if err != nil {
 		c.Error(
@@ -300,7 +304,7 @@ func (server *Server) FinishChunkUpload(c *gin.Context) {
 		)
 		return
 	}
-	index, err := mediasearch.MediaToMeiliSearchMediaIndex([]media.Model{uploadedMedia}, userID)
+	index, err := mediasearch.MediaToMeiliSearchMediaIndex([]mediaStore.Media{uploadedMedia}, userID)
 	if err != nil {
 		// todo fail request on search index creation fail?
 		c.Error(
