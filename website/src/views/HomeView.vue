@@ -9,7 +9,7 @@ import decryptWorker from "@/worker/dist/bundle.js?url";
 // todo if not authenticated redirect to some different page
 // maybe /about
 import { useDisplay } from "vuetify";
-import { useRoute, useRouter } from "vue-router";
+import { useRouter } from "vue-router";
 import { useAuthStore } from "@/piniaStore/auth";
 import { useLoadingStore } from "@/piniaStore/loading";
 import { useUserInfoStore } from "@/piniaStore/userInfo";
@@ -35,7 +35,6 @@ const smallDisplay = computed(
   () => display.mobile.value || display.smAndDown.value
 );
 
-const route = useRoute();
 const router = useRouter();
 // const initializingRef = ref(true);
 const navigationBar = ref(!smallDisplay.value);
@@ -84,7 +83,7 @@ const updateOrRegisterServiceWorker = () => {
             return;
           });
       } else {
-        updateServiceWorker()
+        updateServiceWorker(registration)
           .then((serviceWorker) => {
             resolve(serviceWorker);
             return;
@@ -98,31 +97,32 @@ const updateOrRegisterServiceWorker = () => {
   });
 };
 
-const updateServiceWorker = () => {
-  // todo instead delete and install again?
-  // because if we are changing the path or file name of worker then this fails
+const updateServiceWorker = (registration: ServiceWorkerRegistration) => {
+  // if hard reload or service worker url changed
+  if (
+    navigator.serviceWorker.controller === null ||
+    !navigator.serviceWorker.controller.scriptURL.endsWith(decryptWorker)
+  ) {
+    // https://github.com/rishabhkailey/media-service/issues/2
+    // https://stackoverflow.com/a/66816077
+    return registration.unregister().then(() => registerServiceWorker());
+  }
   return new Promise<ServiceWorker>((resolve, reject) => {
-    navigator.serviceWorker.getRegistration().then((registration) => {
-      if (registration === undefined) {
-        reject(true);
+    registration
+      .update()
+      .then(() => {
+        console.log("updated");
+        if (registration.active === null) {
+          reject(new Error("got null service worker after update"));
+          return;
+        }
+        resolve(registration.active);
         return;
-      }
-      registration
-        .update()
-        .then(() => {
-          console.log("updated");
-          if (registration.active === null) {
-            reject(new Error("got null service worker after update"));
-            return;
-          }
-          resolve(registration.active);
-          return;
-        })
-        .catch((err) => {
-          reject(err);
-          return;
-        });
-    });
+      })
+      .catch((err) => {
+        reject(err);
+        return;
+      });
   });
 };
 
@@ -138,6 +138,7 @@ function registerServiceWorker(): Promise<ServiceWorker> {
         })
         .then((swReg) => {
           if (swReg.active !== null) {
+            console.debug("Service Worker registsered");
             resolve(swReg.active);
             return;
           }
@@ -147,11 +148,12 @@ function registerServiceWorker(): Promise<ServiceWorker> {
             return;
           }
           let callback: () => void;
+          console.debug("waiting for Service Worder to registser");
           swRegTmp.addEventListener(
             "statechange",
             (callback = () => {
               if (swRegTmp.state === "activated") {
-                console.log("registed and activated");
+                console.debug("Service Worder registed and active");
                 swRegTmp.removeEventListener("statechange", callback);
                 resolve(swRegTmp);
               }
