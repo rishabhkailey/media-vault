@@ -56,3 +56,12 @@ interface UserInfo {
   encryption_key_checksum: string;
   storage_usage: number;
 }
+
+interface ThumbnailClickLocation {
+  x: number;
+  y: number;
+  top: number;
+  left: number;
+  width: number;
+  height: number;
+}

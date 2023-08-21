@@ -6,6 +6,7 @@ import { storeToRefs } from "pinia";
 import { useAlbumMediaStore } from "@/piniaStore/albumMedia";
 import LazyMediaThumbnailsPreviewVue from "../MediaThumbnailPreview/LazyMediaThumbnailsPreview.vue";
 import ConfirmationPopup from "../ConfirmationPopup.vue";
+import { base64UrlEncode } from "@/js/utls";
 
 const albumStore = useAlbumStore();
 const { getAlbumByID, deleteAlbum } = albumStore;
@@ -131,7 +132,7 @@ onMounted(() => {
         :load-all-media-of-date="loadAllMediaOfDate"
         :media-date-getter="(media: Media) => media.uploaded_at"
         @thumbnail-click="
-          (clickedMediaID, clickedIndex) => {
+          (clickedMediaID, clickedIndex, thumbnailClickLocation) => {
             router.push({
               name: `AlbumMediaPreview`,
               params: {
@@ -139,10 +140,16 @@ onMounted(() => {
                 media_id: clickedMediaID,
                 album: albumID,
               },
+              hash: `#${base64UrlEncode(thumbnailClickLocation)}`,
             });
           }
         "
       />
     </v-row>
   </v-col>
+  <Teleport to="body">
+    <div style="position: absolute; top: 0px; left: 0px; z-index: 9999999">
+      <RouterView />
+    </div>
+  </Teleport>
 </template>

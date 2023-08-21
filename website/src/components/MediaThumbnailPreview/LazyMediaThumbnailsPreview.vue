@@ -18,7 +18,12 @@ const props = defineProps<{
 }>();
 
 const emits = defineEmits<{
-  (e: "thumbnailClick", mediaID: number, index: number): void;
+  (
+    e: "thumbnailClick",
+    mediaID: number,
+    index: number,
+    clickLocation: ThumbnailClickLocation | undefined
+  ): void;
 }>();
 
 const authStore = useAuthStore();
@@ -68,8 +73,13 @@ onBeforeUnmount(() => {
           :load-all-media-of-date="props.loadAllMediaOfDate"
           :media-date-getter="props.mediaDateGetter"
           @thumbnail-click="
-            (clickedMediaID, clickedIndex) =>
-              emits('thumbnailClick', clickedMediaID, clickedIndex)
+            (clickedMediaID, clickedIndex, clickLocation) =>
+              emits(
+                'thumbnailClick',
+                clickedMediaID,
+                clickedIndex,
+                clickLocation
+              )
           "
         />
         <v-divider />

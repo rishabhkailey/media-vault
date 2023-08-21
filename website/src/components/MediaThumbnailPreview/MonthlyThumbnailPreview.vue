@@ -12,7 +12,12 @@ const props = defineProps<{
 }>();
 
 const emits = defineEmits<{
-  (e: "thumbnailClick", mediaID: number, index: number): void;
+  (
+    e: "thumbnailClick",
+    mediaID: number,
+    index: number,
+    clickLocation: ThumbnailClickLocation | undefined
+  ): void;
 }>();
 
 const dailyMediaList = computed<Array<DailyMedia>>(() =>
@@ -35,8 +40,8 @@ const dailyMediaList = computed<Array<DailyMedia>>(() =>
         :index-media-list="dailyMedia.media"
         :load-all-media-of-date="props.loadAllMediaOfDate"
         @thumbnail-click="
-          (clickedMediaID, clickedIndex) =>
-            emits('thumbnailClick', clickedMediaID, clickedIndex)
+          (clickedMediaID, clickedIndex, clickLocation) =>
+            emits('thumbnailClick', clickedMediaID, clickedIndex, clickLocation)
         "
       />
     </div>

@@ -5,6 +5,7 @@ import { useRoute, useRouter } from "vue-router";
 import { useSearchStore } from "@/piniaStore/search";
 import { useAuthStore } from "@/piniaStore/auth";
 import { storeToRefs } from "pinia";
+import { base64UrlEncode } from "@/js/utls";
 
 const router = useRouter();
 
@@ -51,7 +52,7 @@ function loadAllMediaOfDate(date: Date): Promise<boolean> {
     :load-all-media-of-date="loadAllMediaOfDate"
     :media-date-getter="getMediaDateAccordingToOrderBy"
     @thumbnail-click="
-      (clickedMediaID, clickedIndex) => {
+      (clickedMediaID, clickedIndex, thumbnailClickLocation) => {
         router.push({
           name: `SearchMediaPreview`,
           params: {
@@ -59,9 +60,15 @@ function loadAllMediaOfDate(date: Date): Promise<boolean> {
             media_id: clickedMediaID,
             query: searchQuery,
           },
+          hash: `#${base64UrlEncode(thumbnailClickLocation)}`,
         });
       }
     "
   />
+  <Teleport to="body">
+    <div style="position: absolute; top: 0px; left: 0px; z-index: 9999999">
+      <RouterView />
+    </div>
+  </Teleport>
   <!-- :load-more-media="() => loadMoreSearchResults(accessToken, searchQuery)" -->
 </template>
