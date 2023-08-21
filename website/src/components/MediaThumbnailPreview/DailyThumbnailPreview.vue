@@ -18,10 +18,39 @@ const props = defineProps<{
 }>();
 
 const emits = defineEmits<{
-  (e: "thumbnailClick", mediaID: number, index: number): void;
+  (
+    e: "thumbnailClick",
+    mediaID: number,
+    index: number,
+    clickLocation: ThumbnailClickLocation | undefined
+  ): void;
 }>();
 
-console.log(props.indexMediaList);
+function getThumbnailLocation(
+  event: MouseEvent
+): ThumbnailClickLocation | undefined {
+  console.log(event.target, event.target instanceof HTMLElement);
+  let element: HTMLElement;
+  if (event.target === null || !(event.target instanceof HTMLElement)) {
+    return undefined;
+  }
+  element = event.target;
+  try {
+    let boundingRect = element.getBoundingClientRect();
+    console.log(boundingRect);
+    return {
+      left: boundingRect.left,
+      top: boundingRect.top,
+      height: boundingRect.height,
+      width: boundingRect.width,
+      x: boundingRect.x,
+      y: boundingRect.y,
+    };
+  } catch (err) {
+    console.error(err);
+    return undefined;
+  }
+}
 const containerRef = ref<HTMLElement | undefined>(undefined);
 let widowsCount = 0;
 const justifiedLayout = ref<Array<WidthHeight>>([]);
@@ -138,11 +167,12 @@ async function selectDayMedia(value: boolean) {
         :height="height"
         class="bg-surface thumbnail-container"
         @click.stop="
-          () => {
+          (e) => {
             emits(
               'thumbnailClick',
               props.indexMediaList[index].media.id,
-              props.indexMediaList[index].index
+              props.indexMediaList[index].index,
+              getThumbnailLocation(e)
             );
           }
         "
@@ -163,6 +193,7 @@ async function selectDayMedia(value: boolean) {
           selectIconSize="large"
         >
           <v-img
+            :id="`thumbnail_${props.indexMediaList[index].media.id}`"
             :src="props.indexMediaList[index].media.thumbnail_url"
             :width="width"
             :height="height"

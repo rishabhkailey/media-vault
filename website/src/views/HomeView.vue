@@ -266,8 +266,11 @@ const test = (value: boolean) => {
           class="d-flex flex-column align-stretch"
         >
           <div class="flex-grow-1" style="overflow-y: scroll">
-            <!-- <HomePage /> -->
-            <RouterView :key="route.fullPath" />
+            <RouterView v-slot="{ Component }">
+              <KeepAlive>
+                <component :is="Component" />
+              </KeepAlive>
+            </RouterView>
           </div>
         </v-main>
       </v-layout>
@@ -277,5 +280,4 @@ const test = (value: boolean) => {
 
 //
 https://stackoverflow.com/questions/48859119/why-my-service-worker-is-always-waiting-to-activate
-// https://web.dev/service-worker-lifecycle/
-@/js/channels/encryptionKey
+// https://web.dev/service-worker-lifecycle/ @/js/channels/encryptionKey

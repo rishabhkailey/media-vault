@@ -16,6 +16,13 @@ import AlbumMediaPreviewVue from "@/components/MediaPreview/AlbumMediaPreview.vu
 // todo pages without redirect from vue should be lazy loaded on external/server redirect
 const router = createRouter({
   history: createWebHistory(import.meta.env.BASE_URL),
+  scrollBehavior(to, from, savedPosition) {
+    if (savedPosition !== null) {
+      return savedPosition;
+    } else {
+      return { top: 0 };
+    }
+  },
   routes: [
     {
       path: "/:pathMatch(.*)*",
@@ -30,11 +37,25 @@ const router = createRouter({
           path: "",
           component: HomePageVue,
           name: "Home",
+          children: [
+            {
+              path: "/media/:media_id/index/:index",
+              name: "MediaPreview",
+              component: AllMediaPreviewVue,
+            },
+          ],
         },
         {
           path: "search/:query",
           component: SearchView,
           name: "search",
+          children: [
+            {
+              path: "/search/:query/media/:media_id/index/:index",
+              name: "SearchMediaPreview",
+              component: SearchMediaPreviewVue,
+            },
+          ],
         },
         {
           path: "/albums",
@@ -45,6 +66,13 @@ const router = createRouter({
           path: "/album/:album_id",
           component: AlbumMediaThumbnailsVue,
           name: "Album",
+          children: [
+            {
+              path: "/album/:album_id/media/:media_id/index/:index",
+              name: "AlbumMediaPreview",
+              component: AlbumMediaPreviewVue,
+            },
+          ],
         },
       ],
     },
@@ -63,90 +91,10 @@ const router = createRouter({
       name: "onboarding",
       component: UserOnboarding,
     },
-    // {
-    //   path: "/testVideo",
-    //   name: "testVideoScreen",
-    //   component: TestVideoScreen,
-    // },
-    // {
-    //   path: "/upload",
-    //   name: "FileUploadView",
-    //   component: FileUploadView,
-    // },
-    // {
-    //   path: "/testScreen",
-    //   name: "testScreen",
-    //   component: TestScreenViewVue,
-    // },
-    // {
-    //   path: "/testImageUpload",
-    //   name: "testImageUpload",
-    //   component: TestImageUploadScreen,
-    // },
-    // {
-    //   path: "/testVideoUpload",
-    //   name: "testVideoUpload",
-    //   component: TestVideoUploadScreen,
-    // },
-    // {
-    //   path: "/decrypt",
-    //   name: "decrypt",
-    //   component: WebWorkerModifyResponseView,
-    // },
-    // {
-    //   path: "/chunkUpload",
-    //   name: "chunkUpload",
-    //   component: ChunkedUploadFormView,
-    // },
-    // {
-    //   path: "/encryptedChunkUpload",
-    //   name: "encryptedChunkUpload",
-    //   component: EncryptedChunkedUploadFormView,
-    // },
-    // {
-    //   path: "/encryptedChunkUploadUsingTs",
-    //   name: "encryptedChunkUploadUsingTs",
-    //   component: EncryptedChunkedUploadUsingTsFormViewVue,
-    // },
-    // {
-    //   path: "/encryptedDownload",
-    //   name: "encryptedDownload",
-    //   component: TestEncryptedFileDownload,
-    // },
-    // {
-    //   path: "/encryptedDownloadUsingTs",
-    //   name: "encryptedDownloadUsingTs",
-    //   component: TestEncryptedFileDownloadUsingTs,
-    // },
-    // {
-    //   path: "/encryptedVideoPlay",
-    //   name: "encryptedVideoPlay",
-    //   component: EncryptedVideoPlayView,
-    // },
-    // {
-    //   path: "/videoThumbnailView",
-    //   name: "videoThumbnailView",
-    //   component: VideoThumbnailView,
-    // },
     {
       path: "/pkce",
       name: "pkce",
       component: PKCEVue,
-    },
-    {
-      path: "/media/:media_id/index/:index",
-      name: "MediaPreview",
-      component: AllMediaPreviewVue,
-    },
-    {
-      path: "/search/:query/media/:media_id/index/:index",
-      name: "SearchMediaPreview",
-      component: SearchMediaPreviewVue,
-    },
-    {
-      path: "/album/:album_id/media/:media_id/index/:index",
-      name: "AlbumMediaPreview",
-      component: AlbumMediaPreviewVue,
     },
     {
       path: "/test",
