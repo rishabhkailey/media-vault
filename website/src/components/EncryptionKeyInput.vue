@@ -4,7 +4,7 @@ import LogoButton from "@/components/Logo/LogoButton.vue";
 import { useUserInfoStore } from "@/piniaStore/userInfo";
 
 const emits = defineEmits<{
-  (e: "success"): void;
+  (e: "success", encryptionKey: string): void;
 }>();
 
 const { validateEncryptionKey } = useUserInfoStore();
@@ -20,7 +20,7 @@ function submitHandler() {
     return;
   }
   if (validateEncryptionKey(encryptionKey.value)) {
-    emits("success");
+    emits("success", encryptionKey.value);
     return;
   }
   errorMessage.value = "wrong encryption key";
