@@ -10,6 +10,7 @@ import AlbumsPageVue from "@/components/Album/AlbumsPage.vue";
 import AlbumMediaThumbnailsVue from "@/components/Album/AlbumMediaThumbnails.vue";
 import AboutPage from "@/views/AboutPage.vue";
 import UserOnboarding from "@/views/UserOnboarding.vue";
+import EnterEncryptionKey from "@/views/EnterEncryptionKey.vue";
 import AllMediaPreviewVue from "@/components/MediaPreview/AllMediaPreview.vue";
 import SearchMediaPreviewVue from "@/components/MediaPreview/SearchMediaPreview.vue";
 import AlbumMediaPreviewVue from "@/components/MediaPreview/AlbumMediaPreview.vue";
@@ -80,6 +81,11 @@ const router = createRouter({
       path: "/error",
       name: "errorscreen",
       component: ErrorScreenView,
+    },
+    {
+      path: "/encryption-key",
+      name: "encryptionKey",
+      component: EnterEncryptionKey,
     },
     {
       path: "/about",

@@ -1,7 +1,6 @@
 <script setup lang="ts">
 import AppBar from "@/components/AppBar/AppBar.vue";
 import NavigationBar from "../components/NavigationBar.vue";
-import EncryptionKeyInput from "@/components/EncryptionKeyInput.vue";
 import { computed, inject, onMounted, ref, onBeforeMount, watch } from "vue";
 import { userManagerKey } from "@/symbols/injectionSymbols";
 import type { UserManager } from "oidc-client-ts";
@@ -38,7 +37,6 @@ const smallDisplay = computed(
 const router = useRouter();
 // const initializingRef = ref(true);
 const navigationBar = ref(!smallDisplay.value);
-const encryptionKeyOverlay = ref(false);
 // provide(initializingKey, initializingRef);
 const userManager: UserManager | undefined = inject(userManagerKey);
 
@@ -196,30 +194,18 @@ async function init(): Promise<boolean> {
     return false;
   }
   if (encryptionKeyValidated.value == false) {
-    encryptionKeyOverlay.value = true;
-    // router.push({
-    //   name: "onboarding",
-    // });
+    // encryptionKeyOverlay.value = true;
+    router.push({
+      name: "encryptionKey",
+      query: {
+        return_uri: window.location.pathname + window.location.hash,
+      },
+    });
     return false;
   }
   setInitializing(false);
   return true;
 }
-
-function onValidationEncryptionKey() {
-  encryptionKeyOverlay.value = false;
-  setInitializing(false);
-  navigator.serviceWorker.ready.then((registration) => {
-    if (registration.active === null) {
-      // todo handle errors
-      throw new Error("service worker not active");
-    }
-    registration?.active?.postMessage({
-      encryptionKey: usableEncryptionKey.value,
-    });
-  });
-}
-
 const encryptionKeyChannel = new EncryptionKeyChannelClient(
   usableEncryptionKey.value
 );
@@ -245,12 +231,6 @@ const test = (value: boolean) => {
 
 <template>
   <v-container class="pa-0 ma-0" fluid>
-    <v-overlay
-      v-model="encryptionKeyOverlay"
-      class="justify-center align-center"
-    >
-      <EncryptionKeyInput @success="onValidationEncryptionKey" />
-    </v-overlay>
     <v-card>
       <v-layout>
         <AppBar
