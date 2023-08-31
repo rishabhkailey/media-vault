@@ -22,6 +22,7 @@ function getNonceFromUrl(url: string): string {
   return nonce;
 }
 
+// todo better name
 export async function internalFetch(
   req: Request,
   encryptionKeyGetter: () => Promise<string>
@@ -30,9 +31,9 @@ export async function internalFetch(
   const nonce = getNonceFromUrl(req.url);
   console.log("nonce", nonce);
   const offset = range !== undefined ? range.start : 0;
-  const encryptionKey = await encryptionKeyGetter();
-  const decryptor = newChaCha20Decryptor(encryptionKey, nonce, offset);
   try {
+    const encryptionKey = await encryptionKeyGetter();
+    const decryptor = newChaCha20Decryptor(encryptionKey, nonce, offset);
     const res = await fetch(req);
     // return;
     const encryptedStream = res.body;
