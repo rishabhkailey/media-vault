@@ -20,16 +20,19 @@ type HttpGetRangeHandlerQuery struct {
 	FileName       string
 	Range          utils.Range
 	ResponseWriter http.ResponseWriter
+	Request        *http.Request
 }
 
 type HttpGetMediaHandlerQuery struct {
 	FileName       string
 	ResponseWriter http.ResponseWriter
+	Request        *http.Request
 }
 
 type HttpGetThumbnailHandlerQuery struct {
 	FileName       string
 	ResponseWriter http.ResponseWriter
+	Request        *http.Request
 }
 
 type InitChunkUploadCmd struct {

@@ -134,9 +134,10 @@ func (server *Server) getMedia(c *gin.Context, fileName string, contentType stri
 	c.Header("Content-Type", contentType)
 	c.Header("Connection", "keep-alive")
 	c.Status(http.StatusOK)
-	_, err := server.MediaStorage.HttpGetMediaHandler(c.Request.Context(), mediastorage.HttpGetMediaHandlerQuery{
+	err := server.MediaStorage.HttpGetMediaHandler(c.Request.Context(), mediastorage.HttpGetMediaHandlerQuery{
 		FileName:       fileName,
 		ResponseWriter: c.Writer,
+		Request:        c.Request,
 	})
 	if err != nil {
 		c.Error(
@@ -156,10 +157,11 @@ func (server *Server) GetMediaRange(c *gin.Context, r utils.Range, fileName stri
 	c.Header("Content-Type", contentType)
 	c.Header("Connection", "keep-alive")
 	c.Header("Accept-Ranges", "bytes")
-	_, err := server.MediaStorage.HttpGetRangeHandler(c.Request.Context(), mediastorage.HttpGetRangeHandlerQuery{
+	err := server.MediaStorage.HttpGetRangeHandler(c.Request.Context(), mediastorage.HttpGetRangeHandlerQuery{
 		FileName:       fileName,
 		Range:          r,
 		ResponseWriter: c.Writer,
+		Request:        c.Request,
 	})
 	if err != nil {
 		c.Error(
@@ -180,9 +182,10 @@ func (server *Server) GetThumbnail(c *gin.Context) {
 	c.Header("Content-Type", mediametadata.TYPE_IMAGE_JPEG)
 	c.Header("Connection", "keep-alive")
 	c.Status(http.StatusOK)
-	_, err := server.MediaStorage.HttpGetThumbnailHandler(c.Request.Context(), mediastorage.HttpGetThumbnailHandlerQuery{
+	err := server.MediaStorage.HttpGetThumbnailHandler(c.Request.Context(), mediastorage.HttpGetThumbnailHandlerQuery{
 		FileName:       fileName,
 		ResponseWriter: c.Writer,
+		Request:        c.Request,
 	})
 	if err != nil {
 		c.Error(

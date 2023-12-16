@@ -1,7 +1,6 @@
 package v1_test
 
 import (
-	"crypto/rand"
 	"encoding/json"
 	"errors"
 	"fmt"
@@ -12,49 +11,32 @@ import (
 	"testing"
 	"time"
 
+	v1models "github.com/rishabhkailey/media-service/internal/api/v1/models"
 	authservice "github.com/rishabhkailey/media-service/internal/services/authService"
 	authserviceimpl "github.com/rishabhkailey/media-service/internal/services/authService/authServiceImpl"
 	"github.com/rishabhkailey/media-service/internal/services/media/mediaimpl"
 	"github.com/rishabhkailey/media-service/internal/services/mediaStorage/mediastorageimpl"
-	"github.com/rishabhkailey/media-service/internal/store/media"
 	"github.com/stretchr/testify/assert"
 )
 
 // RefreshSession and UserAuthMiddleware test
 func TestMediaList(t *testing.T) {
-	testMediaListStruct := []media.Media{
-		// {
-		// 	MediaUrl:     "/test/abc",
-		// 	ThumbnailUrl: "/test/def",
-		// 	Metadata: mediametadata.Metadata{
-		// 		Name:      "test",
-		// 		Date:      time.Now(),
-		// 		Type:      "txt",
-		// 		Size:      100,
-		// 		Thumbnail: true,
-		// 	},
-		// },
-		// {
-		// 	MediaUrl:     "/test/abc",
-		// 	ThumbnailUrl: "/test/def",
-		// 	Metadata: mediametadata.Metadata{
-		// 		Name:      "test",
-		// 		Date:      time.Now(),
-		// 		Type:      "txt",
-		// 		Size:      100,
-		// 		Thumbnail: true,
-		// 	},
-		// },
-	}
-	var testMediaListMap any
+	testMediaListStruct := randomMediaList(10)
+
+	var testMediaListResponseMap any
 	{
-		bytes, err := json.Marshal(testMediaListStruct)
+		testMediaListResponse, err := v1models.NewGetMediaListResponse(testMediaListStruct)
+		if err != nil {
+			t.Error(err)
+			return
+		}
+		bytes, err := json.Marshal(testMediaListResponse)
 		if err != nil {
 			t.Error(err)
 			t.Fail() // todo add t.Fail() at other missing places also
 			return
 		}
-		err = json.Unmarshal(bytes, &testMediaListMap)
+		err = json.Unmarshal(bytes, &testMediaListResponseMap)
 		if err != nil {
 			t.Error(err)
 			t.Fail() // todo add t.Fail() at other missing places also
@@ -73,13 +55,12 @@ func TestMediaList(t *testing.T) {
 		{
 			name: "normal",
 			requestQuery: url.Values{
-				"order":   {"date"},
-				"sort":    {"asc"},
-				"page":    {"1"},
-				"perPage": {"10"},
+				"order":    {"date"},
+				"sort":     {"asc"},
+				"per_page": {"10"},
 			},
 			expectedStatusCode: http.StatusOK,
-			expectedResponse:   testMediaListMap,
+			expectedResponse:   testMediaListResponseMap,
 			authService: authserviceimpl.FakeService{
 				ExpectedError:             nil,
 				ExpectedUserID:            "1",
@@ -93,9 +74,8 @@ func TestMediaList(t *testing.T) {
 		{
 			name: "bad request: order missing",
 			requestQuery: url.Values{
-				"sort":    {"asc"},
-				"page":    {"1"},
-				"perPage": {"10"},
+				"sort":     {"asc"},
+				"per_page": {"10"},
 			},
 			expectedStatusCode: http.StatusBadRequest,
 			expectedResponse:   nil,
@@ -112,9 +92,8 @@ func TestMediaList(t *testing.T) {
 		{
 			name: "bad request: sort missing",
 			requestQuery: url.Values{
-				"order":   {"date"},
-				"page":    {"1"},
-				"perPage": {"10"},
+				"order":    {"date"},
+				"per_page": {"10"},
 			},
 			expectedStatusCode: http.StatusBadRequest,
 			expectedResponse:   nil,
@@ -129,30 +108,10 @@ func TestMediaList(t *testing.T) {
 			},
 		},
 		{
-			name: "bad request: page missing",
-			requestQuery: url.Values{
-				"sort":    {"asc"},
-				"order":   {"date"},
-				"perPage": {"10"},
-			},
-			expectedStatusCode: http.StatusBadRequest,
-			expectedResponse:   nil,
-			authService: authserviceimpl.FakeService{
-				ExpectedError:             nil,
-				ExpectedUserID:            "1",
-				ExpectedSessionExpireTime: time.Now().Add(time.Hour * 10).Unix(),
-			},
-			mediaService: mediaimpl.FakeService{
-				ExpectedMediaList: testMediaListStruct,
-				ExpectedError:     nil,
-			},
-		},
-		{
-			name: "bad request: perPage missing",
+			name: "bad request: per_page missing",
 			requestQuery: url.Values{
 				"sort":  {"asc"},
 				"order": {"date"},
-				"page":  {"1"},
 			},
 			expectedStatusCode: http.StatusBadRequest,
 			expectedResponse:   nil,
@@ -169,10 +128,9 @@ func TestMediaList(t *testing.T) {
 		{
 			name: "bad request: negative perPage missing",
 			requestQuery: url.Values{
-				"sort":    {"asc"},
-				"order":   {"date"},
-				"page":    {"-1"},
-				"perPage": {"1"},
+				"sort":     {"asc"},
+				"order":    {"date"},
+				"per_page": {"-1"},
 			},
 			expectedStatusCode: http.StatusBadRequest,
 			expectedResponse:   nil,
@@ -187,12 +145,68 @@ func TestMediaList(t *testing.T) {
 			},
 		},
 		{
-			name: "bad request: negative perPage missing",
+			name: "bad request: invalid sort value",
 			requestQuery: url.Values{
-				"sort":    {"asc"},
-				"order":   {"date"},
-				"page":    {"1"},
-				"perPage": {"-1"},
+				"sort":     {"ascaa"},
+				"order":    {"date"},
+				"per_page": {"-1"},
+			},
+			expectedStatusCode: http.StatusBadRequest,
+			expectedResponse:   nil,
+			authService: authserviceimpl.FakeService{
+				ExpectedError:             nil,
+				ExpectedUserID:            "1",
+				ExpectedSessionExpireTime: time.Now().Add(time.Hour * 10).Unix(),
+			},
+			mediaService: mediaimpl.FakeService{
+				ExpectedMediaList: testMediaListStruct,
+				ExpectedError:     nil,
+			},
+		},
+		{
+			name: "bad request: invalid order value",
+			requestQuery: url.Values{
+				"sort":     {"asc"},
+				"order":    {"date_abc"},
+				"per_page": {"-1"},
+			},
+			expectedStatusCode: http.StatusBadRequest,
+			expectedResponse:   nil,
+			authService: authserviceimpl.FakeService{
+				ExpectedError:             nil,
+				ExpectedUserID:            "1",
+				ExpectedSessionExpireTime: time.Now().Add(time.Hour * 10).Unix(),
+			},
+			mediaService: mediaimpl.FakeService{
+				ExpectedMediaList: testMediaListStruct,
+				ExpectedError:     nil,
+			},
+		},
+		{
+			name: "bad request: invalid last_media_id value",
+			requestQuery: url.Values{
+				"sort":          {"asc"},
+				"order":         {"date_abc"},
+				"last_media_id": {"-1"},
+			},
+			expectedStatusCode: http.StatusBadRequest,
+			expectedResponse:   nil,
+			authService: authserviceimpl.FakeService{
+				ExpectedError:             nil,
+				ExpectedUserID:            "1",
+				ExpectedSessionExpireTime: time.Now().Add(time.Hour * 10).Unix(),
+			},
+			mediaService: mediaimpl.FakeService{
+				ExpectedMediaList: testMediaListStruct,
+				ExpectedError:     nil,
+			},
+		},
+		{
+			name: "bad request: invalid last_date",
+			requestQuery: url.Values{
+				"sort":      {"asc"},
+				"order":     {"date_abc"},
+				"last_date": {"abc"},
 			},
 			expectedStatusCode: http.StatusBadRequest,
 			expectedResponse:   nil,
@@ -209,10 +223,9 @@ func TestMediaList(t *testing.T) {
 		{
 			name: "unathorized error",
 			requestQuery: url.Values{
-				"sort":    {"asc"},
-				"order":   {"date"},
-				"page":    {"1"},
-				"perPage": {"1"},
+				"sort":     {"asc"},
+				"order":    {"date"},
+				"per_page": {"1"},
 			},
 			expectedStatusCode: http.StatusUnauthorized,
 			expectedResponse:   nil,
@@ -229,10 +242,9 @@ func TestMediaList(t *testing.T) {
 		{
 			name: "auth error",
 			requestQuery: url.Values{
-				"sort":    {"asc"},
-				"order":   {"date"},
-				"page":    {"1"},
-				"perPage": {"1"},
+				"sort":     {"asc"},
+				"order":    {"date"},
+				"per_page": {"1"},
 			},
 			expectedStatusCode: http.StatusInternalServerError,
 			expectedResponse:   nil,
@@ -249,10 +261,9 @@ func TestMediaList(t *testing.T) {
 		{
 			name: "get media error",
 			requestQuery: url.Values{
-				"sort":    {"asc"},
-				"order":   {"date"},
-				"page":    {"1"},
-				"perPage": {"1"},
+				"sort":     {"asc"},
+				"order":    {"date"},
+				"per_page": {"1"},
 			},
 			expectedStatusCode: http.StatusInternalServerError,
 			expectedResponse:   nil,
@@ -284,20 +295,13 @@ func TestMediaList(t *testing.T) {
 		recorder := httptest.NewRecorder()
 		router.ServeHTTP(recorder, request)
 		if test.expectedResponse != nil {
-			if err := verifyResponse(t, *recorder, test.expectedResponse); err != nil {
+			if err := verifyResponse(t, *recorder, test.expectedResponse, test.name); err != nil {
 				t.Error(err)
 				t.Fail()
 			}
 		}
-		assert.Equal(t, test.expectedStatusCode, recorder.Code)
+		assert.Equal(t, test.expectedStatusCode, recorder.Code, test.name)
 	}
-}
-
-// it will panic if any error so only use this in tests
-func randomString(n int64) string {
-	bytes := make([]byte, n)
-	rand.Read(bytes)
-	return string(bytes)
 }
 
 // includes get media, media range and thumbnail tests

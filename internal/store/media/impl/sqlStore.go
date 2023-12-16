@@ -146,6 +146,8 @@ func (s *sqlStore) GetByUserIDOrderByUploadDate(ctx context.Context,
 		switch sort {
 		case media.Ascending:
 			{
+				// media whose created date > last media date (sort by created_at asc)
+				// media whose created date = last media date and media id < last media id (media id is sorted by desc order)
 				query = query.Where(`
 				"media"."id" IN (?) 
 				AND (
@@ -158,6 +160,8 @@ func (s *sqlStore) GetByUserIDOrderByUploadDate(ctx context.Context,
 			}
 		default:
 			{
+				// media whose created date < last media date (sort by created_at desc)
+				// media whose created date = last media date and media id < last media id (media id is sorted by desc order)
 				query = query.Where(`
 				"media"."id" IN (?) 
 				AND (

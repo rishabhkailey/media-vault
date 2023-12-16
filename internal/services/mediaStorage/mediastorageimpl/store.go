@@ -8,6 +8,6 @@ import (
 
 type store interface {
 	SaveFile(context.Context, mediastorage.StoreSaveFileCmd) (int64, error)
-	GetByFileName(ctx context.Context, fileNmae string) (mediastorage.File, error)
+	GetByFileName(ctx context.Context, fileName string) (mediastorage.File, error)
 	DeleteOne(ctx context.Context, fileName string) error
 }

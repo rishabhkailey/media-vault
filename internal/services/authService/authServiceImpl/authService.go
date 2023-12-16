@@ -80,7 +80,7 @@ func (s *Service) getUserScope(ctx context.Context, r *http.Request, w http.Resp
 	if err == nil {
 		err := s.saveUserScopeInSession(ctx, r, w, userID, userScope, expireTime)
 		if err != nil {
-			logrus.Warnf("[AuthService.getUserScope] unable to save session: %w", err)
+			logrus.Warnf("[AuthService.getUserScope] unable to save session: %v", err)
 		}
 	}
 	return

@@ -7,9 +7,9 @@ import (
 type Service interface {
 	// GetMediaByFileName(context.Context, GetMediaByFileNameQuery) (File, error)
 	// GetThumbnailByFileName(context.Context, GetThumbnailByFileNameQuery) (File, error)
-	HttpGetRangeHandler(context.Context, HttpGetRangeHandlerQuery) (int64, error)
-	HttpGetMediaHandler(context.Context, HttpGetMediaHandlerQuery) (int64, error)
-	HttpGetThumbnailHandler(context.Context, HttpGetThumbnailHandlerQuery) (int64, error)
+	HttpGetRangeHandler(context.Context, HttpGetRangeHandlerQuery) error
+	HttpGetMediaHandler(context.Context, HttpGetMediaHandlerQuery) error
+	HttpGetThumbnailHandler(context.Context, HttpGetThumbnailHandlerQuery) error
 	InitChunkUpload(context.Context, InitChunkUploadCmd) error
 	UploadChunk(context.Context, UploadChunkCmd) (int64, error)
 	FinishChunkUpload(context.Context, FinishChunkUpload) error
