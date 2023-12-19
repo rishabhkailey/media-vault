@@ -5,10 +5,24 @@ import (
 	"gorm.io/gorm"
 )
 
+// AlbumOrderBy represent the attributes of Album table that can be used to sort albums
+type AlbumOrderBy string
+
+// AlbumOrderBy represent the attributes of AlbumMediaBindings store that can be used to sort media of a album
+type AlbumMediaOrderBy string
+type Sort string
+
 const (
-	ALBUMS_TABLE_NAME              = "albums"
-	USER_ALBUM_BINDINGS_TABLE_NAME = "user_album_bindings"
-	ALBUM_MEDIA_BINDING_TABLE_NAME = "album_media_bindings"
+	ALBUMS_TABLE_NAME                                = "albums"
+	USER_ALBUM_BINDINGS_TABLE_NAME                   = "user_album_bindings"
+	ALBUM_MEDIA_BINDING_TABLE_NAME                   = "album_media_bindings"
+	AlbumOrderByDate               AlbumOrderBy      = "album.created_at"
+	AlbumOrderByUpdatedAt          AlbumOrderBy      = "album.updated_at"
+	AlbumMediaOrderByAddedDate     AlbumMediaOrderBy = "album_media_bindings.created_at"
+	AlbumMediaOrderByUploadedDate  AlbumMediaOrderBy = "media.created_at"
+	AlbumMediaOrderByMediaDate     AlbumMediaOrderBy = "media_metadata.date"
+	Ascending                      Sort              = "asc"
+	Descending                     Sort              = "desc"
 )
 
 type Album struct {
@@ -24,9 +38,9 @@ func (Album) TableName() string {
 
 type UserAlbumBindings struct {
 	gorm.Model
-	UserID  string             `gorm:"index:,unique,composite:user_id_album_id"`
-	AlbumID uint               `gorm:"index:,unique,composite:user_id_album_id"`
-	Alubm   AlbumMediaBindings `gorm:"foreignKey:AlbumID"`
+	UserID  string `gorm:"index:,unique,composite:user_id_album_id"`
+	AlbumID uint   `gorm:"index:,unique,composite:user_id_album_id"`
+	Album   Album  `gorm:"foreignKey:AlbumID"`
 }
 
 func (UserAlbumBindings) TableName() string {

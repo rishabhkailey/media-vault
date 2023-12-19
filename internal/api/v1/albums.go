@@ -90,11 +90,11 @@ func (server *Server) GetAlbums(c *gin.Context) {
 		return
 	}
 	albums, err := server.AlbumService.GetUserAlbums(c.Request.Context(), album.GetUserAlbumsQuery{
-		UserID:  userID,
-		OrderBy: requestBody.OrderBy,
-		Sort:    requestBody.Sort,
-		Page:    requestBody.Page,
-		PerPage: requestBody.PerPage,
+		UserID:      userID,
+		OrderBy:     album.AlbumOrderAttributesMapping[requestBody.OrderBy],
+		Sort:        album.AlbumSortKeywordMapping[requestBody.Sort],
+		PerPage:     requestBody.PerPage,
+		LastAlbumID: requestBody.LastAlbumID,
 	})
 	if err != nil {
 		c.Error(err)
@@ -201,7 +201,7 @@ func (server *Server) GetAlbum(c *gin.Context) {
 	})
 }
 
-func (server *Server) PathchAlbum(c *gin.Context) {
+func (server *Server) PatchAlbum(c *gin.Context) {
 	userID, ok := c.Keys["userID"].(string)
 	if !ok || len(userID) == 0 {
 		c.Error(
@@ -277,6 +277,7 @@ func (server *Server) GetAlubmMedia(c *gin.Context) {
 				"bad request",
 			),
 		)
+		return
 	}
 	if err := requestBody.Validate(); err != nil {
 		c.Error(
@@ -288,18 +289,18 @@ func (server *Server) GetAlubmMedia(c *gin.Context) {
 		return
 	}
 	mediaList, err := server.AlbumService.GetAlbumMedia(c.Request.Context(), album.GetAlbumMediaQuery{
-		UserID:  userID,
-		AlbumID: requestBody.AlbumID,
-		OrderBy: requestBody.OrderBy,
-		Sort:    requestBody.Sort,
-		Page:    requestBody.Page,
-		PerPage: requestBody.PerPage,
+		UserID:      userID,
+		AlbumID:     requestBody.AlbumID,
+		OrderBy:     album.AlbumMediaOrderAttributesMapping[requestBody.OrderBy],
+		Sort:        album.AlbumSortKeywordMapping[requestBody.Sort],
+		PerPage:     requestBody.PerPage,
+		LastMediaID: requestBody.LastMediaID,
 	})
 	if err != nil {
 		c.Error(err)
 		return
 	}
-	response, err := v1models.NewGetMediaListResponse(mediaList)
+	response, err := v1models.NewAlbumMediaListResponse(mediaList)
 	if err != nil {
 		c.Error(
 			internalErrors.NewInternalServerError(

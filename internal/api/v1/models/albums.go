@@ -5,6 +5,7 @@ import (
 	"time"
 
 	"github.com/rishabhkailey/media-service/internal/services/album"
+	albumStore "github.com/rishabhkailey/media-service/internal/store/album"
 	"github.com/sirupsen/logrus"
 )
 
@@ -30,10 +31,10 @@ type AlbumResponse struct {
 }
 
 type GetAlbumsRequest struct {
-	OrderBy string `form:"order" json:"order" binding:"required"`
-	Sort    string `form:"sort" json:"sort" binding:"required"`
-	Page    int64  `form:"page" json:"page" binding:"required"`
-	PerPage int64  `form:"perPage" json:"perPage" binding:"required"`
+	OrderBy     string `form:"order" json:"order" binding:"required"`
+	Sort        string `form:"sort" json:"sort" binding:"required"`
+	PerPage     int    `form:"per_page" json:"per_page" binding:"required"`
+	LastAlbumID *uint  `form:"last_album_id" json:"last_album_id"`
 }
 
 func (request *GetAlbumsRequest) Validate() error {
@@ -43,9 +44,7 @@ func (request *GetAlbumsRequest) Validate() error {
 	if _, ok := album.AlbumSortKeywordMapping[request.Sort]; !ok {
 		return fmt.Errorf("[MediaSearchQueryValidator] invalid param: sort")
 	}
-	if request.Page < 0 || request.PerPage < 0 {
-		return fmt.Errorf("[MediaSearchQueryValidator] invalid param: Page or PerPage")
-	}
+
 	if request.PerPage > album.MAX_ALBUMS_PER_PAGE_VALUE {
 		logrus.Warnf("[MediaSearchQueryValidator] PerPage value exceeded the max supported value")
 		request.PerPage = album.MAX_ALBUMS_PER_PAGE_VALUE
@@ -92,11 +91,11 @@ func (request *DeleteAlbumRequest) Validate() error {
 }
 
 type GetAlbumMediaRequest struct {
-	AlbumID uint   `uri:"albumID" binding:"required"`
-	OrderBy string `form:"order" json:"order" binding:"required"`
-	Sort    string `form:"sort" json:"sort" binding:"required"`
-	Page    int64  `form:"page" json:"page" binding:"required"`
-	PerPage int64  `form:"perPage" json:"perPage" binding:"required"`
+	AlbumID     uint   `uri:"albumID" binding:"required"`
+	OrderBy     string `form:"order" json:"order" binding:"required"`
+	Sort        string `form:"sort" json:"sort" binding:"required"`
+	PerPage     int64  `form:"per_page" json:"per_page" binding:"required"`
+	LastMediaID *uint  `form:"last_media_id" json:"last_media_id"`
 }
 
 func (request *GetAlbumMediaRequest) Validate() error {
@@ -108,9 +107,6 @@ func (request *GetAlbumMediaRequest) Validate() error {
 	}
 	if _, ok := album.AlbumMediaSortKeywordMapping[request.Sort]; !ok {
 		return fmt.Errorf("[MediaSearchQueryValidator] invalid param: sort")
-	}
-	if request.Page < 0 || request.PerPage < 0 {
-		return fmt.Errorf("[MediaSearchQueryValidator] invalid param: Page or PerPage")
 	}
 	if request.PerPage > album.MAX_ALBUM_MEDIA_PER_PAGE_VALUE {
 		logrus.Warnf("[MediaSearchQueryValidator] PerPage value exceeded the max supported value")
@@ -155,4 +151,27 @@ type AlbumRemoveMediaResponse struct {
 
 type AlbumAddMediaResponse struct {
 	MediaIDs []uint `json:"media_ids"`
+}
+
+type GetAlbumMediaListResponse []SingleAlbumMediaResponse
+type SingleAlbumMediaResponse struct {
+	GetMediaResponse
+	AddedAt time.Time `json:"added_at"`
+}
+
+func NewAlbumMediaListResponse(albumMediaBindings []albumStore.AlbumMediaBindings) (GetAlbumMediaListResponse, error) {
+	var response []SingleAlbumMediaResponse
+
+	for _, albumMediaBinding := range albumMediaBindings {
+		mediaResponse, err := NewGetMediaResponse(albumMediaBinding.Media)
+		if err != nil {
+			return response, err
+		}
+		response = append(response, SingleAlbumMediaResponse{
+			AddedAt:          albumMediaBinding.CreatedAt,
+			GetMediaResponse: mediaResponse,
+		})
+	}
+
+	return response, nil
 }

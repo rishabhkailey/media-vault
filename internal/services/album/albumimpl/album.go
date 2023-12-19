@@ -8,7 +8,6 @@ import (
 	"github.com/rishabhkailey/media-service/internal/services/album"
 	"github.com/rishabhkailey/media-service/internal/store"
 	albumStore "github.com/rishabhkailey/media-service/internal/store/album"
-	"github.com/rishabhkailey/media-service/internal/store/media"
 	"golang.org/x/net/context"
 	"gorm.io/gorm"
 )
@@ -45,13 +44,41 @@ func (s *Service) Create(ctx context.Context, cmd album.CreateAlbumCmd) (album a
 }
 
 func (s *Service) GetUserAlbums(ctx context.Context, query album.GetUserAlbumsQuery) ([]albumStore.Album, error) {
-	return s.store.AlbumStore.GetByUserId(
-		ctx, query.UserID,
-		album.AlbumOrderAttributesMapping[query.OrderBy],
-		album.AlbumSortKeywordMapping[query.Sort],
-		int(query.PerPage),
-		int((query.Page-1)*query.PerPage),
-	)
+	switch query.OrderBy {
+	case albumStore.AlbumOrderByDate:
+		{
+			return s.store.AlbumStore.GetAlbumsByUserIdOrderByCreationAt(
+				ctx,
+				query.UserID,
+				query.OrderBy,
+				query.Sort,
+				query.LastAlbumID,
+				query.PerPage,
+			)
+		}
+	case albumStore.AlbumOrderByUpdatedAt:
+		{
+			return s.store.AlbumStore.GetAlbumsByUserIdOrderByUpdatedAt(
+				ctx,
+				query.UserID,
+				query.OrderBy,
+				query.Sort,
+				query.LastAlbumID,
+				query.PerPage,
+			)
+		}
+	default:
+		{
+			return s.store.AlbumStore.GetAlbumsByUserIdOrderByCreationAt(
+				ctx,
+				query.UserID,
+				query.OrderBy,
+				query.Sort,
+				query.LastAlbumID,
+				query.PerPage,
+			)
+		}
+	}
 }
 
 func (s *Service) GetUserAlbum(ctx context.Context, query album.GetUserAlbumQuery) (album albumStore.Album, err error) {
@@ -104,7 +131,7 @@ func (s *Service) DeleteAlbum(ctx context.Context, cmd album.DeleteAlbumCmd) err
 	return s.store.AlbumStore.DeleteAlbum(ctx, cmd.AlbumID)
 }
 
-func (s *Service) GetAlbumMedia(ctx context.Context, query album.GetAlbumMediaQuery) (mediaList []media.Media, err error) {
+func (s *Service) GetAlbumMedia(ctx context.Context, query album.GetAlbumMediaQuery) (albumMediaBindings []albumStore.AlbumMediaBindings, err error) {
 	ok, err := s.store.AlbumStore.CheckAlbumBelongsToUser(ctx, query.UserID, query.AlbumID)
 	if err != nil {
 		return
@@ -113,14 +140,41 @@ func (s *Service) GetAlbumMedia(ctx context.Context, query album.GetAlbumMediaQu
 		err = internalErrors.ErrForbidden
 		return
 	}
-	return s.store.AlbumStore.GetMediaByAlbumId(
-		ctx,
-		query.AlbumID,
-		album.AlbumMediaOrderAttributesMapping[query.OrderBy],
-		album.AlbumMediaSortKeywordMapping[query.Sort],
-		int(query.PerPage),
-		int((query.Page-1)*query.PerPage),
-	)
+	switch query.OrderBy {
+	case albumStore.AlbumMediaOrderByAddedDate:
+		return s.store.AlbumStore.GetMediaByAlbumIdOrderByAddedDate(
+			ctx,
+			query.AlbumID,
+			query.LastMediaID,
+			query.Sort,
+			int(query.PerPage),
+		)
+	case albumStore.AlbumMediaOrderByMediaDate:
+		return s.store.AlbumStore.GetMediaByAlbumIdOrderByDate(
+			ctx,
+			query.AlbumID,
+			query.LastMediaID,
+			query.Sort,
+			int(query.PerPage),
+		)
+	case albumStore.AlbumMediaOrderByUploadedDate:
+		return s.store.AlbumStore.GetMediaByAlbumIdOrderByUploadDate(
+			ctx,
+			query.AlbumID,
+			query.LastMediaID,
+			query.Sort,
+			int(query.PerPage),
+		)
+	default:
+		return s.store.AlbumStore.GetMediaByAlbumIdOrderByUploadDate(
+			ctx,
+			query.AlbumID,
+			query.LastMediaID,
+			query.Sort,
+			int(query.PerPage),
+		)
+	}
+
 }
 
 func (s *Service) UpdateAlbum(ctx context.Context, cmd album.UpdateAlbumCmd) (albumStore.Album, error) {

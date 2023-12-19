@@ -3,7 +3,7 @@ module github.com/rishabhkailey/media-service
 go 1.19
 
 require (
-	github.com/3d0c/gmf v0.0.0-20220906170454-be727bc5b56c
+	// github.com/3d0c/gmf v0.0.0-20220906170454-be727bc5b56c
 	github.com/DATA-DOG/go-sqlmock v1.5.0
 	github.com/awnumar/memguard v0.22.3
 	github.com/coreos/go-oidc/v3 v3.5.0
