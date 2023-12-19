@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { onMounted, ref } from "vue";
+import { onMounted, ref, watch } from "vue";
 import { useRoute, useRouter } from "vue-router";
 import { useAlbumStore } from "@/piniaStore/album";
 import { storeToRefs } from "pinia";
@@ -31,14 +31,35 @@ async function loadAllMediaOfDate(date: Date): Promise<boolean> {
   return true;
 }
 
+// in case of error it will return empty string
+const getAlbumIdFromRoute = () => {
+  let albumID = Array.isArray(route.params.album_id)
+    ? route.params.album_id[0]
+    : route.params.album_id;
+  if (albumID.length == 0 || isNaN(Number(albumID))) {
+    errorMessage.value = "invalid or empty album id";
+    return "";
+  }
+  return albumID;
+};
+
 const route = useRoute();
-const albumID = Array.isArray(route.params.album_id)
-  ? route.params.album_id[0]
-  : route.params.album_id;
 const errorMessage = ref("");
-if (albumID.length == 0) {
-  errorMessage.value = "empty album id";
-}
+let albumID = ref(getAlbumIdFromRoute());
+console.log("album id in script", albumID.value);
+
+watch(
+  () => route.params.album_id,
+  () => {
+    let newAlbumId = getAlbumIdFromRoute();
+    if (newAlbumId.length === 0 || newAlbumId === albumID.value) {
+      return;
+    }
+    console.log("album id updated", newAlbumId);
+    albumID.value = newAlbumId;
+    loadAlbum();
+  }
+);
 
 const album = ref<Album>({
   id: 0,
@@ -72,10 +93,10 @@ function onDeleteConfirm() {
     });
 }
 
-onMounted(() => {
+const loadAlbum = () => {
   loading.value = true;
-  setAlbumID(Number(albumID));
-  getAlbumByID(Number(albumID))
+  setAlbumID(Number(albumID.value));
+  getAlbumByID(Number(albumID.value))
     .then((_album) => {
       album.value = _album;
       loading.value = false;
@@ -83,10 +104,18 @@ onMounted(() => {
     .catch((err) => {
       errorMessage.value = "something went wrong. " + err;
     });
+};
+
+onMounted(() => {
+  console.log("album id in mounted", albumID.value);
+  if (albumID.value.length === 0) {
+    return;
+  }
+  loadAlbum();
 });
 </script>
 <template>
-  <h1 v-if="loading">Loading</h1>
+  <h1 v-if="loading">Loading...</h1>
   <v-col v-else>
     <v-row>
       <v-toolbar :collapse="false" :title="album.name ?? '!'" color="surface">

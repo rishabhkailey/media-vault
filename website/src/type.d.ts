@@ -30,6 +30,10 @@ interface Media {
   thumbnail_aspect_ratio: number;
 }
 
+interface AlbumMedia extends Media {
+  added_at: Date;
+}
+
 interface IndexMedia {
   media: Media;
   index: number;

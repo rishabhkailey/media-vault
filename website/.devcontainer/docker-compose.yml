@@ -6,4 +6,6 @@ services:
     volumes:
       - ../..:/workspaces:cached
     command: sleep infinity
-    network_mode: host
+    network_mode: container:media-service_devcontainer-app-1
+    # for debugging, if enabled we will need to rebuild this container every time `media-service_devcontainer-app-1` container is rebuilt 
+    # pid: "container:media-service_devcontainer-app-1" #(only enable this termporary for debugging network requests to and from vite proxy)
