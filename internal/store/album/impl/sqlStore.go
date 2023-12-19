@@ -83,6 +83,7 @@ func (s *sqlStore) GetByID(ctx context.Context, albumID uint) (result album.Albu
 	return
 }
 
+// todo implement last_media_id and last_date
 func (s *sqlStore) GetMediaByAlbumId(ctx context.Context, albumID uint, orderBy string, sort string, limit int, offset int) (mediaList []media.Media, err error) {
 	db := s.db.WithContext(ctx)
 	mediaIDsByAlbumQuery := db.Model(&album.AlbumMediaBindings{}).Select("media_id").Where("album_id = ?", albumID)

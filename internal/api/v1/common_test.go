@@ -3,8 +3,12 @@ package v1_test
 import (
 	"encoding/json"
 	"io"
+	"math/rand"
 	"net/http/httptest"
 	"testing"
+	"time"
+
+	cryptorand "crypto/rand"
 
 	"github.com/gin-gonic/gin"
 	"github.com/rishabhkailey/media-service/internal/api"
@@ -13,12 +17,16 @@ import (
 	"github.com/rishabhkailey/media-service/internal/services"
 	authserviceimpl "github.com/rishabhkailey/media-service/internal/services/authService/authServiceImpl"
 	"github.com/rishabhkailey/media-service/internal/services/media/mediaimpl"
+	mediametadata "github.com/rishabhkailey/media-service/internal/services/mediaMetadata"
 	mediametadataimpl "github.com/rishabhkailey/media-service/internal/services/mediaMetadata/mediaMetadataImpl"
 	mediasearchimpl "github.com/rishabhkailey/media-service/internal/services/mediaSearch/mediaSearchimpl"
 	"github.com/rishabhkailey/media-service/internal/services/mediaStorage/mediastorageimpl"
+	uploadrequests "github.com/rishabhkailey/media-service/internal/services/uploadRequests"
 	"github.com/rishabhkailey/media-service/internal/services/uploadRequests/uploadrequestsimpl"
 	usermediabindingsimpl "github.com/rishabhkailey/media-service/internal/services/userMediaBindings/userMediaBindingsimpl"
+	"github.com/rishabhkailey/media-service/internal/store/media"
 	"github.com/stretchr/testify/assert"
+	"gorm.io/gorm"
 )
 
 func NewTestServer() *v1.Server {
@@ -60,12 +68,12 @@ func verifyMapResponse(t *testing.T, response httptest.ResponseRecorder, expecte
 	return nil
 }
 
-func verifyResponse(t *testing.T, response httptest.ResponseRecorder, expectedResponse any) error {
+func verifyResponse(t *testing.T, response httptest.ResponseRecorder, expectedResponse any, msgAndArgs ...interface{}) error {
 	var responseBody any
 	if err := json.Unmarshal(response.Body.Bytes(), &responseBody); err != nil {
 		return err
 	}
-	assert.Equal(t, expectedResponse, responseBody)
+	assert.Equal(t, expectedResponse, responseBody, msgAndArgs)
 	return nil
 }
 
@@ -73,4 +81,55 @@ func verifyResponseBytes(t *testing.T, response httptest.ResponseRecorder, expec
 	responseBytes, _ := io.ReadAll(response.Body)
 	assert.Equal(t, expectedResponse, responseBytes)
 	return nil
+}
+
+// it will panic if any error so only use this in tests
+func randomString(n int64) string {
+	bytes := make([]byte, n)
+	cryptorand.Read(bytes)
+	var randString string
+	{
+		// to make string readable
+		ascii := []rune("abcdefghijklmnopqrstuvwxyz ABCDEFGHIJKLMNOPQRSTUVWXYZ")
+		for _, byte := range bytes {
+			randString += string(ascii[int(byte)%len(ascii)])
+		}
+	}
+	return randString
+}
+
+func randomMediaList(n int) (mediaList []media.Media) {
+	for i := 0; i < n; i++ {
+		mediaList = append(mediaList, media.Media{
+			Model: gorm.Model{
+				ID:        uint(rand.Uint32()),
+				CreatedAt: time.Now().AddDate(0, 0, -1*rand.Intn(10)),
+				UpdatedAt: time.Now().AddDate(0, 0, -1*rand.Intn(10)),
+			},
+			FileName:        randomString(10),
+			UploadRequestID: randomString(10),
+			MetadataID:      uint(rand.Uint32()),
+			UploadRequest: uploadrequests.Model{
+				ID:        randomString(10),
+				Status:    uploadrequests.COMPLETED_UPLOAD_STATUS,
+				CreatedAt: time.Now().AddDate(0, 0, -1*rand.Intn(10)),
+				UpdatedAt: time.Now().AddDate(0, 0, -1*rand.Intn(10)),
+			},
+			Metadata: mediametadata.Model{
+				Model: gorm.Model{
+					ID:        uint(rand.Uint32()),
+					CreatedAt: time.Now().AddDate(0, 0, -1*rand.Intn(10)),
+					UpdatedAt: time.Now().AddDate(0, 0, -1*rand.Intn(10)),
+				},
+				Metadata: mediametadata.Metadata{
+					Name:      randomString(10),
+					Date:      time.Now().AddDate(0, 0, -1*rand.Intn(10)),
+					Type:      randomString(5),
+					Size:      rand.Uint64(),
+					Thumbnail: false,
+				},
+			},
+		})
+	}
+	return
 }

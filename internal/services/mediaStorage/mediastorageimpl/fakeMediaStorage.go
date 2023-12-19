@@ -23,32 +23,32 @@ func NewFakeService() mediastorage.Service {
 
 var _ mediastorage.Service = (*FakeService)(nil)
 
-func (s *FakeService) HttpGetRangeHandler(ctx context.Context, query mediastorage.HttpGetRangeHandlerQuery) (int64, error) {
+func (s *FakeService) HttpGetRangeHandler(ctx context.Context, query mediastorage.HttpGetRangeHandlerQuery) error {
 	if s.ExpectedError != nil {
-		return s.ExpectedWrittenBytes, s.ExpectedError
+		return s.ExpectedError
 	}
 	reader := bytes.NewReader(s.FileBytes)
 	io.CopyN(query.ResponseWriter, reader, s.ExpectedWrittenBytes)
 	query.ResponseWriter.Header().Add("Range", fmt.Sprintf("bytes=%d-%d/%d", query.Range.Start, query.Range.End, len(s.FileBytes)))
-	return s.ExpectedWrittenBytes, s.ExpectedError
+	return s.ExpectedError
 }
 
-func (s *FakeService) HttpGetMediaHandler(ctx context.Context, query mediastorage.HttpGetMediaHandlerQuery) (int64, error) {
+func (s *FakeService) HttpGetMediaHandler(ctx context.Context, query mediastorage.HttpGetMediaHandlerQuery) error {
 	if s.ExpectedError != nil {
-		return s.ExpectedWrittenBytes, s.ExpectedError
+		return s.ExpectedError
 	}
 	reader := bytes.NewReader(s.FileBytes)
 	io.CopyN(query.ResponseWriter, reader, s.ExpectedWrittenBytes)
-	return s.ExpectedWrittenBytes, s.ExpectedError
+	return s.ExpectedError
 }
 
-func (s *FakeService) HttpGetThumbnailHandler(ctx context.Context, query mediastorage.HttpGetThumbnailHandlerQuery) (int64, error) {
+func (s *FakeService) HttpGetThumbnailHandler(ctx context.Context, query mediastorage.HttpGetThumbnailHandlerQuery) error {
 	if s.ExpectedError != nil {
-		return s.ExpectedWrittenBytes, s.ExpectedError
+		return s.ExpectedError
 	}
 	reader := bytes.NewReader(s.FileBytes)
 	io.CopyN(query.ResponseWriter, reader, s.ExpectedWrittenBytes)
-	return s.ExpectedWrittenBytes, s.ExpectedError
+	return s.ExpectedError
 }
 
 func (s *FakeService) InitChunkUpload(ctx context.Context, cmd mediastorage.InitChunkUploadCmd) error {

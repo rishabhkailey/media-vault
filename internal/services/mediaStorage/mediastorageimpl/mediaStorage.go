@@ -4,6 +4,7 @@ import (
 	"context"
 	"fmt"
 	"io"
+	"net/http"
 	"time"
 
 	"github.com/minio/minio-go/v7"
@@ -46,56 +47,49 @@ func (s *Service) GetThumbnailByFileName(ctx context.Context, query mediastorage
 	return s.store.GetByFileName(ctx, s.GetThumbnailFileName(query.FileName))
 }
 
-func (s *Service) HttpGetRangeHandler(ctx context.Context, query mediastorage.HttpGetRangeHandlerQuery) (int64, error) {
+func (s *Service) HttpGetRangeHandler(ctx context.Context, query mediastorage.HttpGetRangeHandlerQuery) (err error) {
 	file, err := s.store.GetByFileName(ctx, query.FileName)
 	if err != nil {
-		return 0, fmt.Errorf("[mediaService.HttpGetRangeHandler]: get by file name failed: %w", err)
+		return fmt.Errorf("[mediaService.HttpGetRangeHandler]: get by file name failed: %w", err)
 	}
 	// todo close file/object when it is removed from cache
 	// defer file.Close()
 	stat, err := file.Stat()
 	if err != nil {
-		return 0, fmt.Errorf("[mediaService.HttpGetRangeHandler]: get file stats failed: %w", err)
+		return fmt.Errorf("[mediaService.HttpGetRangeHandler]: get file stats failed: %w", err)
 	}
-	// range end inclusive
-	if query.Range.End > stat.Size()-1 {
-		query.Range.End = stat.Size() - 1
-	}
-	_, err = file.Seek(query.Range.Start, 0)
-	if err != nil {
-		return 0, fmt.Errorf("[mediaService.HttpGetRangeHandler]: file seek failed: %w", err)
-	}
-	// range start and end is inclusive
-	contentLength := query.Range.End - query.Range.Start + 1
-	// todo why can't we move the header logic to router and here we only copy the data
-	// change the function names accordingly
-	query.ResponseWriter.Header().Add("Content-Range", fmt.Sprintf("bytes %d-%d/%d", query.Range.Start, query.Range.End, stat.Size()))
-	// query.ResponseWriter.Header().Add("content-length", strconv.FormatInt(contentLength, 10))
-	return io.CopyN(query.ResponseWriter, file, contentLength)
+	defer func() {
+		if r := recover(); r != nil {
+			err = fmt.Errorf("[mediaService.HttpGetRangeHandler] http.ServeContent panic :%v", r)
+		}
+	}()
+	http.ServeContent(query.ResponseWriter, query.Request, "", stat.ModTime(), file)
+	return
 }
 
-func (s *Service) HttpGetMediaHandler(ctx context.Context, query mediastorage.HttpGetMediaHandlerQuery) (int64, error) {
+func (s *Service) HttpGetMediaHandler(ctx context.Context, query mediastorage.HttpGetMediaHandlerQuery) (err error) {
 	file, err := s.store.GetByFileName(ctx, query.FileName)
 	if err != nil {
-		return 0, err
+		return err
 	}
-	// defer file.Close()
 	stat, err := file.Stat()
 	if err != nil {
-		return 0, err
+		return err
 	}
-	_, err = file.Seek(0, 0)
-	if err != nil {
-		return 0, err
-	}
-	// query.ResponseWriter.Header().Add("content-length", strconv.FormatInt(stat.Size(), 10))
-	return io.CopyN(query.ResponseWriter, file, stat.Size())
+	defer func() {
+		if r := recover(); r != nil {
+			err = fmt.Errorf("[mediaService.HttpGetMediaHandler] http.ServeContent panic :%v", r)
+		}
+	}()
+	http.ServeContent(query.ResponseWriter, query.Request, "", stat.ModTime(), file)
+	return
 }
 
-func (s *Service) HttpGetThumbnailHandler(ctx context.Context, query mediastorage.HttpGetThumbnailHandlerQuery) (int64, error) {
+func (s *Service) HttpGetThumbnailHandler(ctx context.Context, query mediastorage.HttpGetThumbnailHandlerQuery) error {
 	return s.HttpGetMediaHandler(ctx, mediastorage.HttpGetMediaHandlerQuery{
 		FileName:       s.GetThumbnailFileName(query.FileName),
 		ResponseWriter: query.ResponseWriter,
+		Request:        query.Request,
 	})
 }
 
@@ -132,7 +126,7 @@ func (s *Service) InitChunkUpload(_ context.Context, cmd mediastorage.InitChunkU
 			}
 			return
 		}
-		logrus.Infof("[server.startUploadInBackground] upload completed: %n bytes", n)
+		logrus.Infof("[server.startUploadInBackground] upload completed: %d bytes", n)
 		uploadRequest.completed = true
 		uploadRequest.err = nil
 		uploadRequest.cancelFunc()
@@ -230,7 +224,7 @@ func (s *Service) DeleteOne(ctx context.Context, cmd mediastorage.DeleteOneComma
 	if cmd.HasThumbnail {
 		err := s.store.DeleteOne(ctx, s.GetThumbnailFileName(cmd.FileName))
 		if err != nil {
-			logrus.Warnf("[mediaStorage.DeleteOne]: %s's Thumnail deletion failed: %w", cmd.FileName, err)
+			logrus.Warnf("[mediaStorage.DeleteOne]: %s's Thumnail deletion failed: %v", cmd.FileName, err)
 		}
 	}
 	return nil
