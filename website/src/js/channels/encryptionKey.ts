@@ -1,3 +1,5 @@
+import { timestamp } from "../utls";
+
 const channelName = "encryption-key-channel";
 
 export class EncryptionKeyChannelClient {
@@ -7,7 +9,9 @@ export class EncryptionKeyChannelClient {
     this._channel = new BroadcastChannel(channelName);
     this._encryptionKey = encryptionKey;
     this._channel.addEventListener("message", (event) => {
-      console.log("client: want encryption key message received");
+      console.log(
+        `${timestamp()}: client: want encryption key message received`
+      );
       if (event.data.wantEncryptionKey !== true) {
         return;
       }
@@ -26,18 +30,22 @@ export class EncryptionKeyChannelClient {
 }
 
 export class EncryptionKeyChannelWorker {
+  private _requestEncryptionKeyInProgress: boolean;
   private _channel: BroadcastChannel;
   private _encryptionKey: string;
   constructor() {
     this._channel = new BroadcastChannel(channelName);
     this._encryptionKey = "";
+    this._requestEncryptionKeyInProgress = false;
     this._channel.addEventListener("message", (event) => {
       if (
         event.data?.encryptionKey &&
         typeof event.data.encryptionKey === "string" &&
         event.data.encryptionKey.length !== 0
       ) {
-        console.log("worker: set encryption key message received");
+        console.log(
+          `${timestamp()}: worker: set encryption key message received`
+        );
         this._encryptionKey = event.data.encryptionKey;
         return;
       }
@@ -50,21 +58,34 @@ export class EncryptionKeyChannelWorker {
     if (this.encryptionKey.length !== 0) {
       return this.encryptionKey;
     }
-    this._channel.postMessage({
-      wantEncryptionKey: true,
-    });
-    // in ms
-    const interval = 100;
-    const timeout = 10000;
-
-    let time = 0;
-    while (time < timeout) {
-      if (this.encryptionKey.length !== 0) {
-        return this.encryptionKey;
-      }
-      await new Promise((r) => setTimeout(r, interval));
-      time += interval;
+    if (this._requestEncryptionKeyInProgress === false) {
+      console.debug(`${timestamp()}: requesting encryption key from client`);
+      this._channel.postMessage({
+        wantEncryptionKey: true,
+      });
+      this._requestEncryptionKeyInProgress = true;
     }
-    throw new Error("timedout waiting for encryption key from clients");
+    try {
+      // make a function for wait separate
+      // in ms
+      const interval = 100;
+      const timeout = 10000;
+
+      let time = 0;
+      while (time < timeout) {
+        if (this.encryptionKey.length !== 0) {
+          return this.encryptionKey;
+        }
+        await new Promise((r) => setTimeout(r, interval));
+        time += interval;
+      }
+    } catch (err) {
+      throw new Error(`${timestamp()}: failed to watch encryptionKey update`);
+    } finally {
+      this._requestEncryptionKeyInProgress = false;
+    }
+    throw new Error(
+      `${timestamp()}: timedout waiting for encryption key from clients`
+    );
   }
 }
