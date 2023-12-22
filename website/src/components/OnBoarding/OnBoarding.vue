@@ -2,10 +2,11 @@
 import { onMounted, ref } from "vue";
 import LogoButton from "../Logo/LogoButton.vue";
 import { useUserInfoStore } from "@/piniaStore/userInfo";
-import { useRouter } from "vue-router";
+import { useRouter, type NavigationFailure, useRoute } from "vue-router";
 
 const { postUserInfo } = useUserInfoStore();
 const router = useRouter();
+const route = useRoute();
 
 const preferedTimezone = ref("");
 const availableTimezones = ref<Array<string>>([]);
@@ -48,6 +49,34 @@ onMounted(() => {
   }
 });
 
+async function returnToOriginalEndpoint() {
+  const returnUriQuery = Array.isArray(route.query.return_uri)
+    ? route.query.return_uri[0]
+    : route.query.return_uri;
+  let returnUri = "";
+  if (returnUriQuery !== null) {
+    returnUri = returnUriQuery;
+  }
+  let error: void | NavigationFailure | Error | undefined;
+  try {
+    error = await router.push(returnUri);
+    if (!(error instanceof Error)) {
+      return;
+    }
+  } catch (err) {
+    if (err instanceof Error) {
+      error = err;
+    } else {
+      error = new Error("unexpected error while returning to original page.");
+    }
+  }
+  console.error(error);
+  router.push({
+    name: "Home",
+  });
+  return;
+}
+
 function submitHandler() {
   if (isFormValid.value == false || isFormValid.value == null) {
     return;
@@ -55,9 +84,7 @@ function submitHandler() {
   postUserInfo(preferedTimezone.value, encryptionKey.value)
     .then((ok) => {
       if (ok) {
-        router.push({
-          name: "Home",
-        });
+        returnToOriginalEndpoint();
         return;
       }
       errorMessage.value = "request failed.";

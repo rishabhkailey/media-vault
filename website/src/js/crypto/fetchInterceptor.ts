@@ -27,6 +27,7 @@ export async function internalFetch(
   req: Request,
   encryptionKeyGetter: () => Promise<string>
 ) {
+  console.debug(`[internalFetch] ${req.url}`);
   const range: IRequestRange | undefined = getRequestRange(req.headers);
   const nonce = getNonceFromUrl(req.url);
   console.log("nonce", nonce);
@@ -38,7 +39,9 @@ export async function internalFetch(
     // return;
     const encryptedStream = res.body;
     if (encryptedStream === null) {
-      return new Response("res");
+      return new Response(undefined, {
+        status: 500,
+      });
     }
     const decryptedStream = encryptedStream.pipeThrough(
       newDecryptTransformer(decryptor)

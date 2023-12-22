@@ -14,6 +14,7 @@ import EnterEncryptionKey from "@/views/EnterEncryptionKey.vue";
 import AllMediaPreviewVue from "@/components/MediaPreview/AllMediaPreview.vue";
 import SearchMediaPreviewVue from "@/components/MediaPreview/SearchMediaPreview.vue";
 import AlbumMediaPreviewVue from "@/components/MediaPreview/AlbumMediaPreview.vue";
+import { encryptionKeyGaurd, loginGaurd, serviceWrokerGaurd } from "./guards";
 // todo pages without redirect from vue should be lazy loaded on external/server redirect
 const router = createRouter({
   history: createWebHistory(import.meta.env.BASE_URL),
@@ -31,8 +32,10 @@ const router = createRouter({
       component: NotFound,
     },
     {
+      // rename it to root?
       path: "/",
       component: HomeView,
+      beforeEnter: [loginGaurd, encryptionKeyGaurd, serviceWrokerGaurd],
       children: [
         {
           path: "",
@@ -86,6 +89,7 @@ const router = createRouter({
       path: "/encryption-key",
       name: "encryptionKey",
       component: EnterEncryptionKey,
+      beforeEnter: [loginGaurd],
     },
     {
       path: "/about",

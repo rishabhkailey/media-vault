@@ -2,18 +2,20 @@
 import { ref } from "vue";
 import LogoButton from "@/components/Logo/LogoButton.vue";
 import { useUserInfoStore } from "@/piniaStore/userInfo";
+import { onMounted } from "vue";
 
 const emits = defineEmits<{
   (e: "success", encryptionKey: string): void;
 }>();
 
-const { validateEncryptionKey } = useUserInfoStore();
+const { validateEncryptionKey, loadUserInfoIfRequred } = useUserInfoStore();
 
 const encryptionKey = ref("");
 const warningMessage = ref("");
 const errorMessage = ref("");
 
 const isFormValid = ref(false);
+const loading = ref(false);
 
 function submitHandler() {
   if (isFormValid.value == false || isFormValid.value == null) {
@@ -25,6 +27,21 @@ function submitHandler() {
   }
   errorMessage.value = "wrong encryption key";
 }
+onMounted(() => {
+  loading.value = true;
+  loadUserInfoIfRequred()
+    .then((ok) => {
+      if (!ok) {
+        console.error("something went wrong while loading user info");
+        errorMessage.value = "something went wrong while loading user info";
+      }
+      loading.value = false;
+    })
+    .catch((err) => {
+      console.error(err);
+      loading.value = false;
+    });
+});
 </script>
 <template>
   <v-sheet
