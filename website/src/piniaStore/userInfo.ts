@@ -3,7 +3,6 @@ import { defineStore, storeToRefs } from "pinia";
 import { ref } from "vue";
 import { useAuthStore } from "./auth";
 import bcrypt from "bcryptjs";
-import { error } from "console";
 
 interface UserInfo {
   id: string;

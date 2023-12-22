@@ -1,6 +1,6 @@
 import { createRouter, createWebHistory } from "vue-router";
 import NotFound from "@/views/NotFoundView.vue";
-import HomeView from "@/views/HomeView.vue";
+import HomeView from "@/views/Root.vue";
 import ErrorScreenView from "@/views/ErrorScreenView.vue";
 import PKCEVue from "@/views/PKCE.vue";
 import TestView from "@/views/TestView.vue";
@@ -32,7 +32,7 @@ const router = createRouter({
       component: NotFound,
     },
     {
-      // rename it to root?
+      // tod rename it to root or app?
       path: "/",
       component: HomeView,
       beforeEnter: [loginGaurd, encryptionKeyGaurd, serviceWrokerGaurd],
