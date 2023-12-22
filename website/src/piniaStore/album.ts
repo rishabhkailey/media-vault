@@ -1,13 +1,62 @@
 import { UNKNOWN_DATE } from "@/js/date";
 import axios from "axios";
 import { defineStore, storeToRefs } from "pinia";
-import { ref } from "vue";
+import { computed, ref } from "vue";
 import { useAlbumMediaStore } from "./albumMedia";
 import { useMediaStore } from "./media";
 import { useAuthStore } from "./auth";
-
-// we will need lock or something else
+import { URL } from "whatwg-url";
+// todo we will need lock or something else
 // to prevent duplicates if the same request is called twice
+
+type OrderBySearchParam = "created_at" | "updated_at";
+type SortyBySearchParam = "asc" | "desc";
+interface IOrderByProperties {
+  responseAttribute: keyof Album;
+  // for sorting in asc order
+  // album1 > album2 => 1
+  // album1 < album2 => -1
+  // album1 = album2 => 0
+  compare: (album1: Album, album2: Album) => number;
+  orderBySearchParam: OrderBySearchParam;
+  sortBySearchParam: SortyBySearchParam;
+}
+
+// todo
+type UserFriendlyOrderBy =
+  | "Newest date first"
+  | "Oldest date first"
+  | "Newest updated first"
+  | "Oldest updated first";
+
+const userFriendlyOrderByToProperties = new Map<
+  UserFriendlyOrderBy,
+  IOrderByProperties
+>();
+userFriendlyOrderByToProperties.set("Newest date first", {
+  compare: (a1, a2) => a1.created_at.getTime() - a2.created_at.getTime(),
+  responseAttribute: "created_at",
+  orderBySearchParam: "created_at",
+  sortBySearchParam: "desc",
+});
+userFriendlyOrderByToProperties.set("Oldest date first", {
+  compare: (a1, a2) => a1.created_at.getTime() - a2.created_at.getTime(),
+  responseAttribute: "created_at",
+  orderBySearchParam: "created_at",
+  sortBySearchParam: "asc",
+});
+userFriendlyOrderByToProperties.set("Newest updated first", {
+  compare: (a1, a2) => a1.updated_at.getTime() - a2.updated_at.getTime(),
+  responseAttribute: "updated_at",
+  orderBySearchParam: "updated_at",
+  sortBySearchParam: "desc",
+});
+userFriendlyOrderByToProperties.set("Oldest updated first", {
+  compare: (a1, a2) => a1.updated_at.getTime() - a2.updated_at.getTime(),
+  responseAttribute: "updated_at",
+  orderBySearchParam: "updated_at",
+  sortBySearchParam: "asc",
+});
 
 // todo better function names to differentiate delete from backend or just remove from local state
 export const useAlbumStore = defineStore("album", () => {
@@ -15,8 +64,19 @@ export const useAlbumStore = defineStore("album", () => {
   const { mediaList } = storeToRefs(useMediaStore());
   const { accessToken } = storeToRefs(useAuthStore());
   const nextPageNumber = ref(1);
+  const lastAlbumId = ref<null | number>(null);
   const albums = ref<Array<Album>>([]);
   const allAlbumsLoaded = ref(false);
+  const orderBy = ref<UserFriendlyOrderBy>("Newest updated first");
+  const orderByProperties = computed<IOrderByProperties>(() => {
+    const properties = userFriendlyOrderByToProperties.get(orderBy.value);
+    if (properties === undefined) {
+      throw new Error(
+        `"${orderBy.value} "invalid order by value. unable to get properties for the selected order by.`
+      );
+    }
+    return properties;
+  });
 
   function getAlbumByID(albumID: number): Promise<Album> {
     return new Promise<Album>((resolve, reject) => {
@@ -50,10 +110,11 @@ export const useAlbumStore = defineStore("album", () => {
     if (albums.length <= 1) {
       return albums;
     }
-
     albums = albums.sort((a1, a2) => {
-      console.log(a1.updated_at, a2.updated_at);
-      return a1.updated_at > a2.updated_at ? -1 : 1;
+      if (orderByProperties.value.sortBySearchParam === "asc") {
+        return orderByProperties.value.compare(a1, a2);
+      }
+      return -1 * orderByProperties.value.compare(a1, a2);
     });
 
     const uniqueAlbums: Array<Album> = [albums[0]];
@@ -93,16 +154,11 @@ export const useAlbumStore = defineStore("album", () => {
           return album;
         })
         .sort((m1, m2) => {
-          console.log(m1.updated_at, m2.updated_at);
-          return m1.updated_at > m2.updated_at ? -1 : 1;
+          if (orderByProperties.value.sortBySearchParam === "asc") {
+            return orderByProperties.value.compare(m1, m2);
+          }
+          return -1 * orderByProperties.value.compare(m1, m2);
         });
-      // todo remove duplicates
-      // let finalAlbums: Array<Album>;
-      // if (prepend) {
-      //   finalAlbums = [...newAlbums, ...albums.value];
-      // } else {
-      //   finalAlbums = [...albums.value, ...newAlbums];
-      // }
       albums.value = sortAndRemoveDuplicateAlbums([
         ...albums.value,
         ...newAlbums,
@@ -111,22 +167,38 @@ export const useAlbumStore = defineStore("album", () => {
   }
 
   function loadMoreAlbums(): Promise<boolean> {
+    const perPage = 30;
     return new Promise<boolean>((resolve, reject) => {
+      const url = new URL("/v1/albums", import.meta.env.VITE_BASE_URL);
+      url.searchParams.append("per_page", perPage.toString());
+      url.searchParams.append(
+        "order",
+        orderByProperties.value.orderBySearchParam
+      );
+      url.searchParams.append(
+        "sort",
+        orderByProperties.value.sortBySearchParam
+      );
+
+      if (lastAlbumId.value !== null) {
+        url.searchParams.append("last_album_id", lastAlbumId.value.toString());
+      }
       axios
-        .get<Array<Album>>(
-          `/v1/albums?page=${nextPageNumber.value}&perPage=30&order=updated_at&sort=desc`,
-          {
-            headers: {
-              Authorization: `Bearer ${accessToken.value}`,
-            },
-          }
-        )
+        .get<Array<Album>>(url.toString(), {
+          headers: {
+            Authorization: `Bearer ${accessToken.value}`,
+          },
+        })
         .then((response) => {
           console.log(response);
           if (response.status == 200) {
             addAlbumsInLocalState(response.data);
+            if (response.data.length > 0) {
+              lastAlbumId.value = response.data[response.data.length - 1].id;
+            }
             nextPageNumber.value += 1;
-            allAlbumsLoaded.value = response.data.length == 0;
+            allAlbumsLoaded.value =
+              response.data.length == 0 || response.data.length < perPage;
             resolve(true);
             return;
           }

@@ -1,24 +1,101 @@
 import { UNKNOWN_DATE } from "@/js/date";
 import axios from "axios";
 import { defineStore, storeToRefs } from "pinia";
-import { ref } from "vue";
+import { computed, ref } from "vue";
 import { useAuthStore } from "./auth";
 
 // we will need lock or something else
 // to prevent duplicates if the same request is called twice
 
+type OrderBySearchParam = "added_at" | "uploaded_at" | "date";
+type SortyBySearchParam = "asc" | "desc";
+interface IOrderByProperties {
+  responseAttribute: keyof AlbumMedia;
+  // for sorting in asc order
+  // album1 > album2 => 1
+  // album1 < album2 => -1
+  // album1 = album2 => 0
+  compare: (am1: AlbumMedia, am2: AlbumMedia) => number;
+
+  orderBySearchParam: OrderBySearchParam;
+  sortBySearchParam: SortyBySearchParam;
+}
+
+type UserFriendlyOrderBy =
+  | "Newest date first"
+  | "Oldest date first"
+  | "Newest uploaded first"
+  | "Oldest uploaded first"
+  | "Newest Added first"
+  | "Oldest Added first";
+
+const userFriendlyOrderByToProperties = new Map<
+  UserFriendlyOrderBy,
+  IOrderByProperties
+>();
+userFriendlyOrderByToProperties.set("Newest date first", {
+  compare: (a1, a2) => a1.date.getTime() - a2.date.getTime(),
+  responseAttribute: "date",
+  orderBySearchParam: "date",
+  sortBySearchParam: "desc",
+});
+userFriendlyOrderByToProperties.set("Oldest date first", {
+  compare: (a1, a2) => a1.date.getTime() - a2.date.getTime(),
+  responseAttribute: "date",
+  orderBySearchParam: "date",
+  sortBySearchParam: "asc",
+});
+userFriendlyOrderByToProperties.set("Newest uploaded first", {
+  compare: (a1, a2) => a1.uploaded_at.getTime() - a2.uploaded_at.getTime(),
+  responseAttribute: "uploaded_at",
+  orderBySearchParam: "uploaded_at",
+  sortBySearchParam: "desc",
+});
+userFriendlyOrderByToProperties.set("Oldest uploaded first", {
+  compare: (a1, a2) => a1.uploaded_at.getTime() - a2.uploaded_at.getTime(),
+  responseAttribute: "uploaded_at",
+  orderBySearchParam: "uploaded_at",
+  sortBySearchParam: "asc",
+});
+userFriendlyOrderByToProperties.set("Newest Added first", {
+  compare: (a1, a2) => a1.added_at.getTime() - a2.added_at.getTime(),
+  responseAttribute: "added_at",
+  orderBySearchParam: "added_at",
+  sortBySearchParam: "desc",
+});
+userFriendlyOrderByToProperties.set("Newest Added first", {
+  compare: (a1, a2) => a1.added_at.getTime() - a2.added_at.getTime(),
+  responseAttribute: "added_at",
+  orderBySearchParam: "added_at",
+  sortBySearchParam: "asc",
+});
+
 export const useAlbumMediaStore = defineStore("albumMedia", () => {
-  const nextPageNumber = ref(1);
-  const mediaList = ref<Array<Media>>([]);
+  const mediaList = ref<Array<AlbumMedia>>([]);
   const allMediaLoaded = ref(false);
   const albumID = ref(0);
   const { accessToken } = storeToRefs(useAuthStore());
+  const lastMediaId = ref<null | number>(null);
+  const orderBy = ref<UserFriendlyOrderBy>("Newest Added first");
+  const orderByProperties = computed<IOrderByProperties>(() => {
+    const properties = userFriendlyOrderByToProperties.get(orderBy.value);
+    if (properties === undefined) {
+      throw new Error(
+        `"${orderBy.value} "invalid order by value. unable to get properties for the selected order by.`
+      );
+    }
+    return properties;
+  });
+
+  // todo date getter?
+  // will return the date according to which the media is sorted?
 
   function reset() {
-    nextPageNumber.value = 1;
+    console.debug("reset album media store");
     mediaList.value = [];
     allMediaLoaded.value = false;
     albumID.value = 0;
+    lastMediaId.value = null;
   }
   function setAlbumID(_albumID: number) {
     if (albumID.value != _albumID) {
@@ -26,7 +103,7 @@ export const useAlbumMediaStore = defineStore("albumMedia", () => {
     }
     albumID.value = _albumID;
   }
-  function appendMedia(_mediaList: Array<Media>) {
+  function appendMedia(_mediaList: Array<AlbumMedia>) {
     if (_mediaList.length > 0) {
       const newMediaList = _mediaList
         .map((media) => {
@@ -54,22 +131,40 @@ export const useAlbumMediaStore = defineStore("albumMedia", () => {
   }
 
   function loadMoreMedia(): Promise<boolean> {
+    const perPage = 30;
     return new Promise<boolean>((resolve, reject) => {
+      const url = new URL(
+        `/v1/album/${albumID.value}/media`,
+        import.meta.env.VITE_BASE_URL
+      );
+      url.searchParams.append("per_page", perPage.toString());
+      url.searchParams.append(
+        "order",
+        orderByProperties.value.orderBySearchParam
+      );
+      url.searchParams.append(
+        "sort",
+        orderByProperties.value.sortBySearchParam
+      );
+
+      if (lastMediaId.value !== null) {
+        url.searchParams.append("last_media_id", lastMediaId.value.toString());
+      }
       axios
-        .get<Array<Media>>(
-          `/v1/album/${albumID.value}/media?page=${nextPageNumber.value}&perPage=30&order=added_at&sort=desc`,
-          {
-            headers: {
-              Authorization: `Bearer ${accessToken.value}`,
-            },
-          }
-        )
+        .get<Array<AlbumMedia>>(url.toString(), {
+          headers: {
+            Authorization: `Bearer ${accessToken.value}`,
+          },
+        })
         .then((response) => {
           console.log(response);
           if (response.status == 200) {
-            appendMedia(response.data);
-            nextPageNumber.value += 1;
-            allMediaLoaded.value = response.data.length == 0;
+            if (response.data.length > 0) {
+              lastMediaId.value = response.data[response.data.length - 1].id;
+              appendMedia(response.data);
+            }
+            allMediaLoaded.value =
+              response.data.length == 0 || response.data.length < perPage;
             resolve(true);
             return;
           }
@@ -112,7 +207,6 @@ export const useAlbumMediaStore = defineStore("albumMedia", () => {
   }
 
   return {
-    nextPageNumber,
     mediaList,
     allMediaLoaded,
     albumID,

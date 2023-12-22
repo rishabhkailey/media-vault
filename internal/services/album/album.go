@@ -4,7 +4,6 @@ import (
 	"context"
 
 	albumStore "github.com/rishabhkailey/media-service/internal/store/album"
-	"github.com/rishabhkailey/media-service/internal/store/media"
 )
 
 type Service interface {
@@ -15,5 +14,6 @@ type Service interface {
 	AddMedia(context.Context, AddMediaQuery) (addedMediaIDs []uint, err error)
 	RemoveAlbumMedia(context.Context, RemoveMediaCmd) (removedMediaIDs []uint, err error)
 	DeleteAlbum(context.Context, DeleteAlbumCmd) error
-	GetAlbumMedia(context.Context, GetAlbumMediaQuery) ([]media.Media, error)
+	// album will not be loaded only media will be present
+	GetAlbumMedia(context.Context, GetAlbumMediaQuery) ([]albumStore.AlbumMediaBindings, error)
 }

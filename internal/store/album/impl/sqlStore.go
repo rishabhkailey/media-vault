@@ -2,8 +2,10 @@ package albumimpl
 
 import (
 	"context"
+	"database/sql"
 	"errors"
 	"fmt"
+	"time"
 
 	"github.com/go-redis/redis/v8"
 	"github.com/jackc/pgconn"
@@ -63,12 +65,21 @@ func (s *sqlStore) InsertUserAlbumBindings(ctx context.Context, userID string, a
 	return album.ID, err
 }
 
-func (s *sqlStore) GetByUserId(ctx context.Context, userID string, orderBy string, sort string, limit int, offset int) (albums []album.Album, err error) {
+func (s *sqlStore) GetByUserId(
+	ctx context.Context,
+	userID string,
+	orderBy album.AlbumOrderBy,
+	sort album.Sort,
+	limit int,
+	offset int,
+) (albums []album.Album, err error) {
 	db := s.db.WithContext(ctx)
 	// todo join?
 	// cost of join
 	// cost of join > cost of fetching all media_ids of the album and then filter
-	albumByUserIDQuery := db.Model(&album.UserAlbumBindings{}).Select("album_id").Where("user_id = ?", userID)
+	albumByUserIDQuery := db.Model(&album.UserAlbumBindings{}).
+		Select("album_id").
+		Where("user_id = ?", userID)
 	err = db.Model(&album.Album{}).
 		Where("id IN (?)", albumByUserIDQuery).
 		Limit(limit).
@@ -78,21 +89,451 @@ func (s *sqlStore) GetByUserId(ctx context.Context, userID string, orderBy strin
 	return
 }
 
+func (s *sqlStore) GetAlbumsByUserIdOrderByCreationAt(
+	ctx context.Context,
+	userID string,
+	orderBy album.AlbumOrderBy,
+	sort album.Sort,
+	lastAlbumID *uint,
+	limit int,
+) (albums []album.Album, err error) {
+	db := s.db.WithContext(ctx)
+	albumsByUserIDQuery := db.Joins("Album").Model(&album.UserAlbumBindings{})
+
+	if lastAlbumID != nil {
+		var lastAlbumDate time.Time
+		{
+			err = db.Model(&album.Album{}).
+				Select("created_at").
+				Where("id = @lastAlbumID", sql.Named("lastAlbumID", lastAlbumID)).
+				First(&lastAlbumDate).Error
+			if err != nil {
+				return
+			}
+		}
+
+		switch sort {
+		case album.Ascending:
+			{
+				albumsByUserIDQuery = albumsByUserIDQuery.Where(`
+					user_id = @userID
+					AND (
+						(
+							("Album"."created_at" = @lastAlbumDate) AND ("Album"."id" < @lastAlbumID)
+						) OR (
+							("Album"."created_at" > @lastAlbumDate)
+						)
+						)`,
+					sql.Named("userID", userID),
+					sql.Named("lastAlbumDate", lastAlbumDate),
+					sql.Named("lastAlbumID", lastAlbumID),
+				)
+			}
+		default:
+			{
+				albumsByUserIDQuery = albumsByUserIDQuery.Where(`
+					user_id = @userID 
+					AND (
+						(
+							("Album"."created_at" = @lastAlbumDate) AND ("Album"."id" < @lastAlbumID)
+						) OR (
+							("Album"."created_at" < @lastAlbumDate)
+						)
+						)`,
+					sql.Named("userID", userID),
+					sql.Named("lastAlbumDate", lastAlbumDate),
+					sql.Named("lastAlbumID", lastAlbumID),
+				)
+			}
+		}
+	} else {
+		albumsByUserIDQuery = albumsByUserIDQuery.Where(
+			`user_id = @userID `,
+			sql.Named("userID", userID),
+		)
+	}
+	queryOrderBy := fmt.Sprintf(`"Album"."created_at" %s, "Album"."id" desc`, sort)
+	var userAlbumBindings []album.UserAlbumBindings
+	err = albumsByUserIDQuery.
+		Order(queryOrderBy).
+		Limit(limit).
+		Find(&userAlbumBindings).Error
+	if err != nil {
+		return
+	}
+	for _, userAlbumBinding := range userAlbumBindings {
+		albums = append(albums, userAlbumBinding.Album)
+	}
+	return
+}
+
+func (s *sqlStore) GetAlbumsByUserIdOrderByUpdatedAt(
+	ctx context.Context,
+	userID string,
+	orderBy album.AlbumOrderBy,
+	sort album.Sort,
+	lastAlbumID *uint,
+	limit int,
+) (albums []album.Album, err error) {
+	db := s.db.WithContext(ctx)
+	albumsByUserIDQuery := db.Joins("Album").Model(&album.UserAlbumBindings{})
+
+	if lastAlbumID != nil {
+		var lastAlbumDate time.Time
+		{
+			err = db.Model(&album.Album{}).
+				Select("updated_at").
+				Where("id = @lastAlbumID", sql.Named("lastAlbumID", lastAlbumID)).
+				First(&lastAlbumDate).Error
+			if err != nil {
+				return
+			}
+		}
+
+		switch sort {
+		case album.Ascending:
+			{
+				albumsByUserIDQuery = albumsByUserIDQuery.Where(`
+					user_id = @userID
+					AND (
+						(
+							("Album"."updated_at" = @lastAlbumDate) AND ("Album"."id" < @lastAlbumID)
+						) OR (
+							("Album"."updated_at" > @lastAlbumDate)
+						)
+						)`,
+					sql.Named("userID", userID),
+					sql.Named("lastAlbumDate", lastAlbumDate),
+					sql.Named("lastAlbumID", lastAlbumID),
+				)
+			}
+		default:
+			{
+				albumsByUserIDQuery = albumsByUserIDQuery.Where(`
+					user_id = @userID 
+					AND (
+						(
+							("Album"."updated_at" = @lastAlbumDate) AND ("Album"."id" < @lastAlbumID)
+						) OR (
+							("Album"."updated_at" < @lastAlbumDate)
+						)
+						)`,
+					sql.Named("userID", userID),
+					sql.Named("lastAlbumDate", lastAlbumDate),
+					sql.Named("lastAlbumID", lastAlbumID),
+				)
+			}
+		}
+	} else {
+		albumsByUserIDQuery = albumsByUserIDQuery.Where(
+			`user_id = @userID `,
+			sql.Named("userID", userID),
+		)
+	}
+	queryOrderBy := fmt.Sprintf(`"Album"."updated_at" %s, "Album"."id" desc`, sort)
+	var userAlbumBindings []album.UserAlbumBindings
+	err = albumsByUserIDQuery.
+		Order(queryOrderBy).
+		Limit(limit).
+		Find(&userAlbumBindings).Error
+	if err != nil {
+		return
+	}
+	for _, userAlbumBinding := range userAlbumBindings {
+		albums = append(albums, userAlbumBinding.Album)
+	}
+	return
+}
+
 func (s *sqlStore) GetByID(ctx context.Context, albumID uint) (result album.Album, err error) {
 	err = s.db.WithContext(ctx).Model(&album.Album{}).First(&result, albumID).Error
 	return
 }
 
-// todo implement last_media_id and last_date
-func (s *sqlStore) GetMediaByAlbumId(ctx context.Context, albumID uint, orderBy string, sort string, limit int, offset int) (mediaList []media.Media, err error) {
+func (s *sqlStore) GetMediaByAlbumIdOrderByDate(ctx context.Context,
+	albumID uint,
+	lastMediaID *uint,
+	sort album.Sort,
+	limit int,
+) (albumMediaBindings []album.AlbumMediaBindings, err error) {
+
 	db := s.db.WithContext(ctx)
-	mediaIDsByAlbumQuery := db.Model(&album.AlbumMediaBindings{}).Select("media_id").Where("album_id = ?", albumID)
-	err = db.Joins("Metadata").Model(&media.Media{}).
-		Where("media.id IN (?)", mediaIDsByAlbumQuery).
+
+	// table name = media, metadata alias = Metadata
+	query := db.
+		Preload("Media.Metadata").
+		Joins(
+			`LEFT JOIN "media" on "album_media_bindings"."media_id" = "media"."id"
+		AND "album_media_bindings"."deleted_at" IS NULL`,
+		).
+		Joins(
+			`LEFT JOIN "media_metadata" ON "media"."metadata_id" = "media_metadata"."id"
+			AND "media_metadata"."deleted_at" IS NULL`,
+		).
+		Model(&album.AlbumMediaBindings{})
+
+	if lastMediaID != nil {
+
+		var lastMediaDate time.Time
+		{
+			// it is adding extra select columns not sure why
+			// err = db.
+			// 	Joins("Metadata").Model(&media.Media{}).
+			// 	Select(`"Metadata"."date"`).
+			// 	Where(
+			// 		`"media"."id" = @lastMediaID`,
+			// 		sql.Named("lastMediaID", lastMediaID),
+			// 	).Find(&lastMediaDate).Error
+			err = db.Model(&mediametadata.Model{}).
+				Select("date").
+				Where("id = (@lastMediaMetadataID)",
+					sql.Named(
+						"lastMediaMetadataID",
+						db.Model(&media.Media{}).
+							Select("metadata_id").
+							Where("id = ?", lastMediaID),
+					),
+				).First(&lastMediaDate).Error
+			if err != nil {
+				return
+			}
+		}
+
+		switch sort {
+		case album.Ascending:
+			{
+				query = query.Where(`
+					"album_media_bindings"."album_id" = @albumID
+					AND (
+						(
+							("media_metadata"."date" = @lastMediaDate) AND ("media"."id" < @lastMediaID)
+						) OR (
+							("media_metadata"."date" > @lastMediaDate)
+						)
+					)`,
+					sql.Named("albumID", albumID),
+					sql.Named("lastMediaDate", lastMediaDate),
+					sql.Named("lastMediaID", lastMediaID),
+				)
+			}
+		default:
+			{
+				query = query.Where(`
+					"album_media_bindings"."album_id" = @albumID
+					AND (
+						(
+							("media_metadata"."date" = @lastMediaDate) AND ("media"."id" < @lastMediaID)
+						) OR (
+							("media_metadata"."date" < @lastMediaDate)
+						)
+					)`,
+					sql.Named("albumID", albumID),
+					sql.Named("lastMediaDate", lastMediaDate),
+					sql.Named("lastMediaID", lastMediaID),
+				)
+			}
+		}
+	} else {
+		query = query.Where(
+			`"album_media_bindings"."album_id" = @albumID`,
+			sql.Named("albumID", albumID),
+		)
+	}
+
+	queryOrderBy := fmt.Sprintf(`"media_metadata"."date" %s, "media"."id" desc`, sort)
+	err = query.
+		Order(queryOrderBy).
 		Limit(limit).
-		Order(fmt.Sprintf("%s %s", orderBy, sort)).
-		Offset(offset).
-		Find(&mediaList).Error
+		Find(&albumMediaBindings).Error
+
+	if errors.Is(err, gorm.ErrRecordNotFound) {
+		return []album.AlbumMediaBindings{}, nil
+	}
+	return
+}
+
+func (s *sqlStore) GetMediaByAlbumIdOrderByUploadDate(ctx context.Context,
+	albumID uint,
+	lastMediaID *uint,
+	sort album.Sort,
+	limit int,
+) (albumMediaBindings []album.AlbumMediaBindings, err error) {
+	db := s.db.WithContext(ctx)
+
+	query := db.
+		Preload("Media.Metadata").
+		Joins(
+			`LEFT JOIN "media" on "album_media_bindings"."media_id" = "media"."id"
+		AND "album_media_bindings"."deleted_at" IS NULL`,
+		).
+		Joins(
+			`LEFT JOIN "media_metadata" ON "media"."metadata_id" = "media_metadata"."id"
+			AND "media_metadata"."deleted_at" IS NULL`,
+		).
+		Model(&album.AlbumMediaBindings{})
+
+	if lastMediaID != nil {
+		var lastUploadDate time.Time
+		{
+			err = db.Model(&media.Media{}).
+				Select("created_at").
+				Where(
+					"id = @lastMediaID",
+					sql.Named("lastMediaID", lastMediaID),
+				).First(&lastUploadDate).Error
+			if err != nil {
+				return
+			}
+		}
+
+		switch sort {
+		case album.Ascending:
+			{
+				// media whose created date > last media date (sort by created_at asc)
+				// media whose created date = last media date and media id < last media id (media id is sorted by desc order)
+				query = query.Where(`
+					"album_media_bindings"."album_id" = @albumID
+					AND (
+						(
+							("media_metadata"."created_at" = @lastUploadDate) AND ("media"."id" < @lastMediaID)
+						) OR (
+							("media_metadata"."created_at" > @lastUploadDate)
+						)
+					)`,
+					sql.Named("albumID", albumID),
+					sql.Named("lastUploadDate", lastUploadDate),
+					sql.Named("lastMediaID", lastMediaID),
+				)
+			}
+		default:
+			{
+				// media whose created date < last media date (sort by created_at desc)
+				// media whose created date = last media date and media id < last media id (media id is sorted by desc order)
+				query = query.Where(`
+					"album_media_bindings"."album_id" = @albumID
+					AND (
+						(
+							("media_metadata"."created_at" = @lastUploadDate) AND ("media"."id" < @lastMediaID)
+						) OR (
+							("media_metadata"."created_at" < @lastUploadDate)
+						)
+					)`,
+					sql.Named("albumID", albumID),
+					sql.Named("lastUploadDate", lastUploadDate),
+					sql.Named("lastMediaID", lastMediaID),
+				)
+			}
+		}
+	} else {
+		query = query.Where(
+			`"album_media_bindings"."album_id" = @albumID`,
+			sql.Named("albumID", albumID),
+		)
+	}
+
+	queryOrderBy := fmt.Sprintf(`"media_metadata"."created_at" %s, "media"."id" desc`, sort)
+	err = query.
+		Order(queryOrderBy).
+		Limit(limit).
+		Find(&albumMediaBindings).Error
+
+	if errors.Is(err, gorm.ErrRecordNotFound) {
+		return []album.AlbumMediaBindings{}, nil
+	}
+	return
+}
+
+func (s *sqlStore) GetMediaByAlbumIdOrderByAddedDate(
+	ctx context.Context,
+	albumID uint,
+	lastMediaID *uint,
+	sort album.Sort,
+	limit int,
+) (albumMediaBindings []album.AlbumMediaBindings, err error) {
+	db := s.db.WithContext(ctx)
+	// SELECT media_id FROM album_media_bindings
+	query := db.
+		Preload("Media.Metadata").
+		Joins(
+			`LEFT JOIN "media" on "album_media_bindings"."media_id" = "media"."id"
+		AND "album_media_bindings"."deleted_at" IS NULL`,
+		).
+		Joins(
+			`LEFT JOIN "media_metadata" ON "media"."metadata_id" = "media_metadata"."id"
+			AND "media_metadata"."deleted_at" IS NULL`,
+		).
+		Model(&album.AlbumMediaBindings{})
+
+	if lastMediaID != nil {
+		// SELECT created_at FROM album_media_bindings where album_id = ? AND media_id = ?
+		// lastDate not being used because we are not returning the added to album date for a media in response
+		var lastAddedAtDate time.Time
+		{
+
+			err = db.Model(&album.AlbumMediaBindings{}).
+				Select("created_at").
+				Where(
+					`"media_id" = @lastMediaID AND album_id = @albumID`,
+					sql.Named("albumID", albumID),
+					sql.Named("lastMediaID", lastMediaID),
+				).
+				First(&lastAddedAtDate).Error
+			if err != nil {
+				return
+			}
+		}
+		switch sort {
+		case album.Ascending:
+			{
+				query = query.Where(`"album_id" = @albumID
+			AND (
+				(
+					("album_media_bindings"."created_at" = @lastAddedAtDate) AND ("album_media_bindings"."media_id" < @lastMediaID)
+				) OR (
+					("album_media_bindings"."created_at" > @lastAddedAtDate)
+				)
+			)
+			`,
+					sql.Named("albumID", albumID),
+					sql.Named("lastAddedAtDate", lastAddedAtDate),
+					sql.Named("lastMediaID", lastMediaID),
+				)
+			}
+		default:
+			{
+				query = query.Where(`"album_media_bindings"."album_media_bindings""album_id" = @albumID
+			AND (
+				(
+					("album_media_bindings"."album_media_bindings""created_at" = @lastAddedAtDate) AND ("album_media_bindings"."media_id" < @lastMediaID)
+				) OR (
+					("album_media_bindings"."album_media_bindings""created_at" < @lastAddedAtDate)
+				)
+			)
+			`,
+					sql.Named("albumID", albumID),
+					sql.Named("lastAddedAtDate", lastAddedAtDate),
+					sql.Named("lastMediaID", lastMediaID),
+				)
+			}
+		}
+	} else {
+		query.Where(
+			`"album_media_bindings"."album_id" = @albumID`,
+			sql.Named("albumID", albumID),
+		)
+	}
+
+	queryOrderBy := fmt.Sprintf(`"album_media_bindings"."created_at" %s, "album_media_bindings"."media_id" desc`, sort)
+
+	err = query.
+		Order(queryOrderBy).
+		Limit(limit).
+		Find(&albumMediaBindings).Error
+
+	if errors.Is(err, gorm.ErrRecordNotFound) {
+		return []album.AlbumMediaBindings{}, nil
+	}
+
 	return
 }
 
@@ -224,14 +665,17 @@ func (s *sqlStore) UpdateAlbumMediaCount(ctx context.Context, albumID uint, chan
 
 func (s *sqlStore) UpdateThumbnail(ctx context.Context, mediaID uint, thumbnail bool, thumbnailAspectRatio float32) error {
 	mediaMetadataIdSubQuery := s.db.Model(&media.Media{}).Select("metadata_id").Where("id = ?", mediaID).Limit(1)
-	return s.db.Model(&mediametadata.Model{}).Where("id = ?", mediaMetadataIdSubQuery).Select("thumbnail", "thumbnail_aspect_ratio").Updates(
-		mediametadata.Model{
-			Metadata: mediametadata.Metadata{
-				Thumbnail:            thumbnail,
-				ThumbnailAspectRatio: thumbnailAspectRatio,
+	return s.db.Model(&mediametadata.Model{}).
+		Where("id = ?", mediaMetadataIdSubQuery).
+		Select("thumbnail", "thumbnail_aspect_ratio").
+		Updates(
+			mediametadata.Model{
+				Metadata: mediametadata.Metadata{
+					Thumbnail:            thumbnail,
+					ThumbnailAspectRatio: thumbnailAspectRatio,
+				},
 			},
-		},
-	).Error
+		).Error
 }
 
 func isUniqueConstraintError(err error) bool {

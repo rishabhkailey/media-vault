@@ -1,21 +1,27 @@
 package album
 
+import (
+	"time"
+
+	"github.com/rishabhkailey/media-service/internal/store/album"
+)
+
 const (
-	MAX_ALBUMS_PER_PAGE_VALUE      int64 = 100
+	MAX_ALBUMS_PER_PAGE_VALUE      int   = 100
 	MAX_ALBUM_MEDIA_PER_PAGE_VALUE int64 = 100
 )
 
 var (
-	AlbumSortKeywordMapping = map[string]string{
-		"asc":        "asc",
-		"desc":       "desc",
-		"ascending":  "asc",
-		"descending": "desc",
+	AlbumSortKeywordMapping = map[string]album.Sort{
+		"asc":        album.Ascending,
+		"desc":       album.Descending,
+		"ascending":  album.Ascending,
+		"descending": album.Descending,
 	}
-	AlbumOrderAttributesMapping = map[string]string{
-		"name":       "name",
-		"created_at": "created_at",
-		"updated_at": "updated_at",
+	// user friendly order value to store attribute (column in case of SQL)
+	AlbumOrderAttributesMapping = map[string]album.AlbumOrderBy{
+		"created_at": album.AlbumOrderByDate,
+		"updated_at": album.AlbumOrderByUpdatedAt,
 	}
 	AlbumMediaSortKeywordMapping = map[string]string{
 		"asc":        "asc",
@@ -23,8 +29,11 @@ var (
 		"ascending":  "asc",
 		"descending": "desc",
 	}
-	AlbumMediaOrderAttributesMapping = map[string]string{
-		"added_at": "created_at",
+	// user friendly order value to store attribute (column in case of SQL)
+	AlbumMediaOrderAttributesMapping = map[string]album.AlbumMediaOrderBy{
+		"added_at":    album.AlbumMediaOrderByAddedDate,
+		"uploaded_at": album.AlbumMediaOrderByUploadedDate,
+		"date":        album.AlbumMediaOrderByMediaDate,
 	}
 )
 
@@ -35,11 +44,12 @@ type CreateAlbumCmd struct {
 }
 
 type GetUserAlbumsQuery struct {
-	UserID  string
-	OrderBy string
-	Sort    string
-	Page    int64
-	PerPage int64
+	UserID        string
+	OrderBy       album.AlbumOrderBy
+	Sort          album.Sort
+	PerPage       int
+	LastAlbumID   *uint
+	LastAlbumDate *time.Time
 }
 
 type GetUserAlbumQuery struct {
@@ -65,12 +75,13 @@ type DeleteAlbumCmd struct {
 }
 
 type GetAlbumMediaQuery struct {
-	UserID  string
-	AlbumID uint
-	OrderBy string
-	Sort    string
-	Page    int64
-	PerPage int64
+	UserID      string
+	AlbumID     uint
+	OrderBy     album.AlbumMediaOrderBy
+	Sort        album.Sort
+	PerPage     int64
+	LastMediaID *uint
+	LastDate    *time.Time
 }
 
 type UpdateAlbumCmd struct {
