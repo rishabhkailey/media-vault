@@ -6,7 +6,7 @@ import SearchInputField from "@/components/SearchInputField.vue";
 import FloatingWindow from "@/components/FloatingWindow/FloatingWindow.vue";
 import LogoButton from "@/components/Logo/LogoButton.vue";
 import { useAuthStore } from "@/piniaStore/auth";
-import { userManagerKey } from "@/symbols/injectionSymbols";
+import { userManager } from "@/js/auth";
 import { signinUsingUserManager } from "@/js/auth";
 import type { UserManager } from "oidc-client-ts";
 import axios from "axios";
@@ -40,13 +40,8 @@ const { authenticated, userName, email } = storeToRefs(authStore);
 
 const selectedFiles = ref<Array<File>>([]);
 const uploadFilesDialogModel = ref(false);
-const userManager: UserManager | undefined = inject(userManagerKey);
 
 const logOut = async () => {
-  if (userManager === undefined) {
-    console.error("userManager not defined");
-    return;
-  }
   loading.value = true;
   try {
     await userManager.revokeTokens(["access_token", "refresh_token"]);

@@ -1,4 +1,3 @@
-export const userManagerKey = Symbol();
 export const initializingKey = Symbol();
 
 // lazy media thumbnail preview

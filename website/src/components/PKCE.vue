@@ -1,13 +1,11 @@
 <script setup lang="ts">
-import type { UserManager, User } from "oidc-client-ts";
-import { onMounted, inject } from "vue";
+import type { User } from "oidc-client-ts";
+import { onMounted } from "vue";
 import { useRouter, type LocationQueryRaw } from "vue-router";
-import { userManagerKey } from "@/symbols/injectionSymbols";
 import { handlePostLoginUsingUserManager } from "@/js/auth";
 import { useAuthStore } from "@/piniaStore/auth";
+import { userManager } from "@/js/auth";
 const authStore = useAuthStore();
-const userManager: UserManager | undefined = inject(userManagerKey);
-const router = useRouter();
 // not oidc state but state to persist some data after redirect, data will be stored in browser local storage
 interface InternalState {
   internalRedirectPath: string;
@@ -16,10 +14,6 @@ interface InternalState {
 }
 
 const handlePostLogin = async () => {
-  if (userManager === undefined) {
-    console.error("userManager not defined");
-    return;
-  }
   let router = useRouter();
   handlePostLoginUsingUserManager(userManager)
     .then((user: User) => {

@@ -1,6 +1,6 @@
 <script setup lang="ts">
 import { inject, ref } from "vue";
-import { userManagerKey } from "@/symbols/injectionSymbols";
+import { userManager } from "@/js/auth";
 import { signinUsingUserManager } from "@/js/auth";
 import type { UserManager } from "oidc-client-ts";
 import LogoButton from "@/components/Logo/LogoButton.vue";
@@ -8,14 +8,7 @@ import LogoButton from "@/components/Logo/LogoButton.vue";
 // todo error and error message pop up
 const error = ref(false);
 
-const userManager: UserManager | undefined = inject(userManagerKey);
-
 const logIn = () => {
-  if (userManager === undefined) {
-    console.error("userManager not defined");
-    error.value = true;
-    return;
-  }
   signinUsingUserManager(userManager, true);
 };
 </script>
