@@ -1,5 +1,4 @@
 <script setup lang="ts">
-import { useAlbumMediaStore } from "@/piniaStore/albumMedia";
 import MediaPreview from "./MediaPreview.vue";
 import { useMediaStore } from "@/piniaStore/media";
 import { storeToRefs } from "pinia";

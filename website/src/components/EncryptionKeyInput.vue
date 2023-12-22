@@ -53,12 +53,14 @@ function submitHandler() {
                 label="encryption key"
                 type="password"
                 required
-                :rules="[(value: string) => {
-                  if (value.length > 0) {
-                    return true
-                  }
-                  return 'required'
-                }]"
+                :rules="[
+                  (value: string) => {
+                    if (value.length > 0) {
+                      return true;
+                    }
+                    return 'required';
+                  },
+                ]"
                 autocomplete="on"
                 prepend-inner-icon="mdi-lock-outline"
               ></v-text-field>

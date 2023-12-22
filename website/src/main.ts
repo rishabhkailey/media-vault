@@ -12,16 +12,16 @@ import * as directives from "vuetify/directives";
 import { aliases, mdi } from "vuetify/iconsets/mdi";
 import axios from "axios";
 import VueAxios from "vue-axios";
-import router from "./router";
 
 import VueVideoPlayer from "@videojs-player/vue";
 import { UserManager, WebStorageStateStore } from "oidc-client-ts";
 import "./assets/main.css";
 import { userManagerKey } from "./symbols/injectionSymbols";
 import { createPinia } from "pinia";
-const pinia = createPinia();
 
 const app = createApp(App);
+const pinia = createPinia();
+app.use(pinia);
 
 const darkTheme: ThemeDefinition = {
   dark: true,
@@ -112,11 +112,13 @@ const userManager = new UserManager({
   userStore: new WebStorageStateStore({ store: window.localStorage }),
 });
 
-app.use(router);
-app.use(pinia);
-
 app.use(vuetify);
 app.use(VueVideoPlayer);
 app.use(VueAxios, axios);
 app.provide(userManagerKey, userManager);
+
+// router depends on pinia and userMananger
+import router from "./router";
+app.use(router);
+
 app.mount("#app");

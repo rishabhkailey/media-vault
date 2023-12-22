@@ -5,7 +5,7 @@ import { computed, ref } from "vue";
 import { useAlbumMediaStore } from "./albumMedia";
 import { useMediaStore } from "./media";
 import { useAuthStore } from "./auth";
-import { URL } from "whatwg-url";
+// import { URL } from "whatwg-url";
 // todo we will need lock or something else
 // to prevent duplicates if the same request is called twice
 

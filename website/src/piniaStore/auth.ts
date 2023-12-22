@@ -2,7 +2,7 @@ import type { AxiosResponse } from "axios";
 import axios from "axios";
 import type { User } from "oidc-client-ts";
 import { defineStore } from "pinia";
-import { ref } from "vue";
+import { computed, ref } from "vue";
 
 export const useAuthStore = defineStore("auth", () => {
   const authenticated = ref(false);
@@ -10,6 +10,9 @@ export const useAuthStore = defineStore("auth", () => {
   const email = ref("");
   const accessToken = ref("");
   const idToken = ref("");
+  const expireAt = ref(Date.now() / 1000);
+  const expired = computed(() => Date.now() / 1000 > expireAt.value);
+  // todo: if about to expire refresh the token?
 
   function setUserInfo(user: User) {
     console.log(user);
@@ -23,6 +26,12 @@ export const useAuthStore = defineStore("auth", () => {
       idToken.value = user.id_token;
     }
     authenticated.value = true;
+    if (user.expires_at !== undefined) {
+      expireAt.value = user.expires_at;
+    } else {
+      // default 24 hours
+      expireAt.value = Date.now() / 1000 + 24 * 60 * 60;
+    }
   }
 
   function setAuthenticated(_authenticated: boolean) {
@@ -93,6 +102,7 @@ export const useAuthStore = defineStore("auth", () => {
     userName,
     email,
     accessToken,
+    expired,
     setUserInfo,
     setAuthenticated,
     setTokens,

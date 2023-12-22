@@ -9,6 +9,7 @@ const userInfoStore = useUserInfoStore();
 const { usableEncryptionKey } = storeToRefs(userInfoStore);
 
 function onValidationEncryptionKey() {
+  console.debug("encryption key validated");
   navigator.serviceWorker.ready.then((registration) => {
     if (registration.active === null) {
       // todo handle errors
@@ -22,6 +23,7 @@ function onValidationEncryptionKey() {
 }
 
 async function returnToOriginalEndpoint() {
+  console.debug("returning to original validated");
   const returnUriQuery = Array.isArray(route.query.return_uri)
     ? route.query.return_uri[0]
     : route.query.return_uri;
@@ -43,6 +45,7 @@ async function returnToOriginalEndpoint() {
     }
   }
   console.error(error);
+  // todo return uri
   router.push({
     name: "Home",
   });

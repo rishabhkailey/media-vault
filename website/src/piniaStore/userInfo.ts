@@ -13,6 +13,7 @@ interface UserInfo {
 
 export const useUserInfoStore = defineStore("userInfo", () => {
   const { accessToken } = storeToRefs(useAuthStore());
+  const userStoreLoaded = ref(false);
 
   const preferedTimezone = ref("");
   const storageUsage = ref(0);
@@ -24,7 +25,14 @@ export const useUserInfoStore = defineStore("userInfo", () => {
   const usableEncryptionKey = ref("");
   const encryptionKeyValidated = ref(false);
 
-  function updateUserInfo(): Promise<boolean> {
+  function loadUserInfoIfRequred(): Promise<boolean> {
+    if (userStoreLoaded.value === false) {
+      return loadUserInfo();
+    }
+    return new Promise<boolean>((resolve) => resolve(true));
+  }
+
+  function loadUserInfo(): Promise<boolean> {
     return new Promise<boolean>((resolve, reject) => {
       axios
         .get<UserInfo>("/v1/user-info", {
@@ -37,6 +45,7 @@ export const useUserInfoStore = defineStore("userInfo", () => {
             preferedTimezone.value = res.data.prefered_timezone;
             storageUsage.value = res.data.storage_usage;
             encryptionKeyChecksum.value = res.data.encryption_key_checksum;
+            userStoreLoaded.value = true;
             resolve(true);
             return;
           }
@@ -46,6 +55,7 @@ export const useUserInfoStore = defineStore("userInfo", () => {
         .catch((err) => {
           if (axios.isAxiosError(err)) {
             if (err.response?.status == 404) {
+              console.log("init required");
               initRequired.value = true;
               storageUsage.value = 0;
               preferedTimezone.value = "";
@@ -128,7 +138,8 @@ export const useUserInfoStore = defineStore("userInfo", () => {
     initRequired,
     usableEncryptionKey,
     encryptionKeyValidated,
-    updateUserInfo,
+    loadUserInfo,
+    loadUserInfoIfRequred,
     postUserInfo,
     validateEncryptionKey,
   };
