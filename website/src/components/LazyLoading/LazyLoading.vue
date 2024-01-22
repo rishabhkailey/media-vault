@@ -58,7 +58,7 @@ const observer = new IntersectionObserver(
     root: null,
     rootMargin: `${props.rootMargin}px`,
     threshold: props.threshold,
-  }
+  },
 );
 watch(lazyApiLoadObserverTarget, (newValue, oldvalue) => {
   if (oldvalue !== undefined) {

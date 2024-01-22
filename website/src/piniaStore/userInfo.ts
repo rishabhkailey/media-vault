@@ -71,7 +71,7 @@ export const useUserInfoStore = defineStore("userInfo", () => {
 
   function postUserInfo(
     _preferedTimezone: string,
-    encryptionKey: string
+    encryptionKey: string,
   ): Promise<boolean> {
     return new Promise<boolean>((resolve, reject) => {
       const hash = bcrypt.hashSync(encryptionKey, 8);
@@ -86,7 +86,7 @@ export const useUserInfoStore = defineStore("userInfo", () => {
             headers: {
               Authorization: `Bearer ${accessToken.value}`,
             },
-          }
+          },
         )
         .then((res) => {
           if (res.status != 200) {

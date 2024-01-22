@@ -30,7 +30,7 @@ const handlePostLogin = async () => {
         // location.href = user.state?.internalRedirectUri;
         let query: LocationQueryRaw = {};
         let searchParams = new URLSearchParams(
-          internalState.internalRedirectQuery
+          internalState.internalRedirectQuery,
         );
         searchParams.forEach((value, key) => {
           query[key] = value;

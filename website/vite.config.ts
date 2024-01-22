@@ -19,5 +19,8 @@ export default defineConfig({
     headers: {
       "Service-Worker-Allowed": "/",
     },
+    watch: {
+      usePolling: true,
+    },
   },
 });

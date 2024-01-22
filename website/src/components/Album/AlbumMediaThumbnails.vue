@@ -6,7 +6,7 @@ import { storeToRefs } from "pinia";
 import { useAlbumMediaStore } from "@/piniaStore/albumMedia";
 import LazyMediaThumbnailsPreviewVue from "../MediaThumbnailPreview/LazyMediaThumbnailsPreview.vue";
 import ConfirmationPopup from "../ConfirmationPopup.vue";
-import { base64UrlEncode } from "@/js/utls";
+import { base64UrlEncode } from "@/js/utils";
 
 const albumStore = useAlbumStore();
 const { getAlbumByID, deleteAlbum } = albumStore;

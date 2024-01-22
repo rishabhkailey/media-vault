@@ -22,7 +22,7 @@ const idealRangeSize = 100_000_000;
 // currently working on this
 const whileRangeDownloadWithDecrypt = async function (
   url: string,
-  fileName: string
+  fileName: string,
 ) {
   const fileStream = streamSaver.createWriteStream(fileName, {
     writableStrategy: new ByteLengthQueuingStrategy({

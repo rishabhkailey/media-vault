@@ -114,8 +114,8 @@ self.onfetch = (event) => {
                 resolve(key);
               })
               .catch((err) => reject(err));
-          })
-      )
+          }),
+      ),
     );
   }
   // *************************
@@ -175,7 +175,7 @@ self.onfetch = (event) => {
       .replace(/\*/g, "%2A");
     responseHeaders.set(
       "Content-Disposition",
-      "attachment; filename*=UTF-8''" + fileName
+      "attachment; filename*=UTF-8''" + fileName,
     );
   }
 

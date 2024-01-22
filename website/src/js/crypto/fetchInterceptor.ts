@@ -11,7 +11,7 @@ function getNonceFromUrl(url: string): string {
   }
   if (url.indexOf("/v1/thumbnail/") !== -1) {
     nonce = url.substring(
-      url.indexOf("/v1/thumbnail/") + "/v1/thumbnail/".length
+      url.indexOf("/v1/thumbnail/") + "/v1/thumbnail/".length,
     );
   }
   console.log("nonce", nonce);
@@ -25,14 +25,13 @@ function getNonceFromUrl(url: string): string {
 // todo better name
 export async function internalFetch(
   req: Request,
-  encryptionKeyGetter: () => Promise<string>
+  encryptionKeyGetter: () => Promise<string>,
 ) {
   console.debug(`[internalFetch] ${req.url}`);
   const range: IRequestRange | undefined = getRequestRange(req.headers);
-  const nonce = getNonceFromUrl(req.url);
-  console.log("nonce", nonce);
   const offset = range !== undefined ? range.start : 0;
   try {
+    const nonce = getNonceFromUrl(req.url);
     const encryptionKey = await encryptionKeyGetter();
     const decryptor = newChaCha20Decryptor(encryptionKey, nonce, offset);
     const res = await fetch(req);
@@ -44,7 +43,7 @@ export async function internalFetch(
       });
     }
     const decryptedStream = encryptedStream.pipeThrough(
-      newDecryptTransformer(decryptor)
+      newDecryptTransformer(decryptor),
     );
     return new Response(decryptedStream, {
       headers: res.headers,

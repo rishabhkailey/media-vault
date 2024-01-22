@@ -14,7 +14,6 @@ import axios from "axios";
 import VueAxios from "vue-axios";
 
 import VueVideoPlayer from "@videojs-player/vue";
-import { UserManager, WebStorageStateStore } from "oidc-client-ts";
 import "./assets/main.css";
 import { createPinia } from "pinia";
 

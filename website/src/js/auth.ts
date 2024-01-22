@@ -27,7 +27,7 @@ export const userManager = new UserManager({
 
 export function signinUsingUserManager(
   userManager: UserManager,
-  redirectToHome: boolean
+  redirectToHome: boolean,
 ) {
   const nonce = v4();
   const state: InternalState = {
@@ -53,7 +53,7 @@ export function signinUsingUserManager(
 }
 
 export async function handlePostLoginUsingUserManager(
-  userManager: UserManager
+  userManager: UserManager,
 ): Promise<User> {
   return new Promise((resolve, reject) => {
     userManager

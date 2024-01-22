@@ -1,26 +1,21 @@
 <script setup lang="ts">
-import { computed, inject, ref } from "vue";
-import SelectFileButton from "@/components/SelectFileButton.vue";
+import { computed, ref } from "vue";
 import UploadFilesDialog from "@/components/UploadingFiles/UploadingFilesDialog.vue";
-import SearchInputField from "@/components/SearchInputField.vue";
 import FloatingWindow from "@/components/FloatingWindow/FloatingWindow.vue";
-import LogoButton from "@/components/Logo/LogoButton.vue";
 import { useAuthStore } from "@/piniaStore/auth";
 import { userManager } from "@/js/auth";
 import { signinUsingUserManager } from "@/js/auth";
-import type { UserManager } from "oidc-client-ts";
 import axios from "axios";
-import { useDisplay } from "vuetify/lib/framework.mjs";
+import { useDisplay } from "vuetify";
 import { useRouter } from "vue-router";
 import { storeToRefs } from "pinia";
-import ProfileButton from "./ProfileButton.vue";
 import MobileAppBar from "./Size/MobileAppBar.vue";
 import DesktopAppBar from "./Size/DesktopAppBar.vue";
 
 const router = useRouter();
 const display = useDisplay();
 const smallDisplay = computed(
-  () => display.mobile.value || display.smAndDown.value
+  () => display.mobile.value || display.smAndDown.value,
 );
 
 const props = defineProps<{
@@ -58,11 +53,6 @@ const logOut = async () => {
   }
 };
 const logIn = () => {
-  if (userManager === undefined) {
-    console.error("userManager not defined");
-    error.value = true;
-    return;
-  }
   signinUsingUserManager(userManager, false);
 };
 const uploadFiles = (files: Array<File>) => {
@@ -128,4 +118,3 @@ const searchSubmit = (query: string) => {
     />
   </FloatingWindow>
 </template>
-@/js/auth

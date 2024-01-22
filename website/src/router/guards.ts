@@ -3,12 +3,43 @@ import { useAuthStore } from "@/piniaStore/auth";
 import { useUserInfoStore } from "@/piniaStore/userInfo";
 import { storeToRefs } from "pinia";
 import { userManager } from "@/js/auth";
-import type { NavigationGuard, RouteLocationNamedRaw } from "vue-router";
+import type {
+  LocationQueryRaw,
+  NavigationGuard,
+  RouteLocationNamedRaw,
+} from "vue-router";
 import { updateOrRegisterServiceWorker } from "@/js/serviceWorker/registeration";
+import { promiseTimeout } from "@/js/utils";
 
 const aboutNavigationPath: RouteLocationNamedRaw = {
   name: "about",
 };
+
+function errorScreenRoute(
+  title: string,
+  error: any,
+  returnUri?: string,
+): RouteLocationNamedRaw {
+  const query: LocationQueryRaw = {
+    title: title,
+  };
+
+  if (returnUri !== undefined) {
+    query.return_uri = returnUri;
+  }
+
+  if (typeof error === "string") {
+    query.message = error;
+  }
+  if (error instanceof Error) {
+    query.message = error.message + "\n" + error.stack;
+  }
+
+  return {
+    name: "errorscreen",
+    query: query,
+  };
+}
 
 // ensure user is logged in and user onboarding is also done
 export const loginGaurd: NavigationGuard = async (to) => {
@@ -21,11 +52,6 @@ export const loginGaurd: NavigationGuard = async (to) => {
   const authStore = useAuthStore();
   const { authenticated } = storeToRefs(authStore);
 
-  if (userManager === undefined) {
-    // todo on error redirect to error page with redirect uri?
-    console.error("userManager undefined: ", userManager);
-    return false;
-  }
   // load user from local storage
   try {
     const user = await userManager.getUser();
@@ -38,6 +64,7 @@ export const loginGaurd: NavigationGuard = async (to) => {
       authStore.setUserInfo(user);
     }
   } catch (err) {
+    // ignore error and user will remain unauthenticated
     console.error(err);
   }
 
@@ -52,11 +79,8 @@ export const loginGaurd: NavigationGuard = async (to) => {
   try {
     await loadUserInfoIfRequred();
   } catch (err) {
-    // todo: redirect and give option to clear cookies?
-    console.error(err);
-    return false;
+    return errorScreenRoute("Failed to load user info", err, to.fullPath);
   }
-  console.log(userInfoInitRequired.value);
   if (userInfoInitRequired.value) {
     return {
       name: "onboarding",
@@ -72,12 +96,11 @@ export const encryptionKeyGaurd: NavigationGuard = async (to) => {
   try {
     await userInfoStore.loadUserInfoIfRequred();
   } catch (err) {
-    console.log("error: ", err);
-    return false;
+    return errorScreenRoute("Failed to load user info", err, to.fullPath);
   }
   console.debug(
     `encryption key gaurd, ${to.fullPath}`,
-    `encryptionKeyValidated = ${encryptionKeyValidated.value}`
+    `encryptionKeyValidated = ${encryptionKeyValidated.value}`,
   );
   if (encryptionKeyValidated.value == false) {
     return {
@@ -92,12 +115,15 @@ export const encryptionKeyGaurd: NavigationGuard = async (to) => {
 
 export const serviceWrokerGaurd: NavigationGuard = async (to) => {
   try {
-    await updateOrRegisterServiceWorker();
+    console.group("service worker registeration");
+    await promiseTimeout(updateOrRegisterServiceWorker(), 5 * 1000);
+    console.groupEnd();
   } catch (err) {
     let errorMessage = "service worker registeration failed.";
     if (err instanceof Error) {
-      errorMessage += " " + Error.toString();
+      errorMessage += " " + err.message;
     }
+    console.groupEnd();
     return {
       name: "errorscreen",
       query: {
