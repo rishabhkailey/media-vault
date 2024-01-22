@@ -5,7 +5,7 @@ import { useRoute, useRouter } from "vue-router";
 import { useSearchStore } from "@/piniaStore/search";
 import { useAuthStore } from "@/piniaStore/auth";
 import { storeToRefs } from "pinia";
-import { base64UrlEncode } from "@/js/utls";
+import { base64UrlEncode } from "@/js/utils";
 
 const router = useRouter();
 

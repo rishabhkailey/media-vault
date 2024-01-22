@@ -3,10 +3,12 @@ import { useUserInfoStore } from "@/piniaStore/userInfo";
 import EncryptionKeyInput from "../components/EncryptionKeyInput.vue";
 import { storeToRefs } from "pinia";
 import { useRoute, useRouter, type NavigationFailure } from "vue-router";
+import { useErrorsStore } from "@/piniaStore/errors";
 const route = useRoute();
 const router = useRouter();
 const userInfoStore = useUserInfoStore();
 const { usableEncryptionKey } = storeToRefs(userInfoStore);
+const { appendError } = useErrorsStore();
 
 function onValidationEncryptionKey() {
   console.debug("encryption key validated");
@@ -44,7 +46,11 @@ async function returnToOriginalEndpoint() {
       error = new Error("unexpected error while returning to original page.");
     }
   }
-  console.error(error);
+  appendError(
+    `failed to return to original endpoint ${returnUri}`,
+    "return to home page. error: " + error.message,
+    10,
+  );
   // todo return uri
   router.push({
     name: "Home",

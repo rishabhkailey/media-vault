@@ -7,6 +7,7 @@ import { useUserInfoStore } from "@/piniaStore/userInfo";
 import { useMediaStore } from "@/piniaStore/media";
 import CollapsedUploadingFiles from "./CollapsedUploadingFiles.vue";
 import UploadingFile from "./UploadingFile.vue";
+import { useErrorsStore } from "@/piniaStore/errors";
 const authStore = useAuthStore();
 const { accessToken } = storeToRefs(authStore);
 const { usableEncryptionKey } = storeToRefs(useUserInfoStore());
@@ -17,7 +18,7 @@ const props = withDefaults(
     height: string;
     width: string;
   }>(),
-  {}
+  {},
 );
 
 const emits = defineEmits<{
@@ -28,7 +29,6 @@ const emits = defineEmits<{
 }>();
 
 const { appendMedia } = useMediaStore();
-
 const collapsed = ref<boolean>(false);
 const overallProgress = ref(0);
 
@@ -73,7 +73,7 @@ async function uploadFiles(files: Array<File>) {
           filesUploadStatus.value[index].progress = progress;
           uploaded += (progress * file.size) / 100;
           overallProgress.value = (uploaded * 100) / totalSize;
-        }
+        },
       );
       appendMedia([media]);
       filesUploadStatus.value[index].done = true;
@@ -84,7 +84,6 @@ async function uploadFiles(files: Array<File>) {
       if (err instanceof Error) {
         filesUploadStatus.value[index].errMessage = err.toString();
       }
-      console.log(err);
     }
   }
 }

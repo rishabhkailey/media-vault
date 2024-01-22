@@ -1,4 +1,5 @@
 <script setup lang="ts">
+import { getQueryParamStringValue } from "@/js/utils";
 import { ref, onMounted } from "vue";
 import { useRoute } from "vue-router";
 
@@ -6,22 +7,22 @@ const route = useRoute();
 
 const subTitle = ref("");
 const message = ref("");
+const returnUri = ref("");
 
 onMounted(() => {
-  let titleParam = route.query?.title;
-  if (titleParam && typeof titleParam === "string") {
-    subTitle.value = titleParam;
-  } else {
-    subTitle.value = "Received invalid error title from server";
-  }
+  subTitle.value = getQueryParamStringValue(
+    route.query,
+    "title",
+    "Received invalid error title from server",
+  );
 
-  let messageParam = route.query?.message;
-  if (messageParam && typeof messageParam === "string") {
-    message.value = messageParam;
-  } else {
-    message.value = "Received invalid error message from server";
-  }
-  console.log(route.query);
+  message.value = getQueryParamStringValue(
+    route.query,
+    "message",
+    "Received invalid error message from server",
+  );
+
+  returnUri.value = getQueryParamStringValue(route.query, "return_uri", "");
 });
 </script>
 
@@ -42,6 +43,9 @@ onMounted(() => {
           name: 'Home',
         }"
         >go home</v-btn
+      >
+      <v-btn v-if="returnUri.length > 0" prepend-icon="" :to="returnUri"
+        >Return to Last Page</v-btn
       >
     </v-card-actions>
   </v-card>

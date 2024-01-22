@@ -8,10 +8,12 @@ export function updateOrRegisterServiceWorker(): Promise<ServiceWorker> {
         console.debug("worker not registered. registering new worker");
         registerServiceWorker()
           .then((serviceWorker) => {
+            console.debug("new worker registered");
             resolve(serviceWorker);
             return;
           })
           .catch((err) => {
+            console.debug("new worker registeration failed");
             reject(err);
             return;
           });
@@ -19,10 +21,12 @@ export function updateOrRegisterServiceWorker(): Promise<ServiceWorker> {
         console.debug("worker already registered. updating the worker.");
         updateServiceWorker(registration)
           .then((serviceWorker) => {
+            console.debug("updated worker");
             resolve(serviceWorker);
             return;
           })
           .catch((err) => {
+            console.debug("update failed");
             reject(err);
             return;
           });
@@ -32,18 +36,31 @@ export function updateOrRegisterServiceWorker(): Promise<ServiceWorker> {
 }
 
 function updateServiceWorker(
-  registration: ServiceWorkerRegistration
+  registration: ServiceWorkerRegistration,
 ): Promise<ServiceWorker> {
-  // if hard reload or service worker url changed
-  if (
-    navigator.serviceWorker.controller === null ||
-    !navigator.serviceWorker.controller.scriptURL.endsWith(decryptWorker)
-  ) {
-    // https://github.com/rishabhkailey/media-service/issues/2
-    // https://stackoverflow.com/a/66816077
-    return registration.unregister().then(() => registerServiceWorker());
-  }
   return new Promise<ServiceWorker>((resolve, reject) => {
+    // if hard reload or service worker url changed
+    if (
+      navigator.serviceWorker.controller === null ||
+      !navigator.serviceWorker.controller.scriptURL.endsWith(decryptWorker)
+    ) {
+      console.log(
+        "looks like a hard reload. unregistering the existing worker and try to reregister worker",
+      );
+      // https://github.com/rishabhkailey/media-service/issues/2
+      // https://stackoverflow.com/a/66816077
+      return registration
+        .unregister()
+        .then((unregister) => {
+          console.log(unregister);
+          return registerServiceWorker();
+        })
+        .catch((err) => {
+          console.log("worker unregisteration failed");
+          reject(err);
+        });
+    }
+
     registration
       .update()
       .then(() => {
@@ -65,6 +82,7 @@ function updateServiceWorker(
 // https://github.com/jimmywarting/StreamSaver.js/blob/master/mitm.html#L39
 function registerServiceWorker(): Promise<ServiceWorker> {
   return new Promise<ServiceWorker>((resolve, reject) => {
+    console.log("registering new worker");
     if ("serviceWorker" in navigator) {
       // unregister the existing service worker
       navigator.serviceWorker
@@ -93,7 +111,7 @@ function registerServiceWorker(): Promise<ServiceWorker> {
                 swRegTmp.removeEventListener("statechange", callback);
                 resolve(swRegTmp);
               }
-            })
+            }),
           );
         })
         .catch((err) => {

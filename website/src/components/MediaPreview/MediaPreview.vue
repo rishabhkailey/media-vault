@@ -2,6 +2,7 @@
 import ImagePreview from "@/components/ImagePreview.vue";
 import VideoPreview from "@/components/VideoPreview.vue";
 import { download } from "@/js/encryptedFileDownload";
+import { useErrorsStore } from "@/piniaStore/errors";
 import { onMounted, ref } from "vue";
 import { computed } from "vue";
 
@@ -28,7 +29,7 @@ const rootContainer = ref<HTMLElement | null>(null);
 
 function scaleWindowToThumbnailSizeWithoutCrop(
   window: DOMRect,
-  thumbnail: DOMRect
+  thumbnail: DOMRect,
 ) {
   let initialHeight = thumbnail.height;
   let initialWidth = thumbnail.width;
@@ -55,10 +56,10 @@ function scaleWindowToThumbnailSizeWithoutCrop(
 function startImageOpenAnimation() {
   try {
     let thumbnailElement = document.getElementById(
-      `thumbnail_${media.value.id}`
+      `thumbnail_${media.value.id}`,
     );
     let mediaWindowElement = document.getElementById(
-      `media_window_${media.value.id}`
+      `media_window_${media.value.id}`,
     );
     if (thumbnailElement === null || mediaWindowElement === null) {
       return;
@@ -95,6 +96,7 @@ function startImageOpenAnimation() {
       fill: "both",
     });
   } catch (err) {
+    // ignore animation related error
     console.error(err);
     return;
   }
@@ -116,16 +118,16 @@ function startBackgroundOpenAnimation() {
       duration: 150,
       easing: "ease-in",
       fill: "both",
-    }
+    },
   );
 }
 function startImageCloseAnimation() {
   try {
     let thumbnailElement = document.getElementById(
-      `thumbnail_${media.value.id}`
+      `thumbnail_${media.value.id}`,
     );
     let mediaWindowElement = document.getElementById(
-      `media_window_${media.value.id}`
+      `media_window_${media.value.id}`,
     );
     if (thumbnailElement === null || mediaWindowElement === null) {
       return;
@@ -163,6 +165,7 @@ function startImageCloseAnimation() {
       easing: "ease-in",
     });
   } catch (err) {
+    // ignore animation related error
     console.error(err);
     return;
   }
@@ -184,8 +187,22 @@ function startBackgroundCloseAnimation() {
       duration: 150,
       easing: "ease-in",
       fill: "both",
-    }
+    },
   );
+}
+
+const { appendError } = useErrorsStore();
+function downloadMedia(media: Media) {
+  download(media.url, media.name).catch((err) => {
+    let errorMessage = "";
+    if (typeof err === "string") {
+      errorMessage = err;
+    }
+    if (err instanceof Error) {
+      errorMessage = err.message + " " + err.stack;
+    }
+    appendError(`Download failed ${media.name}`, errorMessage, -1);
+  });
 }
 
 onMounted(() => {
@@ -199,6 +216,7 @@ async function close() {
     try {
       await closeAnimation.finished;
     } catch (err) {
+      // ignore animation related error
       console.error(err);
     }
   }
@@ -206,6 +224,7 @@ async function close() {
     try {
       await backgroundCloseAnimation.finished;
     } catch (err) {
+      // ignore animation related error
       console.error(err);
     }
   }
@@ -232,11 +251,7 @@ async function close() {
     >
       <v-btn
         icon="mdi-download"
-        @click.stop="
-          () => {
-            download(media.url, media.name);
-          }
-        "
+        @click.stop="() => downloadMedia(media)"
         style="background: none; border: none; box-shadow: none"
       >
         <v-icon color="white">mdi-download</v-icon>

@@ -16,7 +16,7 @@ export function chunkUpload(
   bearerToken: string,
   encryptionKey: string,
   controller: AbortController,
-  callback: ProgressCallback
+  callback: ProgressCallback,
 ): Promise<Media> {
   return new Promise((resolve, reject) => {
     initChunkUpload(file, bearerToken, controller)
@@ -27,7 +27,7 @@ export function chunkUpload(
         const textEncoder = new TextEncoder();
         const encryptor = new Chacha20(
           textEncoder.encode(encryptionKey),
-          textEncoder.encode(nonce)
+          textEncoder.encode(nonce),
         );
         uploadFileChunks(
           file,
@@ -35,7 +35,7 @@ export function chunkUpload(
           chunkRequestInfo,
           encryptor,
           controller,
-          callback
+          callback,
         )
           .then((uploadedBytes) => {
             console.log("uploaded " + uploadedBytes + " bytes of " + file.name);
@@ -45,9 +45,9 @@ export function chunkUpload(
               bearerToken,
               new Chacha20(
                 textEncoder.encode(encryptionKey),
-                textEncoder.encode(nonce)
+                textEncoder.encode(nonce),
               ),
-              controller
+              controller,
             )
               .then((success) => {
                 if (!success) {
@@ -95,7 +95,7 @@ interface ChunkRequestInfo {
 function initChunkUpload(
   file: File,
   bearerToken: string,
-  controller: AbortController
+  controller: AbortController,
 ): Promise<ChunkRequestInfo> {
   return new Promise((resolve, reject) => {
     axios
@@ -113,7 +113,7 @@ function initChunkUpload(
             Authorization: `Bearer ${bearerToken}`,
           },
           signal: controller.signal,
-        }
+        },
       )
       .then((response) => {
         if (response.status !== 200) {
@@ -156,7 +156,7 @@ function uploadFileChunks(
   chunkRequestInfo: ChunkRequestInfo,
   encryptor: Chacha20,
   controller: AbortController,
-  callback: ProgressCallback
+  callback: ProgressCallback,
 ): Promise<number> {
   const stream = file.stream();
   const reader = stream.getReader();
@@ -186,7 +186,7 @@ function uploadFileChunks(
                 bytesUploaded,
                 buffer.slice(0, bufferIndex),
                 encryptor,
-                controller
+                controller,
               );
             } catch (err) {
               reject(err);
@@ -219,7 +219,7 @@ function uploadFileChunks(
               bytesUploaded,
               buffer,
               encryptor,
-              controller
+              controller,
             );
           } catch (err) {
             reject(err);
@@ -259,7 +259,7 @@ async function encryptAndUploadChunk(
   index: number,
   value: Uint8Array,
   encryptor: Chacha20,
-  controller: AbortController
+  controller: AbortController,
 ) {
   let chunkBlob: Blob;
   try {
@@ -287,7 +287,7 @@ async function encryptAndUploadChunk(
           Authorization: `Bearer ${bearerToken}`,
         },
         signal: controller.signal,
-      }
+      },
     );
   } catch (err) {
     console.log("Upload chunk failed with error " + err);
@@ -296,7 +296,7 @@ async function encryptAndUploadChunk(
   console.log(response);
   if (response.status !== 200) {
     throw new Error(
-      "upload chunk request failed with status" + response.status
+      "upload chunk request failed with status" + response.status,
     );
   }
 }
@@ -304,7 +304,7 @@ async function encryptAndUploadChunk(
 function finishChunkUpload(
   chunkRequestInfo: ChunkRequestInfo,
   bearerToken: string,
-  controller: AbortController
+  controller: AbortController,
 ): Promise<Media> {
   return new Promise<Media>((resolve, reject) => {
     // finish upload
@@ -321,12 +321,12 @@ function finishChunkUpload(
             Authorization: `Bearer ${bearerToken}`,
           },
           signal: controller.signal,
-        }
+        },
       )
       .then((res) => {
         if (res.status !== 200) {
           throw new Error(
-            "upload chuck request failed with status" + res.status
+            "upload chuck request failed with status" + res.status,
           );
         }
         resolve(res.data);
@@ -344,7 +344,7 @@ function uploadThumbnail(
   file: File,
   bearerToken: string,
   encryptor: Chacha20,
-  controller: AbortController
+  controller: AbortController,
 ): Promise<boolean> {
   return new Promise((resolve, reject) => {
     // finish upload
@@ -372,12 +372,12 @@ function uploadThumbnail(
                 Authorization: `Bearer ${bearerToken}`,
               },
               signal: controller.signal,
-            }
+            },
           )
           .then((res) => {
             if (res.status !== 200) {
               throw new Error(
-                "upload chuck request failed with status" + res.status
+                "upload chuck request failed with status" + res.status,
               );
             }
             resolve(true);

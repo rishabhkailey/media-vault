@@ -1,6 +1,6 @@
 <script setup lang="ts">
 import LazyMediaThumbnailsPreview from "@/components/MediaThumbnailPreview/LazyMediaThumbnailsPreview.vue";
-import { base64UrlEncode } from "@/js/utls";
+import { base64UrlEncode } from "@/js/utils";
 import { useMediaStore } from "@/piniaStore/media";
 import { storeToRefs } from "pinia";
 import { useRouter } from "vue-router";

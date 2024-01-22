@@ -1,4 +1,4 @@
-import { timestamp } from "../utls";
+import { timestamp } from "../utils";
 
 const channelName = "encryption-key-channel";
 

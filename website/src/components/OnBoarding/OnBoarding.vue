@@ -3,8 +3,10 @@ import { onMounted, ref } from "vue";
 import LogoButton from "../Logo/LogoButton.vue";
 import { useUserInfoStore } from "@/piniaStore/userInfo";
 import { useRouter, type NavigationFailure, useRoute } from "vue-router";
+import { useErrorsStore } from "@/piniaStore/errors";
 
 const { postUserInfo } = useUserInfoStore();
+const { appendError } = useErrorsStore();
 const router = useRouter();
 const route = useRoute();
 
@@ -70,7 +72,14 @@ async function returnToOriginalEndpoint() {
       error = new Error("unexpected error while returning to original page.");
     }
   }
-  console.error(error);
+
+  if (error !== undefined) {
+    appendError(
+      `failed to return to original endpoint ${returnUri}`,
+      "return to home page. error: " + error.message,
+      10,
+    );
+  }
   router.push({
     name: "Home",
   });
@@ -95,14 +104,7 @@ function submitHandler() {
 }
 </script>
 <template>
-  <v-sheet
-    elevation="2"
-    max-height="75vh"
-    min-height="50vh"
-    max-width="50vw"
-    min-width="40vw"
-    class="d-flex ma-0 pt-0"
-  >
+  <v-sheet elevation="2" max-height="75vh" min-height="50vh" max-width="50vw" min-width="40vw" class="d-flex ma-0 pt-0">
     <v-col>
       <v-row justify="center" align="center" class="pa-5">
         <LogoButton :redirect="false" />
@@ -116,64 +118,29 @@ function submitHandler() {
       </v-row>
       <v-row align="stretch" justify="center">
         <v-col cols="12">
-          <v-form
-            @submit.prevent="submitHandler"
-            v-model="isFormValid"
-            lazy-validation
-          >
+          <v-form @submit.prevent="submitHandler" v-model="isFormValid" lazy-validation>
             <v-row class="px-4 py-2">
-              <v-autocomplete
-                class="input-fields"
-                v-model="preferedTimezone"
-                label="timezone"
-                required
-                prepend-inner-icon="mdi-map-clock-outline"
-                :items="availableTimezones"
-              />
+              <v-autocomplete class="input-fields" v-model="preferedTimezone" label="timezone" required
+                prepend-inner-icon="mdi-map-clock-outline" :items="availableTimezones" />
             </v-row>
             <v-row class="px-4 py-2">
-              <v-text-field
-                class="input-fields"
-                v-model="encryptionKey"
-                :rules="encryptionKeyRules"
-                label="encryption key"
-                type="password"
-                required
-                autocomplete="on"
-                prepend-inner-icon="mdi-lock-outline"
-              ></v-text-field>
+              <v-text-field class="input-fields" v-model="encryptionKey" :rules="encryptionKeyRules"
+                label="encryption key" type="password" required autocomplete="on"
+                prepend-inner-icon="mdi-lock-outline"></v-text-field>
             </v-row>
             <v-row class="px-4 py-2">
-              <v-text-field
-                class="input-fields"
-                v-model="confirmEncryptionKey"
-                :rules="confirmEncryptionKeyRules"
-                label="confirm encryption key"
-                type="password"
-                required
-                autocomplete="on"
-                prepend-inner-icon="mdi-lock-outline"
-              ></v-text-field>
+              <v-text-field class="input-fields" v-model="confirmEncryptionKey" :rules="confirmEncryptionKeyRules"
+                label="confirm encryption key" type="password" required autocomplete="on"
+                prepend-inner-icon="mdi-lock-outline"></v-text-field>
             </v-row>
             <v-row>
-              <v-alert
-                v-if="warningMessage.length > 0"
-                type="warning"
-                :text="warningMessage"
-              />
-              <v-alert
-                v-if="errorMessage.length > 0"
-                type="error"
-                :text="errorMessage"
-              />
+              <v-alert v-if="warningMessage.length > 0" type="warning" :text="warningMessage" />
+              <v-alert v-if="errorMessage.length > 0" type="error" :text="errorMessage" />
             </v-row>
             <v-row justify="center">
-              <v-alert
-                type="info"
-                title="Please Note"
+              <v-alert type="info" title="Please Note"
                 text="the above encryption key will be used to encrypt your files so make sure to set it to secure password. make sure to remember it if you forget your encryption key your will not be able read any of your uploaded data."
-                variant="tonal"
-              ></v-alert>
+                variant="tonal"></v-alert>
             </v-row>
             <v-row justify="center" class="px-4 py-2">
               <v-btn type="submit" color="primary"> Confirm </v-btn>

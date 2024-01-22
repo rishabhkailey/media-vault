@@ -5,6 +5,7 @@ import { useMediaSelectionStore } from "@/piniaStore/mediaSelection";
 import { storeToRefs } from "pinia";
 import SelectWrapper from "@/components/SelectWrapper/SelectWrapper.vue";
 import createJustifiedLayout from "justified-layout";
+import { useErrorsStore } from "@/piniaStore/errors";
 // interface doesn't work https://github.com/vuejs/core/issues/4294
 // const props = defineProps<DailyMedia>();
 const props = defineProps<{
@@ -22,12 +23,12 @@ const emits = defineEmits<{
     e: "thumbnailClick",
     mediaID: number,
     index: number,
-    clickLocation: ThumbnailClickLocation | undefined
+    clickLocation: ThumbnailClickLocation | undefined,
   ): void;
 }>();
 
 function getThumbnailLocation(
-  event: MouseEvent
+  event: MouseEvent,
 ): ThumbnailClickLocation | undefined {
   console.log(event.target, event.target instanceof HTMLElement);
   let element: HTMLElement;
@@ -47,10 +48,13 @@ function getThumbnailLocation(
       y: boundingRect.y,
     };
   } catch (err) {
+    // ignore animation related error
     console.error(err);
     return undefined;
   }
 }
+
+const { appendError } = useErrorsStore();
 const containerRef = ref<HTMLElement | undefined>(undefined);
 let widowsCount = 0;
 const justifiedLayout = ref<Array<WidthHeight>>([]);
@@ -59,20 +63,24 @@ watch(
   ([newIndexMediaList, newContainerRef]) => {
     console.log("in watch", newContainerRef, containerRef.value);
     if (newContainerRef === undefined) {
-      console.error("containerRef undefined");
+      appendError(
+        "media layout failed",
+        "container reference is undefined unable to calculate media layout. ",
+        -1,
+      );
       return;
     }
     console.log("justifiedLayout", containerRef.value);
     justifiedLayout.value = justifiedLayout.value.slice(
       0,
-      justifiedLayout.value.length - widowsCount
+      justifiedLayout.value.length - widowsCount,
     );
     // let startIndex = justifiedLayout.value.length - widowsCount;
     let startIndex = justifiedLayout.value.length;
     console.log(
       justifiedLayout.value,
       justifiedLayout.value.length,
-      widowsCount
+      widowsCount,
     );
     let aspectRatios: Array<number> = [];
     console.log(newIndexMediaList);
@@ -97,9 +105,9 @@ watch(
       aspectRatios,
       justifiedLayout.value,
       widowsCount,
-      newIndexMediaList.length
+      newIndexMediaList.length,
     );
-  }
+  },
 );
 
 const selectDayMediaLoading = ref(false);
@@ -125,7 +133,7 @@ async function selectDayMedia(value: boolean) {
   selectDayMediaLoading.value = true;
   await props.loadAllMediaOfDate(
     // month is 0 indexed in js, so + 1
-    new Date(`${props.year}-${props.month + 1}-${props.date}`)
+    new Date(`${props.year}-${props.month + 1}-${props.date}`),
   );
   props.indexMediaList.forEach(({ media }) => {
     updateSelection(media.id, value);
@@ -172,7 +180,7 @@ async function selectDayMedia(value: boolean) {
               'thumbnailClick',
               props.indexMediaList[index].media.id,
               props.indexMediaList[index].index,
-              getThumbnailLocation(e)
+              getThumbnailLocation(e),
             );
           }
         "
