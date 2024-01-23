@@ -1,7 +1,7 @@
 <script setup lang="ts">
 import { computed, ref } from "vue";
-import UploadFilesDialog from "@/components/UploadingFiles/UploadingFilesDialog.vue";
-import FloatingWindow from "@/components/FloatingWindow/FloatingWindow.vue";
+import FileUploadDialog from "@/components/FileUpload/FileUploadDialog.vue";
+import FloatingWindow from "@/components/Modals/FloatingWindow.vue";
 import { useAuthStore } from "@/piniaStore/auth";
 import { userManager } from "@/js/auth";
 import { signinUsingUserManager } from "@/js/auth";
@@ -19,22 +19,21 @@ const smallDisplay = computed(
 );
 
 const props = defineProps<{
-  navigationBar: boolean;
+  sidebarOpen: boolean;
 }>();
 
 const emits = defineEmits<{
-  (e: "update:navigationBar", value: boolean): void;
+  (e: "update:sidebarOpen", value: boolean): void;
 }>();
 
 const search = ref("");
 const loading = ref(false);
-// todo error and error message pop up
-const error = ref(false);
+
 const authStore = useAuthStore();
 const { authenticated, userName, email } = storeToRefs(authStore);
 
 const selectedFiles = ref<Array<File>>([]);
-const uploadFilesDialogModel = ref(false);
+const FileUploadDialogModel = ref(false);
 
 const logOut = async () => {
   loading.value = true;
@@ -57,7 +56,7 @@ const logIn = () => {
 };
 const uploadFiles = (files: Array<File>) => {
   selectedFiles.value = files;
-  uploadFilesDialogModel.value = true;
+  FileUploadDialogModel.value = true;
   console.log(files);
 };
 console.log(display.mobile.value);
@@ -79,7 +78,7 @@ const searchSubmit = (query: string) => {
 <template>
   <v-row v-if="smallDisplay">
     <MobileAppBar
-      :navigation-bar="props.navigationBar"
+      :navigation-bar="props.sidebarOpen"
       :search-query="search"
       :authenticated="authenticated"
       :email="email"
@@ -87,7 +86,7 @@ const searchSubmit = (query: string) => {
       :user-auth-loading="loading"
       @search-submit="(query) => searchSubmit(query)"
       @upload-files="(files) => uploadFiles(files)"
-      @update:navigation-bar="(value) => emits('update:navigationBar', value)"
+      @update:navigation-bar="(value) => emits('update:sidebarOpen', value)"
       @login="logIn"
       @logout="logOut"
     />
@@ -108,11 +107,11 @@ const searchSubmit = (query: string) => {
   </v-row>
   <!-- todo move this to somewhere else? -->
   <!-- may be to selectButtom component? -->
-  <FloatingWindow v-model="uploadFilesDialogModel" :bottom="10" :right="10">
-    <UploadFilesDialog
+  <FloatingWindow v-model="FileUploadDialogModel" :bottom="10" :right="10">
+    <FileUploadDialog
       :model-value="true"
       :files="selectedFiles"
-      @close="() => (uploadFilesDialogModel = false)"
+      @close="() => (FileUploadDialogModel = false)"
       height="40vh"
       width="30vh"
     />

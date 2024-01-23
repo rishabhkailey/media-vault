@@ -1,6 +1,6 @@
 <script setup lang="ts">
 import { useUserInfoStore } from "@/piniaStore/userInfo";
-import EncryptionKeyInput from "../components/EncryptionKeyInput.vue";
+import EncryptionKeyInput from "@/components/AccountManagement/EncryptionKeyInput.vue";
 import { storeToRefs } from "pinia";
 import { useRoute, useRouter, type NavigationFailure } from "vue-router";
 import { useErrorsStore } from "@/piniaStore/errors";
@@ -14,8 +14,12 @@ function onValidationEncryptionKey() {
   console.debug("encryption key validated");
   navigator.serviceWorker.ready.then((registration) => {
     if (registration.active === null) {
-      // todo handle errors
-      throw new Error("service worker not active");
+      appendError(
+        "unable to send encryption key to the worker",
+        "service worker not active",
+        -1,
+      );
+      return;
     }
     registration?.active?.postMessage({
       encryptionKey: usableEncryptionKey.value,

@@ -4,7 +4,7 @@ import { useMediaSelectionStore } from "@/piniaStore/mediaSelection";
 import { useMediaStore } from "@/piniaStore/media";
 import { useLoadingStore } from "@/piniaStore/loading";
 import { storeToRefs } from "pinia";
-import ConfirmationPopup from "@/components/ConfirmationPopup.vue";
+import ConfirmationModal from "@/components/Modals/ConfirmationModal.vue";
 import { useRoute } from "vue-router";
 import { useAlbumStore } from "@/piniaStore/album";
 import { useAlbumMediaStore } from "@/piniaStore/albumMedia";
@@ -44,7 +44,7 @@ async function deleteSelectedMedia() {
   }
   failedIDs.forEach((id) => updateSelection(id, true));
   removeMediaByIDsFromLocalState(
-    mediaIDs.filter((id) => !failedIDs.includes(id))
+    mediaIDs.filter((id) => !failedIDs.includes(id)),
   );
   setGlobalLoading(false, false, 0);
 }
@@ -92,7 +92,7 @@ function removeSelectedMedia() {
       </transition>
       <!-- confirmation -->
       <transition name="bounce">
-        <ConfirmationPopup
+        <ConfirmationModal
           title="Remove selected?"
           cancel-button-color=""
           cancel-button-text="cancel"
@@ -125,7 +125,7 @@ function removeSelectedMedia() {
       </transition>
       <!-- confirmation -->
       <transition name="bounce">
-        <ConfirmationPopup
+        <ConfirmationModal
           title="Delete selected?"
           cancel-button-color=""
           cancel-button-text="cancel"

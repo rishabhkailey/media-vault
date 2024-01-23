@@ -72,7 +72,7 @@ export const useAlbumStore = defineStore("album", () => {
     const properties = userFriendlyOrderByToProperties.get(orderBy.value);
     if (properties === undefined) {
       throw new Error(
-        `"${orderBy.value} "invalid order by value. unable to get properties for the selected order by.`
+        `"${orderBy.value} "invalid order by value. unable to get properties for the selected order by.`,
       );
     }
     return properties;
@@ -173,11 +173,11 @@ export const useAlbumStore = defineStore("album", () => {
       url.searchParams.append("per_page", perPage.toString());
       url.searchParams.append(
         "order",
-        orderByProperties.value.orderBySearchParam
+        orderByProperties.value.orderBySearchParam,
       );
       url.searchParams.append(
         "sort",
-        orderByProperties.value.sortBySearchParam
+        orderByProperties.value.sortBySearchParam,
       );
 
       if (lastAlbumId.value !== null) {
@@ -226,7 +226,7 @@ export const useAlbumStore = defineStore("album", () => {
               "Content-Type": "application/json",
               Authorization: `Bearer ${accessToken.value}`,
             },
-          }
+          },
         )
         .then((res) => {
           if (res.status === 200) {
@@ -275,7 +275,7 @@ export const useAlbumStore = defineStore("album", () => {
   // returns failed album ids
   // reject only in case of unexpected/unhandeled error
   async function deleteMultipleAlbums(
-    albumIDs: Array<number>
+    albumIDs: Array<number>,
   ): Promise<Array<number>> {
     const failedAlbumIDs = new Set<number>();
     const successAlbumIDs = new Set<number>();
@@ -316,7 +316,7 @@ export const useAlbumStore = defineStore("album", () => {
 
   function removeMediaFromAlbum(
     albumID: number,
-    mediaIDs: Array<number>
+    mediaIDs: Array<number>,
   ): Promise<boolean> {
     return new Promise<boolean>((resolve, reject) => {
       axios
@@ -343,7 +343,7 @@ export const useAlbumStore = defineStore("album", () => {
 
   async function addMediaToAlbum(
     albumID: number,
-    mediaIDs: Array<number>
+    mediaIDs: Array<number>,
   ): Promise<boolean> {
     // will call api if not present in local store
     let album = await getAlbumByID(albumID);
@@ -356,7 +356,7 @@ export const useAlbumStore = defineStore("album", () => {
         headers: {
           Authorization: `Bearer ${accessToken.value}`,
         },
-      }
+      },
     );
     if (album.media_count == 0) {
       const thumbnailUrl = getFirstThumbnail(mediaIDs);
@@ -373,7 +373,7 @@ export const useAlbumStore = defineStore("album", () => {
 
   function updateAlbumThumbnail(
     albumID: number,
-    thumbnailUrl: string
+    thumbnailUrl: string,
   ): Promise<Album> {
     return new Promise<Album>((resolve, reject) => {
       axios
@@ -386,7 +386,7 @@ export const useAlbumStore = defineStore("album", () => {
             headers: {
               Authorization: `Bearer ${accessToken.value}`,
             },
-          }
+          },
         )
         .then((res) => {
           if (res.status != 200) {

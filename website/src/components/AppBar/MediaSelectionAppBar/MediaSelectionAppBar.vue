@@ -1,7 +1,7 @@
 <script setup lang="ts">
 import { useMediaSelectionStore } from "@/piniaStore/mediaSelection";
 import { storeToRefs } from "pinia";
-import MediaAndSearchActions from "./actions/MediaAndSearchActions.vue";
+import MediaActions from "./actions/MediaActions.vue";
 import AlbumMediaActions from "./actions/AlbumMediaActions.vue";
 import { useRoute } from "vue-router";
 
@@ -12,14 +12,14 @@ const { reset: resetMediaSelection } = mediaSelectionStore;
 const { count: selectedMediaCount } = storeToRefs(mediaSelectionStore);
 
 console.log(typeof AlbumMediaActions);
-let Actions = MediaAndSearchActions;
+let Actions = MediaActions;
 switch (route.name) {
   case "Album": {
     Actions = AlbumMediaActions;
     break;
   }
   default: {
-    Actions = MediaAndSearchActions;
+    Actions = MediaActions;
     break;
   }
 }

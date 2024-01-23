@@ -54,6 +54,27 @@ export function getQueryParamStringValue(
   }
 }
 
+export function getQueryParamNumberValue(
+  query: LocationQuery,
+  key: string,
+  defaultValue: number,
+): number {
+  try {
+    const queryParam = query[key];
+    if (
+      queryParam &&
+      typeof queryParam === "string" &&
+      !isNaN(Number(queryParam))
+    ) {
+      return Number(queryParam);
+    } else {
+      return defaultValue;
+    }
+  } catch (err) {
+    return defaultValue;
+  }
+}
+
 export class PromiseTimeoutError extends Error {}
 
 export function promiseTimeout(

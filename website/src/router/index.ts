@@ -1,19 +1,19 @@
 import { createRouter, createWebHistory } from "vue-router";
-import NotFound from "@/views/NotFoundView.vue";
-import HomeView from "@/views/Root.vue";
+import NotFoundPage from "@/views/NotFoundPage.vue";
+import HomeView from "@/views/RootView.vue";
 import ErrorScreenView from "@/views/ErrorScreenView.vue";
 import PKCEVue from "@/views/PKCE.vue";
 import TestView from "@/views/TestView.vue";
 import SearchView from "@/views/SearchView.vue";
-import HomePageVue from "@/components/HomePage.vue";
-import AlbumsPageVue from "@/components/Album/AlbumsPage.vue";
-import AlbumMediaThumbnailsVue from "@/components/Album/AlbumMediaThumbnails.vue";
+import HomePageVue from "@/views/HomePage.vue";
+import AlbumsList from "@/components/Album/AlbumsList.vue";
+import AlbumMediaGrid from "@/components/Album/AlbumMediaGrid.vue";
 import AboutPage from "@/views/AboutPage.vue";
-import UserOnboarding from "@/views/UserOnboarding.vue";
+import InitialSetup from "@/views/InitialSetup.vue";
 import EnterEncryptionKey from "@/views/EnterEncryptionKey.vue";
-import AllMediaPreviewVue from "@/components/MediaPreview/AllMediaPreview.vue";
-import SearchMediaPreviewVue from "@/components/MediaPreview/SearchMediaPreview.vue";
-import AlbumMediaPreviewVue from "@/components/MediaPreview/AlbumMediaPreview.vue";
+import UserMediaCarousel from "@/components/MediaCarousel/UserMediaCarousel.vue";
+import SearchMediaCarousel from "@/components/MediaCarousel/SearchMediaCarousel.vue";
+import AlbumMediaCarousel from "@/components/MediaCarousel/AlbumMediaCarousel.vue";
 import { encryptionKeyGaurd, loginGaurd, serviceWrokerGaurd } from "./guards";
 // todo pages without redirect from vue should be lazy loaded on external/server redirect
 const router = createRouter({
@@ -29,7 +29,7 @@ const router = createRouter({
     {
       path: "/:pathMatch(.*)*",
       name: "NotFound",
-      component: NotFound,
+      component: NotFoundPage,
     },
     {
       // tod rename it to root or app?
@@ -45,7 +45,7 @@ const router = createRouter({
             {
               path: "/media/:media_id/index/:index",
               name: "MediaPreview",
-              component: AllMediaPreviewVue,
+              component: UserMediaCarousel,
             },
           ],
         },
@@ -57,24 +57,24 @@ const router = createRouter({
             {
               path: "/search/:query/media/:media_id/index/:index",
               name: "SearchMediaPreview",
-              component: SearchMediaPreviewVue,
+              component: SearchMediaCarousel,
             },
           ],
         },
         {
           path: "/albums",
-          component: AlbumsPageVue,
+          component: AlbumsList,
           name: "Albums",
         },
         {
           path: "/album/:album_id",
-          component: AlbumMediaThumbnailsVue,
+          component: AlbumMediaGrid,
           name: "Album",
           children: [
             {
               path: "/album/:album_id/media/:media_id/index/:index",
               name: "AlbumMediaPreview",
-              component: AlbumMediaPreviewVue,
+              component: AlbumMediaCarousel,
             },
           ],
         },
@@ -97,9 +97,9 @@ const router = createRouter({
       component: AboutPage,
     },
     {
-      path: "/onboarding",
-      name: "onboarding",
-      component: UserOnboarding,
+      path: "/initial-setup",
+      name: "initialSetup",
+      component: InitialSetup,
     },
     {
       path: "/pkce",

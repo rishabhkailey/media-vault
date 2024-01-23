@@ -2,6 +2,7 @@
 import { reactive } from "vue";
 import { storeToRefs } from "pinia";
 import { useErrorsStore } from "@/piniaStore/errors";
+import FloatingWindow from "@/components/Modals/FloatingWindow.vue";
 
 const props = withDefaults(
   defineProps<{
@@ -27,58 +28,55 @@ function getTrucatedMessage(id: number, message: string): string {
 }
 </script>
 <template>
-  <div
-    style="
-      position: absolute;
-      bottom: 0px;
-      right: 0px;
-      max-width: 30%;
-      max-height: 30%;
-      overflow-y: scroll;
-      overflow-x: hidden;
-    "
-    class="ma-1"
+  <FloatingWindow
+    :model-value="popUpErrors.length > 0"
+    height="300px"
+    width="600px"
+    :right="10"
+    :bottom="10"
   >
-    <v-alert
-      v-for="{ title, message, id } in popUpErrors"
-      :key="id"
-      :elevation="3"
-      type="error"
-      :title="title"
-      :text="getTrucatedMessage(id, message)"
-      variant="elevated"
-      class="ma-1"
-    >
-      <template #append>
-        <div class="d-flex flex-column">
-          <v-btn
-            icon="mdi-close"
-            @click="() => removeError(id)"
-            size="x-small"
-            variant="text"
-          />
-          <v-btn
-            v-if="
-              message.length > props.maxMessgeLength &&
-              expandedErrorMessageMap.get(id) !== true
-            "
-            icon="mdi-arrow-expand"
-            @click="() => expandedErrorMessageMap.set(id, true)"
-            size="x-small"
-            variant="text"
-          />
-          <v-btn
-            v-if="
-              message.length > props.maxMessgeLength &&
-              expandedErrorMessageMap.get(id) === true
-            "
-            icon="mdi-arrow-collapse"
-            @click="() => expandedErrorMessageMap.set(id, false)"
-            size="x-small"
-            variant="text"
-          />
-        </div>
-      </template>
-    </v-alert>
-  </div>
+    <div style="height: 100%; overflow-y: auto">
+      <v-alert
+        v-for="{ title, message, id } in popUpErrors"
+        :key="id"
+        :elevation="3"
+        type="error"
+        :title="title"
+        :text="getTrucatedMessage(id, message)"
+        variant="elevated"
+        class="ma-1"
+      >
+        <template #append>
+          <div class="d-flex flex-column">
+            <v-btn
+              icon="mdi-close"
+              @click="() => removeError(id)"
+              size="x-small"
+              variant="text"
+            />
+            <v-btn
+              v-if="
+                message.length > props.maxMessgeLength &&
+                expandedErrorMessageMap.get(id) !== true
+              "
+              icon="mdi-arrow-expand"
+              @click="() => expandedErrorMessageMap.set(id, true)"
+              size="x-small"
+              variant="text"
+            />
+            <v-btn
+              v-if="
+                message.length > props.maxMessgeLength &&
+                expandedErrorMessageMap.get(id) === true
+              "
+              icon="mdi-arrow-collapse"
+              @click="() => expandedErrorMessageMap.set(id, false)"
+              size="x-small"
+              variant="text"
+            />
+          </div>
+        </template>
+      </v-alert>
+    </div>
+  </FloatingWindow>
 </template>

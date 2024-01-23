@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import PKCE from "../components/PKCE.vue";
+import PKCE from "@/components/AccountManagement/PKCE.vue";
 </script>
 
 <template>

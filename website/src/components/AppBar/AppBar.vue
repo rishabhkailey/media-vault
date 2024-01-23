@@ -6,11 +6,11 @@ import MediaSelectionAppBar from "@/components/AppBar/MediaSelectionAppBar/Media
 import { storeToRefs } from "pinia";
 
 const props = defineProps<{
-  navigationBar: boolean;
+  sideBar: boolean;
 }>();
 
 const emits = defineEmits<{
-  (e: "update:navigationBar", value: boolean): void;
+  (e: "update:sideBar", value: boolean): void;
 }>();
 
 const mediaSelectionStore = useMediaSelectionStore();
@@ -40,10 +40,10 @@ const { loading, progress, indeterminate } = storeToRefs(loadingStore);
     <MediaSelectionAppBar v-if="selectedMediaCount > 0" />
     <NormalAppBar
       v-else
-      :navigation-bar="props.navigationBar"
-      @update:navigation-bar="
+      :sidebar-open="props.sideBar"
+      @update:sidebar-open="
         (value) => {
-          emits('update:navigationBar', value);
+          emits('update:sideBar', value);
         }
       "
     />

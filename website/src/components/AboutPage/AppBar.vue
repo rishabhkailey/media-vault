@@ -1,12 +1,7 @@
 <script setup lang="ts">
-import { inject, ref } from "vue";
 import { userManager } from "@/js/auth";
 import { signinUsingUserManager } from "@/js/auth";
-import type { UserManager } from "oidc-client-ts";
-import LogoButton from "@/components/Logo/LogoButton.vue";
-
-// todo error and error message pop up
-const error = ref(false);
+import AppLogoButton from "@/components/Logo/AppLogoButton.vue";
 
 const logIn = () => {
   signinUsingUserManager(userManager, true);
@@ -25,7 +20,7 @@ const logIn = () => {
       <v-col class="d-flex flex-row justify-start align-stretch pa-0 ma-0">
         <v-toolbar-title>
           <div>
-            <LogoButton />
+            <AppLogoButton />
           </div>
           <!-- <v-list-item prepend-icon="mdi-home" title="Home" /> -->
         </v-toolbar-title>
@@ -41,4 +36,3 @@ const logIn = () => {
     </v-row>
   </v-app-bar>
 </template>
-@/js/auth

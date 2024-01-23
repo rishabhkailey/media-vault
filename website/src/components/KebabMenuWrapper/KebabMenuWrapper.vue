@@ -1,6 +1,6 @@
 <script setup lang="ts">
 import { computed, ref } from "vue";
-import { useDisplay } from "vuetify/lib/framework.mjs";
+import { useDisplay } from "vuetify";
 
 const props = defineProps<{
   selectIconSize: string | number;
@@ -13,8 +13,7 @@ const props = defineProps<{
 const { mobile: mobileDevice } = useDisplay();
 const allwaysShowSelectButton = computed<boolean>(() => {
   return (
-    props.alwaysShowSelectButton ||
-    (mobileDevice.value && props.alwaysShowSelectOnMobile)
+    props.alwaysShowSelectButton || (mobileDevice.value && props.alwaysShowSelectOnMobile)
   );
 });
 
