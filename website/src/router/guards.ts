@@ -83,7 +83,7 @@ export const loginGaurd: NavigationGuard = async (to) => {
   }
   if (userInfoInitRequired.value) {
     return {
-      name: "onboarding",
+      name: "initialSetup",
     };
   }
   return true;

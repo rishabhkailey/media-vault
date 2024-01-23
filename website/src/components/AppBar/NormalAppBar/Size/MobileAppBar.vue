@@ -1,7 +1,7 @@
 <script setup lang="ts">
-import SelectFileButton from "@/components/SelectFileButton.vue";
-import SearchInputField from "@/components/SearchInputField.vue";
-import ProfileButton from "@/components/AppBar/NormalAppBar/ProfileButton.vue";
+import FilePickerButton from "@/components/FileUpload/FilePickerButton.vue";
+import SearchBar from "@/components/Search/SearchBar.vue";
+import AccountButton from "@/components/AppBar/NormalAppBar/AccountButton.vue";
 
 const props = defineProps<{
   navigationBar: boolean;
@@ -39,7 +39,7 @@ const emits = defineEmits<{
     <v-col cols="10">
       <v-row class="d-flex flex-row flex-nowrap justify-end align-center">
         <div>
-          <SearchInputField
+          <SearchBar
             :model-value="props.searchQuery"
             @update:model-value="(value) => emits('update:searchQuery', value)"
             :collapsed="true"
@@ -47,14 +47,14 @@ const emits = defineEmits<{
           />
         </div>
         <div>
-          <SelectFileButton
+          <FilePickerButton
             :icon-only="true"
             label="upload"
             icon="mdi-upload"
             @select="(files) => emits('uploadFiles', files)"
           />
         </div>
-        <ProfileButton
+        <AccountButton
           :authenticated="authenticated"
           :loading="props.userAuthLoading"
           :user-name="userName"

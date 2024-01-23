@@ -1,8 +1,8 @@
 <script setup lang="ts">
-import SelectFileButton from "@/components/SelectFileButton.vue";
-import SearchInputField from "@/components/SearchInputField.vue";
-import ProfileButton from "@/components/AppBar/NormalAppBar/ProfileButton.vue";
-import LogoButton from "@/components/Logo/LogoButton.vue";
+import FilePickerButton from "@/components/FileUpload/FilePickerButton.vue";
+import SearchBar from "@/components/Search/SearchBar.vue";
+import AccountButton from "@/components/AppBar/NormalAppBar/AccountButton.vue";
+import AppLogoButton from "@/components/Logo/AppLogoButton.vue";
 
 const props = defineProps<{
   searchQuery: string;
@@ -30,13 +30,13 @@ const emits = defineEmits<{
     >
       <v-toolbar-title>
         <div>
-          <LogoButton :redirect="true" redirect-component-name="Home" />
+          <AppLogoButton :redirect="true" redirect-component-name="Home" />
         </div>
       </v-toolbar-title>
     </v-col>
     <!-- mid -->
     <v-col cols="4">
-      <SearchInputField
+      <SearchBar
         :model-value="props.searchQuery"
         @update:model-value="(value) => emits('update:searchQuery', value)"
         :collapsed="false"
@@ -47,14 +47,14 @@ const emits = defineEmits<{
     <v-col cols="4">
       <v-row class="d-flex flex-row flex-nowrap justify-end align-center">
         <div>
-          <SelectFileButton
+          <FilePickerButton
             :icon-only="false"
             label="upload"
             icon="mdi-upload"
             @select="(files) => emits('uploadFiles', files)"
           />
         </div>
-        <ProfileButton
+        <AccountButton
           :authenticated="authenticated"
           :loading="props.userAuthLoading"
           :user-name="userName"

@@ -1,7 +1,7 @@
 <script setup lang="ts">
-import SearchResults from "../components/SearchResults.vue";
+import SearchMediaGrid from "../components/Search/SearchMediaGrid.vue";
 </script>
 
 <template>
-  <SearchResults />
+  <SearchMediaGrid />
 </template>

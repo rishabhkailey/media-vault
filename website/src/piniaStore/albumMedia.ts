@@ -72,6 +72,7 @@ userFriendlyOrderByToProperties.set("Newest Added first", {
 
 export const useAlbumMediaStore = defineStore("albumMedia", () => {
   const mediaList = ref<Array<AlbumMedia>>([]);
+  // todo add lastMediaLoadFailed so we don't keep retrying failed request
   const allMediaLoaded = ref(false);
   const albumID = ref(0);
   const { accessToken } = storeToRefs(useAuthStore());
@@ -81,7 +82,7 @@ export const useAlbumMediaStore = defineStore("albumMedia", () => {
     const properties = userFriendlyOrderByToProperties.get(orderBy.value);
     if (properties === undefined) {
       throw new Error(
-        `"${orderBy.value} "invalid order by value. unable to get properties for the selected order by.`
+        `"${orderBy.value} "invalid order by value. unable to get properties for the selected order by.`,
       );
     }
     return properties;
@@ -135,16 +136,16 @@ export const useAlbumMediaStore = defineStore("albumMedia", () => {
     return new Promise<boolean>((resolve, reject) => {
       const url = new URL(
         `/v1/album/${albumID.value}/media`,
-        import.meta.env.VITE_BASE_URL
+        import.meta.env.VITE_BASE_URL,
       );
       url.searchParams.append("per_page", perPage.toString());
       url.searchParams.append(
         "order",
-        orderByProperties.value.orderBySearchParam
+        orderByProperties.value.orderBySearchParam,
       );
       url.searchParams.append(
         "sort",
-        orderByProperties.value.sortBySearchParam
+        orderByProperties.value.sortBySearchParam,
       );
 
       if (lastMediaId.value !== null) {
@@ -178,7 +179,7 @@ export const useAlbumMediaStore = defineStore("albumMedia", () => {
     });
   }
 
-  function loadAllMediaForDate(date: Date): Promise<boolean> {
+  function loadAllMediaUntil(date: Date): Promise<boolean> {
     return new Promise((resolve, reject) => {
       let lastMedia = mediaList.value[mediaList.value.length - 1];
       if (lastMedia.date > date) {
@@ -202,7 +203,7 @@ export const useAlbumMediaStore = defineStore("albumMedia", () => {
 
   function removeMediaByIDsFromLocalState(mediaIDs: Array<number>) {
     mediaList.value = mediaList.value.filter(
-      (media) => !mediaIDs.includes(media.id)
+      (media) => !mediaIDs.includes(media.id),
     );
   }
 
@@ -213,7 +214,7 @@ export const useAlbumMediaStore = defineStore("albumMedia", () => {
     reset,
     setAlbumID,
     loadMoreMedia,
-    loadAllMediaForDate,
+    loadAllMediaUntil,
     removeMediaByIDsFromLocalState,
   };
 });
