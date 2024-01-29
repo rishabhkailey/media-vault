@@ -11,6 +11,7 @@ const props = defineProps<{
   loadMoreMedia: () => Promise<Boolean>;
   allMediaLoaded: boolean;
   routeName: string;
+  animationOriginSelector: string;
 }>();
 
 const emits = defineEmits<{
@@ -54,8 +55,8 @@ function scaleWindowToThumbnailSizeWithoutCrop(
 }
 function startImageOpenAnimation() {
   try {
-    let thumbnailElement = document.getElementById(
-      `thumbnail_${media.value.id}`,
+    let thumbnailElement = document.querySelector(
+      props.animationOriginSelector,
     );
     let mediaWindowElement = document.getElementById(
       `media_window_${media.value.id}`,
@@ -67,6 +68,7 @@ function startImageOpenAnimation() {
     // if we change this behavior this might stop working, in that case we can use route hash to get thumbnailRect
     let thumbnailRect = thumbnailElement.getBoundingClientRect();
     let mediaWindowRect = mediaWindowElement.getBoundingClientRect();
+    console.log(thumbnailRect, mediaWindowRect);
     let {
       x: initialX,
       y: initialY,
@@ -122,8 +124,8 @@ function startBackgroundOpenAnimation() {
 }
 function startImageCloseAnimation() {
   try {
-    let thumbnailElement = document.getElementById(
-      `thumbnail_${media.value.id}`,
+    let thumbnailElement = document.querySelector(
+      props.animationOriginSelector,
     );
     let mediaWindowElement = document.getElementById(
       `media_window_${media.value.id}`,
@@ -135,6 +137,7 @@ function startImageCloseAnimation() {
     // if we change this behavior this might stop working, in that case we can use route hash to get thumbnailRect
     let thumbnailRect = thumbnailElement.getBoundingClientRect();
     let mediaWindowRect = mediaWindowElement.getBoundingClientRect();
+    console.log(thumbnailRect, mediaWindowRect);
     let {
       x: initialX,
       y: initialY,
