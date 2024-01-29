@@ -24,6 +24,7 @@ const props = defineProps<{
 
 const emits = defineEmits<{
   (e: "update:sidebarOpen", value: boolean): void;
+  (e: "selectFilesForUpload", selectedFiles: Array<File>): void;
 }>();
 
 const search = ref("");
@@ -72,7 +73,6 @@ const searchSubmit = (query: string) => {
     },
   });
 };
-// todo different commonent for mobile app bar instead of if else
 </script>
 
 <template>
@@ -85,7 +85,7 @@ const searchSubmit = (query: string) => {
       :user-name="userName"
       :user-auth-loading="loading"
       @search-submit="(query) => searchSubmit(query)"
-      @upload-files="(files) => uploadFiles(files)"
+      @select-files-for-upload="(files) => uploadFiles(files)"
       @update:navigation-bar="(value) => emits('update:sidebarOpen', value)"
       @login="logIn"
       @logout="logOut"
@@ -100,7 +100,7 @@ const searchSubmit = (query: string) => {
       :user-name="userName"
       :user-auth-loading="loading"
       @search-submit="(query) => searchSubmit(query)"
-      @upload-files="(files) => uploadFiles(files)"
+      @select-files-for-upload="(files) => uploadFiles(files)"
       @login="logIn"
       @logout="logOut"
     />

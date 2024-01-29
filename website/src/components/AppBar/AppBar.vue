@@ -11,6 +11,7 @@ const props = defineProps<{
 
 const emits = defineEmits<{
   (e: "update:sideBar", value: boolean): void;
+  (e: "selectFilesForUpload", selectedFiles: Array<File>): void;
 }>();
 
 const mediaSelectionStore = useMediaSelectionStore();
