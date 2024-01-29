@@ -49,7 +49,7 @@ export const monthShort = [
 
 export function getMonthlyMediaIndex(
   mediaList: Array<Media>,
-  mediaDateGetter: (media: Media) => Date
+  mediaDateGetter: (media: Media) => Date,
 ) {
   const monthlyMediaList: Array<MonthlyMedia> = [];
   const getKey = (month: number, year: number) => {
@@ -83,20 +83,20 @@ export function getMonthlyMediaIndex(
     });
   });
   monthlyMediaList.sort((a, b) => {
-    if (a.year > b.year) {
-      return -1;
+    if (a.year !== b.year) {
+      return (b.year - a.year) * 12;
     }
-    if (a.month > b.month) {
-      return -1;
+    if (a.month !== b.month) {
+      return a.month - b.month;
     }
-    return 1;
+    return 0;
   });
   return monthlyMediaList;
 }
 
 export function getDailyMediaIndex(
   mediaList: Array<IndexMedia>,
-  mediaDateGetter: (media: Media) => Date
+  mediaDateGetter: (media: Media) => Date,
 ) {
   const dailyMediaList: Array<DailyMedia> = [];
   const getKey = (day: number, date: number, month: number, year: number) => {
@@ -120,14 +120,14 @@ export function getDailyMediaIndex(
         date.getDay(),
         date.getDate(),
         date.getMonth(),
-        date.getFullYear()
+        date.getFullYear(),
       );
     } catch (err) {
       key = getKey(
         UNKNOWN_DATE.getDay(),
         UNKNOWN_DATE.getDate(),
         UNKNOWN_DATE.getMonth(),
-        UNKNOWN_DATE.getFullYear()
+        UNKNOWN_DATE.getFullYear(),
       );
     }
     if (dailyMediaMap.get(key) === undefined) {
