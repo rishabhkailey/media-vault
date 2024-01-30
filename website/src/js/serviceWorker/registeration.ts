@@ -1,5 +1,5 @@
-import decryptWorker from "@/worker/dist/bundle.js?url";
-// import decryptWorker from "@/worker/decrypt?url";
+import decryptWorker from "@/js/serviceWorker/dist/serviceWorker.js?url";
+// import decryptWorker from "@/js/serviceWorker/serviceWorker.ts";
 
 export function updateOrRegisterServiceWorker(): Promise<ServiceWorker> {
   return new Promise<ServiceWorker>((resolve, reject) => {

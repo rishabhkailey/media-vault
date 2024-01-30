@@ -7,7 +7,7 @@ firefox doesn't support es6 imports in service worker
 
 ## commands to run
 ```bash
-cd src/worker
+cd src/js/serviceWorker
 npx webpack --mode development --config webpack.config.cjs
 ```
 

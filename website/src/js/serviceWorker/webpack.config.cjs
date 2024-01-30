@@ -1,8 +1,8 @@
 // eslint-disable-next-line no-undef
 module.exports = {
-  entry: "./decrypt.ts",
+  entry: "./serviceWorker.ts",
   output: {
-    filename: "bundle.js",
+    filename: "serviceWorker.js",
   },
   resolve: {
     extensions: [".ts", ".js"],
