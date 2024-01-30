@@ -92,10 +92,10 @@ export const useSearchStore = defineStore("search", () => {
 
   function loadMoreSearchResults(
     accessToken: string,
-    _query: string
-  ): Promise<boolean> {
+    _query: string,
+  ): Promise<LoadMoreMediaStatus> {
     console.log(query.value, _query, query.value !== _query);
-    return new Promise<boolean>((resolve, reject) => {
+    return new Promise<LoadMoreMediaStatus>((resolve, reject) => {
       if (query.value !== _query) {
         console.log("query changed resetting media list");
         reset();
@@ -108,15 +108,18 @@ export const useSearchStore = defineStore("search", () => {
             headers: {
               Authorization: `Bearer ${accessToken}`,
             },
-          }
+          },
         )
         .then((response) => {
           console.log(response);
           if (response.status == 200) {
             appendMedia(response.data);
             nextPageNumber.value += 1;
-            allMediaLoaded.value = response.data.length === 0;
-            resolve(true);
+            if (response.data.length === 0) {
+              allMediaLoaded.value = response.data.length === 0;
+              resolve("empty");
+            }
+            resolve("ok");
             return;
           }
           reject(new Error("non 200 status code"));

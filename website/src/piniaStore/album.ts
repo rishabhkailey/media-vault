@@ -166,9 +166,10 @@ export const useAlbumStore = defineStore("album", () => {
     }
   }
 
-  function loadMoreAlbums(): Promise<boolean> {
+  function loadMoreAlbums(): Promise<LoadMoreAlbumStatus> {
     const perPage = 30;
-    return new Promise<boolean>((resolve, reject) => {
+    return new Promise<LoadMoreAlbumStatus>((resolve, reject) => {
+      // todo fix: new URL("/abc", "http://localhost:5173/v1").toString() -> "http://localhost:5173/abc"
       const url = new URL("/v1/albums", import.meta.env.VITE_BASE_URL);
       url.searchParams.append("per_page", perPage.toString());
       url.searchParams.append(
@@ -197,9 +198,12 @@ export const useAlbumStore = defineStore("album", () => {
               lastAlbumId.value = response.data[response.data.length - 1].id;
             }
             nextPageNumber.value += 1;
-            allAlbumsLoaded.value =
-              response.data.length == 0 || response.data.length < perPage;
-            resolve(true);
+            if (response.data.length == 0 || response.data.length < perPage) {
+              allAlbumsLoaded.value = true;
+              resolve("empty");
+              return;
+            }
+            resolve("ok");
             return;
           }
           reject(new Error("non 200 status code"));

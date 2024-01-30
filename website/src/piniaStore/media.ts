@@ -105,8 +105,16 @@ export const useMediaStore = defineStore("media", () => {
     return uniqueMediaList;
   }
 
-  function loadMoreMedia(): Promise<boolean> {
-    return new Promise<boolean>((resolve, reject) => {
+  /**
+   * Fetches and loads more media content.
+   *
+   * @returns {Promise<boolean>} A Promise that resolves with:
+   *   - `true` if more media was successfully loaded.
+   *   - `false` if there is no more media available.
+   *   - Rejects with an error if media loading fails.
+   */
+  function loadMoreMedia(): Promise<LoadMoreMediaStatus> {
+    return new Promise<LoadMoreMediaStatus>((resolve, reject) => {
       let url = `/v1/mediaList?order=${orderBy.value}&sort=desc&per_page=30`;
       if (mediaList.value.length !== 0) {
         const lastMedia = mediaList.value[mediaList.value.length - 1];
@@ -125,8 +133,12 @@ export const useMediaStore = defineStore("media", () => {
           if (response.status == 200) {
             appendMedia(response.data);
             nextPageNumber.value += 1;
-            allMediaLoaded.value = response.data.length == 0;
-            resolve(true);
+            if (response.data.length == 0) {
+              allMediaLoaded.value = true;
+              resolve("empty");
+              return;
+            }
+            resolve("ok");
             return;
           }
           reject(new Error("non 200 status code"));

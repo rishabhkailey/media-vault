@@ -41,7 +41,7 @@ function initParams() {
 
 let allMediaLoaded = ref(true);
 let mediaList = ref<Array<Media>>([]);
-let loadMoreMedia: () => Promise<boolean>;
+let loadMoreMedia: LoadMoreMedia;
 initMediaPreviewRefsAndStore();
 
 // function initRefsAndStores() {
@@ -81,7 +81,8 @@ function initMediaPreviewRefsAndStore() {
 function initSingleMediaPreviewRefsAndStore() {
   allMediaLoaded.value = true;
   mediaList.value = [];
-  loadMoreMedia = () => new Promise<boolean>((resolve) => resolve(true));
+  loadMoreMedia = () =>
+    new Promise<LoadMoreMediaStatus>((resolve) => resolve("empty"));
 }
 // function initAlbumMediaPreviewRefsAndStore() {
 //   const albumMediaStore = useAlbumMediaStore();

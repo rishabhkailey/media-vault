@@ -131,9 +131,9 @@ export const useAlbumMediaStore = defineStore("albumMedia", () => {
     }
   }
 
-  function loadMoreMedia(): Promise<boolean> {
+  function loadMoreMedia(): Promise<LoadMoreMediaStatus> {
     const perPage = 30;
-    return new Promise<boolean>((resolve, reject) => {
+    return new Promise<LoadMoreMediaStatus>((resolve, reject) => {
       const url = new URL(
         `/v1/album/${albumID.value}/media`,
         import.meta.env.VITE_BASE_URL,
@@ -164,9 +164,12 @@ export const useAlbumMediaStore = defineStore("albumMedia", () => {
               lastMediaId.value = response.data[response.data.length - 1].id;
               appendMedia(response.data);
             }
-            allMediaLoaded.value =
-              response.data.length == 0 || response.data.length < perPage;
-            resolve(true);
+            if (response.data.length == 0 || response.data.length < perPage) {
+              allMediaLoaded.value = true;
+              resolve("empty");
+              return;
+            }
+            resolve("ok");
             return;
           }
           reject(new Error("non 200 status code"));
