@@ -8,11 +8,12 @@ import ConfirmationModal from "@/components/Modals/ConfirmationModal.vue";
 import AddToAlbumPopup from "@/components/Album/AddToAlbumPopup.vue";
 import { useAlbumStore } from "@/piniaStore/album";
 import { useAlbumMediaStore } from "@/piniaStore/albumMedia";
+import { useErrorsStore } from "@/piniaStore/errors";
 
 const mediaSelectionStore = useMediaSelectionStore();
 const { reset: resetMediaSelection, updateSelection } = mediaSelectionStore;
 const { selectedMediaIDs } = storeToRefs(mediaSelectionStore);
-
+const { appendError } = useErrorsStore();
 const { deleteMultipleMedia } = useMediaStore();
 const { setGlobalLoading, setProgress } = useLoadingStore();
 
@@ -39,9 +40,22 @@ async function deleteSelectedMedia() {
       setProgress((100 * (index + batchSize)) / count);
     } catch (err) {
       failedIDs.push(...mediaIDsToDelete);
-      // todo user feedback component for errors
-      console.log(err);
+      let errorMessage = "";
+      if (typeof err == "string") {
+        errorMessage = err;
+      }
+      if (err instanceof Error) {
+        errorMessage = err.message + " " + err.stack;
+      }
+      appendError("unexpected error", errorMessage, 10);
     }
+  }
+  if (failedIDs.length > 0) {
+    appendError(
+      "deletion failed",
+      `We weren't able to delete ${failedIDs.length} items. They're still selected, so you can try deleting them again.`,
+      -1,
+    );
   }
   failedIDs.forEach((id) => updateSelection(id, true));
   removeMediaByIDsFromLocalState(

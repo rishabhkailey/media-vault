@@ -167,7 +167,7 @@ export const useMediaStore = defineStore("media", () => {
 
   function removeMediaByIDs(mediaIDs: Array<number>) {
     mediaList.value = mediaList.value.filter(
-      (media) => !mediaIDs.includes(media.id)
+      (media) => !mediaIDs.includes(media.id),
     );
   }
 
@@ -197,7 +197,7 @@ export const useMediaStore = defineStore("media", () => {
   // returns failed media ids
   // reject only in case of unexpected/unhandeled error
   async function deleteMultipleMedia(
-    mediaIDs: Array<number>
+    mediaIDs: Array<number>,
   ): Promise<Array<number>> {
     const failedMediaIDs = new Set<number>();
     const successMediaIDs = new Set<number>();

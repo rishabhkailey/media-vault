@@ -8,6 +8,7 @@ import ConfirmationModal from "@/components/Modals/ConfirmationModal.vue";
 import { useRoute } from "vue-router";
 import { useAlbumStore } from "@/piniaStore/album";
 import { useAlbumMediaStore } from "@/piniaStore/albumMedia";
+import { useErrorsStore } from "@/piniaStore/errors";
 
 const mediaSelectionStore = useMediaSelectionStore();
 const { reset: resetMediaSelection, updateSelection } = mediaSelectionStore;
@@ -16,6 +17,8 @@ const { selectedMediaIDs } = storeToRefs(mediaSelectionStore);
 const { removeMediaByIDsFromLocalState } = useAlbumMediaStore();
 const { deleteMultipleMedia } = useMediaStore();
 const { setGlobalLoading, setProgress } = useLoadingStore();
+
+const { appendError } = useErrorsStore();
 
 const deleteConfirmationPopUp = ref(false);
 
@@ -38,9 +41,23 @@ async function deleteSelectedMedia() {
       setProgress((100 * (index + batchSize)) / count);
     } catch (err) {
       failedIDs.push(...mediaIDsToDelete);
-      // todo user feedback component for errors
+      let errorMessage = "";
+      if (typeof err == "string") {
+        errorMessage = err;
+      }
+      if (err instanceof Error) {
+        errorMessage = err.message + " " + err.stack;
+      }
+      appendError("unexpected error", errorMessage, 10);
       console.log(err);
     }
+  }
+  if (failedIDs.length > 0) {
+    appendError(
+      "deletion failed",
+      `We weren't able to delete ${failedIDs.length} items. They're still selected, so you can try deleting them again.`,
+      -1,
+    );
   }
   failedIDs.forEach((id) => updateSelection(id, true));
   removeMediaByIDsFromLocalState(
@@ -65,7 +82,6 @@ function removeSelectedMedia() {
       removeSelectedMediaInProgress.value = false;
       removedMediaFromAlbumPopUp.value = false;
       resetMediaSelection();
-      // todo remove media from album media list
     })
     .catch((err) => {
       removeSelectedMediaInProgress.value = false;

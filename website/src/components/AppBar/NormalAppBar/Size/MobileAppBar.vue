@@ -18,7 +18,7 @@ const emits = defineEmits<{
   (e: "login"): void;
   (e: "logout"): void;
   (e: "searchSubmit", query: string): void;
-  (e: "uploadFiles", selectedFiles: Array<File>): void;
+  (e: "selectFilesForUpload", selectedFiles: Array<File>): void;
 }>();
 </script>
 
@@ -51,7 +51,7 @@ const emits = defineEmits<{
             :icon-only="true"
             label="upload"
             icon="mdi-upload"
-            @select="(files) => emits('uploadFiles', files)"
+            @select="(files) => emits('selectFilesForUpload', files)"
           />
         </div>
         <AccountButton

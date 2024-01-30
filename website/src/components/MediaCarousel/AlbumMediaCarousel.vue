@@ -67,7 +67,8 @@ function initMediaPreviewRefsAndStore() {
     albumMediaStore.setAlbumID(albumID.value);
   }
   if (
-    albumMediaStore.mediaList.findIndex((m) => m.id === mediaID.value) !== index.value
+    albumMediaStore.mediaList.findIndex((m) => m.id === mediaID.value) !==
+    index.value
   ) {
     initSingleMediaPreviewRefsAndStore();
     return;
@@ -104,6 +105,7 @@ function updateIndex(newIndex: number) {
     :load-more-media="loadMoreMedia"
     :all-media-loaded="allMediaLoaded"
     route-name="MediaPreview"
+    :animation-origin-selector="`#thumbnail_${mediaList[index].id}`"
     @close="
       () => {
         router.push({

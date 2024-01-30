@@ -17,7 +17,8 @@ const searchQuery = Array.isArray(route.params.query)
 const { accessToken } = storeToRefs(useAuthStore());
 const searchStore = useSearchStore();
 const { mediaList, allMediaLoaded } = storeToRefs(searchStore);
-const { loadMoreSearchResults, setQuery, getMediaDateAccordingToOrderBy } = searchStore;
+const { loadMoreSearchResults, setQuery, getMediaDateAccordingToOrderBy } =
+  searchStore;
 onBeforeMount(() => {
   // as we are using global store for search results, it can still have results of old media search
   // this will ensure to update search query and results in store

@@ -150,7 +150,7 @@ onMounted(() => {
               params: {
                 index: clickedIndex,
                 media_id: clickedMediaID,
-                album: albumID,
+                album_id: albumID,
               },
               hash: `#${base64UrlEncode(thumbnailClickLocation)}`,
             });
