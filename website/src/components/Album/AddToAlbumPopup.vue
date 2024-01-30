@@ -2,7 +2,6 @@
 import { useAlbumStore } from "@/piniaStore/album";
 import { storeToRefs } from "pinia";
 import { ref } from "vue";
-import InfiniteScroller from "@/components/InfiniteScroller/InfiniteScroller.vue";
 
 const props = defineProps<{
   title: string;
@@ -25,7 +24,7 @@ const emits = defineEmits<{
 const selectedAlbums = ref<Array<number>>([]);
 const albumStore = useAlbumStore();
 const { loadMoreAlbums } = albumStore;
-const { albums, allAlbumsLoaded } = storeToRefs(albumStore);
+const { albums } = storeToRefs(albumStore);
 </script>
 <template>
   <v-overlay
@@ -46,33 +45,38 @@ const { albums, allAlbumsLoaded } = storeToRefs(albumStore);
       </v-card-text>
       <!-- albums -->
       <v-container class="pl-2" style="max-height: 50vh; overflow-y: scroll">
-        <v-checkbox
-          v-for="album in albums"
-          :key="album.id"
-          :value="album.id"
-          v-model="selectedAlbums"
+        <v-infinite-scroll
+          :min-height="100"
+          :min-width="100"
+          :items="albums"
+          @load="
+            ({ done }) => {
+              loadMoreAlbums()
+                .then((status) => {
+                  done(status);
+                })
+                .catch((_) => {
+                  done('error');
+                });
+            }
+          "
         >
-          <template #label>
-            <v-list-item
-              :title="album.name"
-              prepend-icon="mdi-image"
-              :value="album.name"
-              color="primary"
-            />
-          </template>
-        </v-checkbox>
-        <v-row class="justify-center">
-          <InfiniteScroller
-            v-if="!allAlbumsLoaded"
-            :on-threshold-reach="loadMoreAlbums"
-            :threshold="0.1"
-            :min-height="100"
-            :min-width="100"
-            :root-margin="10"
+          <v-checkbox
+            v-for="album in albums"
+            :key="album.id"
+            :value="album.id"
+            v-model="selectedAlbums"
           >
-            <v-progress-circular indeterminate></v-progress-circular>
-          </InfiniteScroller>
-        </v-row>
+            <template #label>
+              <v-list-item
+                :title="album.name"
+                prepend-icon="mdi-image"
+                :value="album.name"
+                color="primary"
+              />
+            </template>
+          </v-checkbox>
+        </v-infinite-scroll>
       </v-container>
       <v-card-actions>
         <div class="d-flex flex-row justify-end flex-grow-1">

@@ -8,7 +8,7 @@ import { computed } from "vue";
 const props = defineProps<{
   index: number;
   mediaList: Array<Media>;
-  loadMoreMedia: () => Promise<Boolean>;
+  loadMoreMedia: LoadMoreMedia;
   allMediaLoaded: boolean;
   routeName: string;
   animationOriginSelector: string;

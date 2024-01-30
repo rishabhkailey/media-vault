@@ -28,6 +28,9 @@ interface Media {
   url: string;
   thumbnail_url: string;
   thumbnail_aspect_ratio: number;
+  // todo
+  // getSortBy(): string];
+  // getDateAccordingToSortBy(): Date;
 }
 
 interface AlbumMedia extends Media {
@@ -69,3 +72,9 @@ interface ThumbnailClickLocation {
   width: number;
   height: number;
 }
+
+type LoadMoreMediaStatus = "ok" | "empty";
+type LoadMoreMedia = () => Promise<LoadMoreMediaStatus>;
+
+type LoadMoreAlbumStatus = "ok" | "empty";
+type LoadMoreAlbum = () => Promise<LoadMoreAlbumStatus>;
