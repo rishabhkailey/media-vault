@@ -1,6 +1,7 @@
 package album
 
 import (
+	"github.com/rishabhkailey/media-service/internal/constants"
 	"github.com/rishabhkailey/media-service/internal/store/media"
 	"gorm.io/gorm"
 )
@@ -13,7 +14,6 @@ type AlbumMediaOrderBy string
 type Sort string
 
 const (
-	ALBUMS_TABLE_NAME                                = "albums"
 	USER_ALBUM_BINDINGS_TABLE_NAME                   = "user_album_bindings"
 	ALBUM_MEDIA_BINDING_TABLE_NAME                   = "album_media_bindings"
 	AlbumOrderByDate               AlbumOrderBy      = "album.created_at"
@@ -33,7 +33,7 @@ type Album struct {
 }
 
 func (Album) TableName() string {
-	return ALBUMS_TABLE_NAME
+	return constants.ALBUMS_TABLE
 }
 
 type UserAlbumBindings struct {
@@ -44,7 +44,7 @@ type UserAlbumBindings struct {
 }
 
 func (UserAlbumBindings) TableName() string {
-	return USER_ALBUM_BINDINGS_TABLE_NAME
+	return constants.USER_ALBUM_BINDINGS_TABLE
 }
 
 type AlbumMediaBindings struct {
@@ -56,5 +56,5 @@ type AlbumMediaBindings struct {
 }
 
 func (AlbumMediaBindings) TableName() string {
-	return ALBUM_MEDIA_BINDING_TABLE_NAME
+	return constants.ALBUM_MEDIA_BINDING_TABLE
 }

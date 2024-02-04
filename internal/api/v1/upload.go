@@ -20,7 +20,7 @@ import (
 )
 
 func (server *Server) InitChunkUpload(c *gin.Context) {
-	userID := c.GetString("userID")
+	userID := c.GetString("user_id")
 	if len(userID) == 0 {
 		c.Error(
 			internalErrors.NewInternalServerError(
@@ -132,7 +132,7 @@ func (server *Server) InitChunkUpload(c *gin.Context) {
 }
 
 func (server *Server) UploadChunk(c *gin.Context) {
-	userID := c.GetString("userID")
+	userID := c.GetString("user_id")
 	if len(userID) == 0 {
 		c.Error(
 			internalErrors.NewInternalServerError(
@@ -203,7 +203,7 @@ func (server *Server) UploadThumbnail(c *gin.Context) {
 		)
 		return
 	}
-	userID := c.GetString("userID")
+	userID := c.GetString("user_id")
 	if len(userID) == 0 {
 		c.Error(
 			internalErrors.NewInternalServerError(
@@ -271,7 +271,7 @@ func (server *Server) FinishChunkUpload(c *gin.Context) {
 		)
 		return
 	}
-	userID := c.GetString("userID")
+	userID := c.GetString("user_id")
 	if len(userID) == 0 {
 		c.Error(
 			internalErrors.NewInternalServerError(

@@ -124,7 +124,7 @@ func (s *sqlStore) GetAlbumsByUserIdOrderByCreationAt(
 							("Album"."created_at" > @lastAlbumDate)
 						)
 						)`,
-					sql.Named("userID", userID),
+					sql.Named("user_id", userID),
 					sql.Named("lastAlbumDate", lastAlbumDate),
 					sql.Named("lastAlbumID", lastAlbumID),
 				)
@@ -140,7 +140,7 @@ func (s *sqlStore) GetAlbumsByUserIdOrderByCreationAt(
 							("Album"."created_at" < @lastAlbumDate)
 						)
 						)`,
-					sql.Named("userID", userID),
+					sql.Named("user_id", userID),
 					sql.Named("lastAlbumDate", lastAlbumDate),
 					sql.Named("lastAlbumID", lastAlbumID),
 				)
@@ -149,7 +149,7 @@ func (s *sqlStore) GetAlbumsByUserIdOrderByCreationAt(
 	} else {
 		albumsByUserIDQuery = albumsByUserIDQuery.Where(
 			`user_id = @userID `,
-			sql.Named("userID", userID),
+			sql.Named("user_id", userID),
 		)
 	}
 	queryOrderBy := fmt.Sprintf(`"Album"."created_at" %s, "Album"."id" desc`, sort)
@@ -202,7 +202,7 @@ func (s *sqlStore) GetAlbumsByUserIdOrderByUpdatedAt(
 							("Album"."updated_at" > @lastAlbumDate)
 						)
 						)`,
-					sql.Named("userID", userID),
+					sql.Named("user_id", userID),
 					sql.Named("lastAlbumDate", lastAlbumDate),
 					sql.Named("lastAlbumID", lastAlbumID),
 				)
@@ -218,7 +218,7 @@ func (s *sqlStore) GetAlbumsByUserIdOrderByUpdatedAt(
 							("Album"."updated_at" < @lastAlbumDate)
 						)
 						)`,
-					sql.Named("userID", userID),
+					sql.Named("user_id", userID),
 					sql.Named("lastAlbumDate", lastAlbumDate),
 					sql.Named("lastAlbumID", lastAlbumID),
 				)
@@ -227,7 +227,7 @@ func (s *sqlStore) GetAlbumsByUserIdOrderByUpdatedAt(
 	} else {
 		albumsByUserIDQuery = albumsByUserIDQuery.Where(
 			`user_id = @userID `,
-			sql.Named("userID", userID),
+			sql.Named("user_id", userID),
 		)
 	}
 	queryOrderBy := fmt.Sprintf(`"Album"."updated_at" %s, "Album"."id" desc`, sort)

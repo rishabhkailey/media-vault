@@ -3,8 +3,8 @@ package mediasearch
 import (
 	"fmt"
 
-	usermediabindings "github.com/rishabhkailey/media-service/internal/services/userMediaBindings"
 	mediaStore "github.com/rishabhkailey/media-service/internal/store/media"
+	usermediabindings "github.com/rishabhkailey/media-service/internal/store/userMediaBindings"
 )
 
 const (

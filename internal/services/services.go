@@ -58,19 +58,19 @@ func NewServices(
 	if err != nil {
 		return nil, err
 	}
-	userMediaBindingsService, err := usermediabindingsimpl.NewService(db)
-	if err != nil {
-		return nil, err
-	}
 	mediaSearchService, err := mediasearchimpl.NewService(ms)
 	if err != nil {
 		return nil, err
 	}
-	authService, err := authserviceimpl.NewService(*oidcClient, userMediaBindingsService, time.Hour*12)
+	store, err := store.NewStore(db, redis, minio)
 	if err != nil {
 		return nil, err
 	}
-	store, err := store.NewStore(db, redis, minio)
+	userMediaBindingsService, err := usermediabindingsimpl.NewService(*store)
+	if err != nil {
+		return nil, err
+	}
+	authService, err := authserviceimpl.NewService(*oidcClient, userMediaBindingsService, time.Hour*12)
 	if err != nil {
 		return nil, err
 	}

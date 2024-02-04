@@ -6,7 +6,7 @@ import (
 	"time"
 
 	"github.com/go-redis/redis/v8"
-	usermediabindings "github.com/rishabhkailey/media-service/internal/services/userMediaBindings"
+	"github.com/rishabhkailey/media-service/internal/constants"
 	media "github.com/rishabhkailey/media-service/internal/store/media"
 	"gorm.io/gorm"
 )
@@ -88,7 +88,7 @@ func (s *sqlStore) GetByUserIDOrderByDate(ctx context.Context,
 ) (mediaList []media.Media, err error) {
 
 	db := s.db.WithContext(ctx)
-	mediaByUserIDQuery := db.Model(&usermediabindings.Model{}).Select("media_id").Where("user_id = ?", userID)
+	mediaByUserIDQuery := db.Table(constants.USER_MEDIA_BINDINGS_TABLE).Select("media_id").Where("user_id = ?", userID)
 	// table name = media, metadata alias = Metadata
 	query := db.Joins("Metadata").Model(&media.Media{})
 	if lastMediaID != nil && lastDate != nil {
@@ -139,7 +139,7 @@ func (s *sqlStore) GetByUserIDOrderByUploadDate(ctx context.Context,
 ) (mediaList []media.Media, err error) {
 
 	db := s.db.WithContext(ctx)
-	mediaByUserIDQuery := db.Model(&usermediabindings.Model{}).Select("media_id").Where("user_id = ?", userID)
+	mediaByUserIDQuery := db.Table(constants.USER_MEDIA_BINDINGS_TABLE).Select("media_id").Where("user_id = ?", userID)
 	// table name = media, metadata alias = Metadata
 	query := db.Joins("Metadata").Model(&media.Media{})
 	if lastMediaID != nil && lastDate != nil {

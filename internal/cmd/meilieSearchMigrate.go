@@ -9,7 +9,7 @@ import (
 	"github.com/meilisearch/meilisearch-go"
 	mediasearch "github.com/rishabhkailey/media-service/internal/services/mediaSearch"
 	mediasearchimpl "github.com/rishabhkailey/media-service/internal/services/mediaSearch/mediaSearchimpl"
-	usermediabindings "github.com/rishabhkailey/media-service/internal/services/userMediaBindings"
+	usermediabindings "github.com/rishabhkailey/media-service/internal/store/userMediaBindings"
 	"github.com/sirupsen/logrus"
 	"gorm.io/gorm"
 )

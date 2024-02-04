@@ -5,12 +5,13 @@ import (
 
 	usermediabindings "github.com/rishabhkailey/media-service/internal/services/userMediaBindings"
 	mediaStore "github.com/rishabhkailey/media-service/internal/store/media"
+	userMediaBindingsStore "github.com/rishabhkailey/media-service/internal/store/userMediaBindings"
 	"gorm.io/gorm"
 )
 
 type FakeService struct {
 	ExpectedError              error
-	ExpectedUserMediaBinding   usermediabindings.Model
+	ExpectedUserMediaBinding   userMediaBindingsStore.Model
 	ExpectedFileBelongsToUser  bool
 	ExpectedMediaBelongsToUser bool
 }
@@ -25,7 +26,7 @@ func (s *FakeService) WithTransaction(_ *gorm.DB) usermediabindings.Service {
 	return s
 }
 
-func (s *FakeService) Create(ctx context.Context, query usermediabindings.CreateCommand) (usermediabindings.Model, error) {
+func (s *FakeService) Create(ctx context.Context, query usermediabindings.CreateCommand) (userMediaBindingsStore.Model, error) {
 	return s.ExpectedUserMediaBinding, s.ExpectedError
 }
 
@@ -37,7 +38,7 @@ func (s *FakeService) DeleteMany(context.Context, usermediabindings.DeleteManyCo
 	return s.ExpectedError
 }
 
-func (s *FakeService) GetByMediaID(ctx context.Context, query usermediabindings.GetByMediaIDQuery) (usermediabindings.Model, error) {
+func (s *FakeService) GetByMediaID(ctx context.Context, query usermediabindings.GetByMediaIDQuery) (userMediaBindingsStore.Model, error) {
 	return s.ExpectedUserMediaBinding, s.ExpectedError
 }
 

@@ -11,7 +11,7 @@ import (
 )
 
 func (s *Server) GetUserInfo(c *gin.Context) {
-	userID := c.GetString("userID")
+	userID := c.GetString("user_id")
 	if len(userID) == 0 {
 		c.Error(
 			internalErrors.NewInternalServerError(
@@ -37,7 +37,7 @@ func (s *Server) GetUserInfo(c *gin.Context) {
 }
 
 func (s *Server) PostUserInfo(c *gin.Context) {
-	userID := c.GetString("userID")
+	userID := c.GetString("user_id")
 	if len(userID) == 0 {
 		c.Error(
 			internalErrors.NewInternalServerError(

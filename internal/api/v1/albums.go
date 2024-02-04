@@ -12,7 +12,7 @@ import (
 )
 
 func (server *Server) CreateAlbum(c *gin.Context) {
-	userID := c.GetString("userID")
+	userID := c.GetString("user_id")
 	if len(userID) == 0 {
 		c.Error(
 			internalErrors.NewInternalServerError(
@@ -61,7 +61,7 @@ func (server *Server) CreateAlbum(c *gin.Context) {
 }
 
 func (server *Server) GetAlbums(c *gin.Context) {
-	userID := c.GetString("userID")
+	userID := c.GetString("user_id")
 	if len(userID) == 0 {
 		c.Error(
 			internalErrors.NewInternalServerError(
@@ -115,7 +115,7 @@ func (server *Server) GetAlbums(c *gin.Context) {
 }
 
 func (server *Server) DeleteAlbum(c *gin.Context) {
-	userID := c.GetString("userID")
+	userID := c.GetString("user_id")
 	if len(userID) == 0 {
 		c.Error(
 			internalErrors.NewInternalServerError(
@@ -155,7 +155,7 @@ func (server *Server) DeleteAlbum(c *gin.Context) {
 }
 
 func (server *Server) GetAlbum(c *gin.Context) {
-	userID := c.GetString("userID")
+	userID := c.GetString("user_id")
 	if len(userID) == 0 {
 		c.Error(
 			internalErrors.NewInternalServerError(
@@ -202,7 +202,7 @@ func (server *Server) GetAlbum(c *gin.Context) {
 }
 
 func (server *Server) PatchAlbum(c *gin.Context) {
-	userID := c.GetString("userID")
+	userID := c.GetString("user_id")
 	if len(userID) == 0 {
 		c.Error(
 			internalErrors.NewInternalServerError(
@@ -260,7 +260,7 @@ func (server *Server) PatchAlbum(c *gin.Context) {
 
 // todo fix it returns delete media also
 func (server *Server) GetAlubmMedia(c *gin.Context) {
-	userID := c.GetString("userID")
+	userID := c.GetString("user_id")
 	if len(userID) == 0 {
 		c.Error(
 			internalErrors.NewInternalServerError(
@@ -314,7 +314,7 @@ func (server *Server) GetAlubmMedia(c *gin.Context) {
 }
 
 func (server *Server) AlbumAddMedia(c *gin.Context) {
-	userID := c.GetString("userID")
+	userID := c.GetString("user_id")
 	if len(userID) == 0 {
 		c.Error(
 			internalErrors.NewInternalServerError(
@@ -357,7 +357,7 @@ func (server *Server) AlbumAddMedia(c *gin.Context) {
 }
 
 func (server *Server) RemoveAlbumMedia(c *gin.Context) {
-	userID := c.GetString("userID")
+	userID := c.GetString("user_id")
 	if len(userID) == 0 {
 		c.Error(
 			internalErrors.NewInternalServerError(

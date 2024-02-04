@@ -3,11 +3,11 @@ package mediametadata
 import (
 	"time"
 
+	"github.com/rishabhkailey/media-service/internal/constants"
 	"gorm.io/gorm"
 )
 
 const (
-	TABLE_NAME      = "media_metadata"
 	TYPE_UNKNOWN    = "unknown"
 	TYPE_VIDEO_MP4  = "video/mp4"
 	TYPE_VIDEO_WEBM = "video/webm"
@@ -30,7 +30,7 @@ type Model struct {
 }
 
 func (Model) TableName() string {
-	return TABLE_NAME
+	return constants.MEDIA_METADATA_TABLE
 }
 
 type CreateCommand struct {

@@ -3,6 +3,7 @@ package uploadrequests
 import (
 	"time"
 
+	"github.com/rishabhkailey/media-service/internal/constants"
 	"gorm.io/gorm"
 )
 
@@ -12,7 +13,6 @@ const (
 	COMPLETED_UPLOAD_STATUS   Status = "completed"
 	FAILED_UPLOAD_STATUS      Status = "failed"
 	IN_PROGRESS_UPLOAD_STATUS Status = "inProgress"
-	TABLE_NAME                       = "upload_requests"
 )
 
 type Model struct {
@@ -25,7 +25,7 @@ type Model struct {
 }
 
 func (Model) TableName() string {
-	return TABLE_NAME
+	return constants.UPLOAD_REQUESTS_TABLE
 }
 
 // will be used by upload request service
