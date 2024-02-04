@@ -19,6 +19,9 @@ import (
 	"github.com/stretchr/testify/assert"
 )
 
+// todo test if in the last get media request we get empty array instead of null
+// same for album and album media
+
 // RefreshSession and UserAuthMiddleware test
 func TestMediaList(t *testing.T) {
 	testMediaListStruct := randomMediaList(10)

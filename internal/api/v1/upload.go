@@ -20,8 +20,8 @@ import (
 )
 
 func (server *Server) InitChunkUpload(c *gin.Context) {
-	userID, ok := c.Keys["userID"].(string)
-	if !ok || len(userID) == 0 {
+	userID := c.GetString("userID")
+	if len(userID) == 0 {
 		c.Error(
 			internalErrors.NewInternalServerError(
 				fmt.Errorf("[InitChunkUpload]: empty userID"),
@@ -132,8 +132,8 @@ func (server *Server) InitChunkUpload(c *gin.Context) {
 }
 
 func (server *Server) UploadChunk(c *gin.Context) {
-	userID, ok := c.Keys["userID"].(string)
-	if !ok || len(userID) == 0 {
+	userID := c.GetString("userID")
+	if len(userID) == 0 {
 		c.Error(
 			internalErrors.NewInternalServerError(
 				fmt.Errorf("[InitChunkUpload]: empty userID"),
@@ -203,8 +203,8 @@ func (server *Server) UploadThumbnail(c *gin.Context) {
 		)
 		return
 	}
-	userID, ok := c.Keys["userID"].(string)
-	if !ok || len(userID) == 0 {
+	userID := c.GetString("userID")
+	if len(userID) == 0 {
 		c.Error(
 			internalErrors.NewInternalServerError(
 				fmt.Errorf("[UploadThumbnail]: empty userID"),
@@ -271,8 +271,8 @@ func (server *Server) FinishChunkUpload(c *gin.Context) {
 		)
 		return
 	}
-	userID, ok := c.Keys["userID"].(string)
-	if !ok || len(userID) == 0 {
+	userID := c.GetString("userID")
+	if len(userID) == 0 {
 		c.Error(
 			internalErrors.NewInternalServerError(
 				fmt.Errorf("[FinishChunkUpload]: empty userID"),

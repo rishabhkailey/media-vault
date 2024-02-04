@@ -8,6 +8,7 @@ import (
 	"github.com/sirupsen/logrus"
 )
 
+// todo not so redable?
 func ErrorHandler(c *gin.Context) {
 	c.Next()
 	err := c.Errors.Last()
@@ -29,7 +30,6 @@ func ErrorHandler(c *gin.Context) {
 			"method": c.Request.Method,
 			"url":    c.Request.URL,
 		}).Error(e.Err)
-		// break
 	default:
 		c.AbortWithStatusJSON(http.StatusInternalServerError, gin.H{
 			"error": "Internal server error",

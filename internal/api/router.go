@@ -5,8 +5,6 @@ import (
 	"net/http/pprof"
 	"path"
 
-	"github.com/gin-contrib/sessions"
-	"github.com/gin-contrib/sessions/cookie"
 	"github.com/gin-contrib/static"
 	"github.com/gin-gonic/gin"
 	v1Api "github.com/rishabhkailey/media-service/internal/api/v1"
@@ -17,8 +15,9 @@ import (
 func NewRouter(v1ApiServer *v1Api.Server, config config.Config) (*gin.Engine, error) {
 	router := gin.Default()
 	router.Use(v1Api.ErrorHandler)
-	store := cookie.NewStore([]byte(config.Session.Secret))
-	router.Use(sessions.Sessions("mysession", store))
+	// store := cookie.NewStore([]byte(config.Session.Secret))
+	// // session.SetCookieName("media_service")
+	// router.Use(sessions.Sessions("media_service", store))
 
 	// todo - check if there is any security risk of doing this
 	router.Use(

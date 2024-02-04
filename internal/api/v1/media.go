@@ -28,8 +28,8 @@ var SUPPORTED_ORDER_BY = []string{MEDIA_API_ORDER_BY_MEDIA_CREATION_TIME, MEDIA_
 
 // todo- ignore upload status failed media
 func (server *Server) MediaList(c *gin.Context) {
-	userID, ok := c.Keys["userID"].(string)
-	if !ok || len(userID) == 0 {
+	userID := c.GetString("userID")
+	if len(userID) == 0 {
 		c.Error(
 			internalErrors.NewInternalServerError(
 				fmt.Errorf("[MediaList]: empty userID"),
@@ -217,8 +217,8 @@ func (server *Server) DeleteMedia(c *gin.Context) {
 		)
 		return
 	}
-	userID, ok := c.Keys["userID"].(string)
-	if !ok || len(userID) == 0 {
+	userID := c.GetString("userID")
+	if len(userID) == 0 {
 		c.Error(
 			internalErrors.NewInternalServerError(
 				fmt.Errorf("[DeleteMedia]: empty userID"),

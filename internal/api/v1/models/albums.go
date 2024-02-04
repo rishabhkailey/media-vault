@@ -160,7 +160,7 @@ type SingleAlbumMediaResponse struct {
 }
 
 func NewAlbumMediaListResponse(albumMediaBindings []albumStore.AlbumMediaBindings) (GetAlbumMediaListResponse, error) {
-	var response []SingleAlbumMediaResponse
+	var response = []SingleAlbumMediaResponse{}
 
 	for _, albumMediaBinding := range albumMediaBindings {
 		mediaResponse, err := NewGetMediaResponse(albumMediaBinding.Media)

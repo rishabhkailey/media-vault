@@ -33,7 +33,7 @@ func (server *Server) UserAuthMiddleware(c *gin.Context) {
 		c.Error(internalErrors.NewInternalServerError(err))
 		return
 	}
-	c.Keys["userID"] = userID
+	c.Set("userID", userID)
 	c.Next()
 }
 
