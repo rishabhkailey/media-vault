@@ -9,7 +9,7 @@ import (
 
 	"github.com/go-redis/redis/v8"
 	"github.com/jackc/pgconn"
-	mediametadata "github.com/rishabhkailey/media-service/internal/services/mediaMetadata"
+	"github.com/rishabhkailey/media-service/internal/constants"
 	"github.com/rishabhkailey/media-service/internal/store/album"
 	"github.com/rishabhkailey/media-service/internal/store/media"
 	"github.com/rishabhkailey/media-service/internal/utils"
@@ -284,7 +284,7 @@ func (s *sqlStore) GetMediaByAlbumIdOrderByDate(ctx context.Context,
 			// 		`"media"."id" = @lastMediaID`,
 			// 		sql.Named("lastMediaID", lastMediaID),
 			// 	).Find(&lastMediaDate).Error
-			err = db.Model(&mediametadata.Model{}).
+			err = db.Table(constants.MEDIA_METADATA_TABLE).
 				Select("date").
 				Where("id = (@lastMediaMetadataID)",
 					sql.Named(
@@ -661,21 +661,6 @@ func (s *sqlStore) UpdateAlbumMediaCount(ctx context.Context, albumID uint, chan
 	}
 	err = s.db.WithContext(ctx).Save(&updatedAlbum).Error
 	return
-}
-
-func (s *sqlStore) UpdateThumbnail(ctx context.Context, mediaID uint, thumbnail bool, thumbnailAspectRatio float32) error {
-	mediaMetadataIdSubQuery := s.db.Model(&media.Media{}).Select("metadata_id").Where("id = ?", mediaID).Limit(1)
-	return s.db.Model(&mediametadata.Model{}).
-		Where("id = ?", mediaMetadataIdSubQuery).
-		Select("thumbnail", "thumbnail_aspect_ratio").
-		Updates(
-			mediametadata.Model{
-				Metadata: mediametadata.Metadata{
-					Thumbnail:            thumbnail,
-					ThumbnailAspectRatio: thumbnailAspectRatio,
-				},
-			},
-		).Error
 }
 
 func isUniqueConstraintError(err error) bool {

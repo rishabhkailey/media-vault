@@ -16,6 +16,7 @@ import (
 	uploadrequests "github.com/rishabhkailey/media-service/internal/services/uploadRequests"
 	usermediabindings "github.com/rishabhkailey/media-service/internal/services/userMediaBindings"
 	mediaStore "github.com/rishabhkailey/media-service/internal/store/media"
+	storemodels "github.com/rishabhkailey/media-service/internal/store/models"
 	"gorm.io/gorm"
 )
 
@@ -49,7 +50,7 @@ func (server *Server) InitChunkUpload(c *gin.Context) {
 		)
 		return
 	}
-	var uploadRequest uploadrequests.Model
+	var uploadRequest storemodels.UploadRequestsModel
 	var uploadingMedia mediaStore.Media
 	{
 		tx := server.Services.CreateTransaction()
@@ -65,7 +66,7 @@ func (server *Server) InitChunkUpload(c *gin.Context) {
 			return
 		}
 		mediaMetadata, err := server.MediaMetadata.Create(c.Request.Context(), mediametadata.CreateCommand{
-			Metadata: mediametadata.Metadata{
+			MediaMetadata: storemodels.MediaMetadata{
 				Name: requestBody.FileName,
 				Date: time.UnixMilli(requestBody.Date),
 				Size: uint64(requestBody.Size),

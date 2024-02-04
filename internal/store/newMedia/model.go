@@ -2,8 +2,7 @@ package newmedia
 
 import (
 	"github.com/rishabhkailey/media-service/internal/constants"
-	mediametadata "github.com/rishabhkailey/media-service/internal/services/mediaMetadata"
-	uploadrequests "github.com/rishabhkailey/media-service/internal/services/uploadRequests"
+	storemodels "github.com/rishabhkailey/media-service/internal/store/models"
 	"gorm.io/gorm"
 )
 
@@ -21,8 +20,8 @@ type Media struct {
 	gorm.Model
 	FileName        string `gorm:"index,unique"`
 	UploadRequestID string `gorm:"index"`
-	UploadRequest   uploadrequests.Model
-	Metadata        mediametadata.Model
+	UploadRequest   storemodels.UploadRequestsModel
+	Metadata        storemodels.MediaMetadataModel
 	MetadataID      uint
 }
 

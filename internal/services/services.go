@@ -49,15 +49,6 @@ func NewServices(
 	redis *redis.Client,
 	oidcClient *auth.OidcClient,
 ) (*Services, error) {
-	// order matters, order of table creation
-	uploadRequestsService, err := uploadrequestsimpl.NewService(db)
-	if err != nil {
-		return nil, err
-	}
-	mediaMetadataService, err := mediametadataimpl.NewService(db)
-	if err != nil {
-		return nil, err
-	}
 	mediaSearchService, err := mediasearchimpl.NewService(ms)
 	if err != nil {
 		return nil, err
@@ -66,7 +57,16 @@ func NewServices(
 	if err != nil {
 		return nil, err
 	}
+	// order matters, order of table creation
+	uploadRequestsService, err := uploadrequestsimpl.NewService(*store)
+	if err != nil {
+		return nil, err
+	}
 	userMediaBindingsService, err := usermediabindingsimpl.NewService(*store)
+	if err != nil {
+		return nil, err
+	}
+	mediaMetadataService, err := mediametadataimpl.NewService(*store)
 	if err != nil {
 		return nil, err
 	}

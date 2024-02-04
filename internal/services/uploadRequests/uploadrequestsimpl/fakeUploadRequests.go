@@ -4,12 +4,13 @@ import (
 	"context"
 
 	uploadrequests "github.com/rishabhkailey/media-service/internal/services/uploadRequests"
+	storemodels "github.com/rishabhkailey/media-service/internal/store/models"
 	"gorm.io/gorm"
 )
 
 type FakeService struct {
 	ExpectedError         error
-	ExpectedUploadRequest uploadrequests.Model
+	ExpectedUploadRequest storemodels.UploadRequestsModel
 }
 
 func NewFakeService() uploadrequests.Service {
@@ -22,11 +23,11 @@ func (s *FakeService) WithTransaction(_ *gorm.DB) uploadrequests.Service {
 	return s
 }
 
-func (s *FakeService) Create(ctx context.Context, cmd uploadrequests.CreateUploadRequestCommand) (uploadrequests.Model, error) {
+func (s *FakeService) Create(ctx context.Context, cmd uploadrequests.CreateUploadRequestCommand) (storemodels.UploadRequestsModel, error) {
 	return s.ExpectedUploadRequest, s.ExpectedError
 }
 
-func (s *FakeService) GetByID(ctx context.Context, query uploadrequests.GetByIDQuery) (uploadrequests.Model, error) {
+func (s *FakeService) GetByID(ctx context.Context, query uploadrequests.GetByIDQuery) (storemodels.UploadRequestsModel, error) {
 	return s.ExpectedUploadRequest, s.ExpectedError
 }
 

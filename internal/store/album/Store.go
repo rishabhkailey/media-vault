@@ -87,9 +87,4 @@ type Store interface {
 	DeleteAlbum(ctx context.Context,
 		albumID uint,
 	) error
-	UpdateThumbnail(ctx context.Context,
-		mediaID uint,
-		thumbnail bool,
-		thumbnailAspectRatio float32,
-	) error
 }

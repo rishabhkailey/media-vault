@@ -17,7 +17,6 @@ import (
 	"github.com/rishabhkailey/media-service/internal/services"
 	authserviceimpl "github.com/rishabhkailey/media-service/internal/services/authService/authServiceImpl"
 	"github.com/rishabhkailey/media-service/internal/services/media/mediaimpl"
-	mediametadata "github.com/rishabhkailey/media-service/internal/services/mediaMetadata"
 	mediametadataimpl "github.com/rishabhkailey/media-service/internal/services/mediaMetadata/mediaMetadataImpl"
 	mediasearchimpl "github.com/rishabhkailey/media-service/internal/services/mediaSearch/mediaSearchimpl"
 	"github.com/rishabhkailey/media-service/internal/services/mediaStorage/mediastorageimpl"
@@ -25,6 +24,7 @@ import (
 	"github.com/rishabhkailey/media-service/internal/services/uploadRequests/uploadrequestsimpl"
 	usermediabindingsimpl "github.com/rishabhkailey/media-service/internal/services/userMediaBindings/userMediaBindingsimpl"
 	"github.com/rishabhkailey/media-service/internal/store/media"
+	storemodels "github.com/rishabhkailey/media-service/internal/store/models"
 	"github.com/stretchr/testify/assert"
 	"gorm.io/gorm"
 )
@@ -109,19 +109,19 @@ func randomMediaList(n int) (mediaList []media.Media) {
 			FileName:        randomString(10),
 			UploadRequestID: randomString(10),
 			MetadataID:      uint(rand.Uint32()),
-			UploadRequest: uploadrequests.Model{
+			UploadRequest: storemodels.UploadRequestsModel{
 				ID:        randomString(10),
-				Status:    uploadrequests.COMPLETED_UPLOAD_STATUS,
+				Status:    string(uploadrequests.COMPLETED_UPLOAD_STATUS),
 				CreatedAt: time.Now().AddDate(0, 0, -1*rand.Intn(10)),
 				UpdatedAt: time.Now().AddDate(0, 0, -1*rand.Intn(10)),
 			},
-			Metadata: mediametadata.Model{
+			Metadata: storemodels.MediaMetadataModel{
 				Model: gorm.Model{
 					ID:        uint(rand.Uint32()),
 					CreatedAt: time.Now().AddDate(0, 0, -1*rand.Intn(10)),
 					UpdatedAt: time.Now().AddDate(0, 0, -1*rand.Intn(10)),
 				},
-				Metadata: mediametadata.Metadata{
+				MediaMetadata: storemodels.MediaMetadata{
 					Name:      randomString(10),
 					Date:      time.Now().AddDate(0, 0, -1*rand.Intn(10)),
 					Type:      randomString(5),

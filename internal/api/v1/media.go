@@ -10,7 +10,6 @@ import (
 	internalErrors "github.com/rishabhkailey/media-service/internal/errors"
 	"github.com/rishabhkailey/media-service/internal/services/media"
 	mediametadata "github.com/rishabhkailey/media-service/internal/services/mediaMetadata"
-	mediasearch "github.com/rishabhkailey/media-service/internal/services/mediaSearch"
 	mediastorage "github.com/rishabhkailey/media-service/internal/services/mediaStorage"
 	usermediabindings "github.com/rishabhkailey/media-service/internal/services/userMediaBindings"
 	"github.com/rishabhkailey/media-service/internal/utils"
@@ -223,74 +222,74 @@ func (server *Server) DeleteMedia(c *gin.Context) {
 		c.Error(internalErrors.ErrForbidden)
 		return
 	}
-	{
-		deletingMedia, err := server.Media.GetByMediaID(c.Request.Context(), media.GetByMediaIDQuery{
-			MediaID: uint(mediaID),
-		})
-		if err != nil {
-			c.Error(internalErrors.NewInternalServerError(
-				fmt.Errorf("[DeleteMedia] error while getting media: %w", err),
-			))
-			return
-		}
+	// {
+	// 	deletingMedia, err := server.Media.GetByMediaID(c.Request.Context(), media.GetByMediaIDQuery{
+	// 		MediaID: uint(mediaID),
+	// 	})
+	// 	if err != nil {
+	// 		c.Error(internalErrors.NewInternalServerError(
+	// 			fmt.Errorf("[DeleteMedia] error while getting media: %w", err),
+	// 		))
+	// 		return
+	// 	}
 
-		tx := server.Services.CreateTransaction()
-		err = server.UserMediaBindings.DeleteOne(c.Request.Context(), usermediabindings.DeleteOneCommand{
-			UserID:  userID,
-			MediaID: deletingMedia.ID,
-		})
-		if err != nil {
-			tx.Rollback()
-			c.Error(internalErrors.NewInternalServerError(
-				fmt.Errorf("[DeleteMedia] error while deleting user media binding: %w", err),
-			))
-			return
-		}
+	// 	tx := server.Services.CreateTransaction()
+	// 	err = server.UserMediaBindings.DeleteOne(c.Request.Context(), usermediabindings.DeleteOneCommand{
+	// 		UserID:  userID,
+	// 		MediaID: deletingMedia.ID,
+	// 	})
+	// 	if err != nil {
+	// 		tx.Rollback()
+	// 		c.Error(internalErrors.NewInternalServerError(
+	// 			fmt.Errorf("[DeleteMedia] error while deleting user media binding: %w", err),
+	// 		))
+	// 		return
+	// 	}
 
-		err = server.Media.DeleteOne(c.Request.Context(), media.DeleteOneCommand{
-			ID: deletingMedia.ID,
-		})
-		if err != nil {
-			tx.Rollback()
-			c.Error(internalErrors.NewInternalServerError(
-				fmt.Errorf("[DeleteMedia] error while deleting media: %w", err),
-			))
-			return
-		}
+	// 	err = server.Media.DeleteOne(c.Request.Context(), media.DeleteOneCommand{
+	// 		ID: deletingMedia.ID,
+	// 	})
+	// 	if err != nil {
+	// 		tx.Rollback()
+	// 		c.Error(internalErrors.NewInternalServerError(
+	// 			fmt.Errorf("[DeleteMedia] error while deleting media: %w", err),
+	// 		))
+	// 		return
+	// 	}
 
-		err = server.MediaMetadata.WithTransaction(tx).DeleteOne(c.Request.Context(), mediametadata.DeleteOneCommand{
-			ID: deletingMedia.Metadata.ID,
-		})
-		if err != nil {
-			tx.Rollback()
-			c.Error(internalErrors.NewInternalServerError(
-				fmt.Errorf("[DeleteMedia] error while deleting media metadata: %w", err),
-			))
-			return
-		}
+	// 	err = server.MediaMetadata.WithTransaction(tx).DeleteOne(c.Request.Context(), mediametadata.DeleteOneCommand{
+	// 		ID: deletingMedia.Metadata.ID,
+	// 	})
+	// 	if err != nil {
+	// 		tx.Rollback()
+	// 		c.Error(internalErrors.NewInternalServerError(
+	// 			fmt.Errorf("[DeleteMedia] error while deleting media metadata: %w", err),
+	// 		))
+	// 		return
+	// 	}
 
-		_, err = server.MediaSearch.DeleteOne(c.Request.Context(), mediasearch.DeleteOneCommand{
-			MediaID: deletingMedia.ID,
-		})
-		if err != nil {
-			tx.Rollback()
-			c.Error(internalErrors.NewInternalServerError(
-				fmt.Errorf("[DeleteMedia] delete search document failed: %w", err),
-			))
-		}
-		err = server.MediaStorage.DeleteOne(c.Request.Context(), mediastorage.DeleteOneCommand{
-			FileName:     deletingMedia.FileName,
-			HasThumbnail: deletingMedia.Metadata.Thumbnail,
-		})
-		if err != nil {
-			tx.Rollback()
-			c.Error(internalErrors.NewInternalServerError(
-				fmt.Errorf("[DeleteMedia] error while deleting media from storge: %w", err),
-			))
-			return
-		}
-		tx.Commit()
-	}
+	// 	_, err = server.MediaSearch.DeleteOne(c.Request.Context(), mediasearch.DeleteOneCommand{
+	// 		MediaID: deletingMedia.ID,
+	// 	})
+	// 	if err != nil {
+	// 		tx.Rollback()
+	// 		c.Error(internalErrors.NewInternalServerError(
+	// 			fmt.Errorf("[DeleteMedia] delete search document failed: %w", err),
+	// 		))
+	// 	}
+	// 	err = server.MediaStorage.DeleteOne(c.Request.Context(), mediastorage.DeleteOneCommand{
+	// 		FileName:     deletingMedia.FileName,
+	// 		HasThumbnail: deletingMedia.Metadata.Thumbnail,
+	// 	})
+	// 	if err != nil {
+	// 		tx.Rollback()
+	// 		c.Error(internalErrors.NewInternalServerError(
+	// 			fmt.Errorf("[DeleteMedia] error while deleting media from storge: %w", err),
+	// 		))
+	// 		return
+	// 	}
+	// 	tx.Commit()
+	// }
 	c.Status(http.StatusOK)
 }
 
