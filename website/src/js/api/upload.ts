@@ -1,7 +1,7 @@
 import axios, { type AxiosResponse } from "axios";
 import { Chacha20 } from "ts-chacha20";
 import { getFileType } from "@/js/utils";
-import { generateThumbnailAsArrayBuffer } from "./thumbnail/thumbnail";
+import { generateThumbnailAsArrayBuffer } from "@/js/thumbnail/thumbnail";
 
 type ProgressCallback = (percentage: number) => void;
 // todo update promise<any> to request info or something

@@ -12,12 +12,16 @@ const props = withDefaults(
     right?: number;
     margin?: number;
     modelValue: boolean;
+    class?: any;
+    style?: StyleValue;
   }>(),
   {
     height: "",
     width: "",
     margin: 10,
     modelValue: false,
+    class: "",
+    style: "",
   },
 );
 
@@ -55,7 +59,8 @@ const positionStyle = computed<Array<StyleValue>>(() => {
     <div
       v-if="props.modelValue"
       class="floating-over-body"
-      :style="positionStyle"
+      :class="props.class"
+      :style="[props.style, positionStyle]"
     >
       <slot></slot>
     </div>

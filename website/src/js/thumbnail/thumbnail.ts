@@ -1,9 +1,9 @@
-import { fileType } from "../file";
+import { getFileType } from "@/js/utils";
 import { calculateThumbnailResolution } from "./resolution";
 
 export function generateThumbnailAsArrayBuffer(
   file: File,
-  constraints: thumbnailConstraints
+  constraints: thumbnailConstraints,
 ): Promise<{ thumbnail: Uint8Array; resolution: WidthHeight }> {
   return new Promise((resolve, reject) => {
     generateThumbnail(file, constraints)
@@ -33,12 +33,12 @@ export function generateThumbnailAsArrayBuffer(
 
 function generateThumbnail(
   file: File,
-  constraints: thumbnailConstraints
+  constraints: thumbnailConstraints,
 ): Promise<{ thumbnail: Blob; resolution: WidthHeight }> {
-  if (fileType(file).startsWith("image")) {
+  if (getFileType(file).startsWith("image")) {
     return generateImageThumbnail(file, constraints);
   }
-  if (fileType(file).startsWith("video")) {
+  if (getFileType(file).startsWith("video")) {
     return getnerateVideoThumbnail(file, constraints);
   }
   return new Promise((_, reject) => {
@@ -48,7 +48,7 @@ function generateThumbnail(
 
 function generateImageThumbnail(
   originalImage: Blob,
-  constraints: thumbnailConstraints
+  constraints: thumbnailConstraints,
 ): Promise<{ thumbnail: Blob; resolution: WidthHeight }> {
   return new Promise((resolve, reject) => {
     const fileReader: FileReader = new FileReader();
@@ -86,7 +86,7 @@ function generateImageThumbnail(
           0,
           0,
           destinationResolution.width,
-          destinationResolution.height
+          destinationResolution.height,
         );
         // todo directry use canvas.toBlob
         fetch(canvas.toDataURL("image/jpeg"))
@@ -161,7 +161,7 @@ if thumbnail resolution < source resolution
 
 function getnerateVideoThumbnail(
   file: File,
-  constraints: thumbnailConstraints
+  constraints: thumbnailConstraints,
 ): Promise<{ thumbnail: Blob; resolution: WidthHeight }> {
   return new Promise((resolve, reject) => {
     const video = document.createElement("video");
@@ -205,7 +205,7 @@ function getnerateVideoThumbnail(
             width: metadata.width,
             height: metadata.height,
           },
-          constraints
+          constraints,
         ));
       } catch (err) {
         reject(err);
@@ -225,7 +225,7 @@ function getnerateVideoThumbnail(
 function generateThumbnailOfCurrentFrame(
   video: HTMLVideoElement,
   resolution: WidthHeight,
-  constraints: thumbnailConstraints
+  constraints: thumbnailConstraints,
 ): Promise<{ thumbnail: Blob; resolution: WidthHeight }> {
   return new Promise((resolve, reject) => {
     const canvas = document.createElement("canvas");
@@ -250,7 +250,7 @@ function generateThumbnailOfCurrentFrame(
       0,
       0,
       destinationResolution.width,
-      destinationResolution.height
+      destinationResolution.height,
     );
     canvas.toBlob((thumbnail) => {
       if (thumbnail === null) {
