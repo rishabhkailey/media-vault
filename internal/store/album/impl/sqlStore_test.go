@@ -12,6 +12,7 @@ import (
 
 	"github.com/DATA-DOG/go-sqlmock"
 	"github.com/rishabhkailey/media-service/internal/store/album"
+	storemodels "github.com/rishabhkailey/media-service/internal/store/models"
 	"gorm.io/driver/postgres"
 	"gorm.io/gorm"
 	"gorm.io/gorm/logger"
@@ -77,7 +78,7 @@ func TestAlbumInsert(t *testing.T) {
 		return
 	}
 
-	album := album.Album{
+	album := storemodels.AlbumModel{
 		Model: gorm.Model{
 			CreatedAt: time.Now(),
 			UpdatedAt: time.Now(),

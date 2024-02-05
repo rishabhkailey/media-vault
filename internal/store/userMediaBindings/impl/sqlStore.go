@@ -6,6 +6,7 @@ import (
 
 	// usermediabindings "github.com/rishabhkailey/media-service/internal/services/userMediaBindings"
 	"github.com/rishabhkailey/media-service/internal/constants"
+	storemodels "github.com/rishabhkailey/media-service/internal/store/models"
 	usermediabindings "github.com/rishabhkailey/media-service/internal/store/userMediaBindings"
 	"gorm.io/gorm"
 )
@@ -17,7 +18,7 @@ type sqlStore struct {
 var _ usermediabindings.Store = (*sqlStore)(nil)
 
 func NewSqlStore(db *gorm.DB) (*sqlStore, error) {
-	if err := db.Migrator().AutoMigrate(&usermediabindings.Model{}); err != nil {
+	if err := db.Migrator().AutoMigrate(&storemodels.UserMediaBindingsModel{}); err != nil {
 		return nil, err
 	}
 	return &sqlStore{
@@ -31,13 +32,13 @@ func (s *sqlStore) WithTransaction(tx *gorm.DB) usermediabindings.Store {
 	}
 }
 
-func (s *sqlStore) Insert(ctx context.Context, userMediaBinding *usermediabindings.Model) (uint, error) {
+func (s *sqlStore) Insert(ctx context.Context, userMediaBinding *storemodels.UserMediaBindingsModel) (uint, error) {
 	err := s.db.WithContext(ctx).Create(&userMediaBinding).Error
 	return userMediaBinding.ID, err
 }
 
 func (s *sqlStore) DeleteOne(ctx context.Context, userID string, mediaID uint) error {
-	return s.db.WithContext(ctx).Delete(&usermediabindings.Model{
+	return s.db.WithContext(ctx).Delete(&storemodels.UserMediaBindingsModel{
 		UserID:  userID,
 		MediaID: mediaID,
 	}).Error
@@ -49,7 +50,7 @@ func (s *sqlStore) DeleteOne(ctx context.Context, userID string, mediaID uint) e
 // 	}).Error
 // }
 
-func (s *sqlStore) GetByMediaID(ctx context.Context, mediaID uint) (userMediaBinding usermediabindings.Model, err error) {
+func (s *sqlStore) GetByMediaID(ctx context.Context, mediaID uint) (userMediaBinding storemodels.UserMediaBindingsModel, err error) {
 	err = s.db.WithContext(ctx).First(&userMediaBinding, "media_id = ?", mediaID).Error
 	return
 }
@@ -63,8 +64,8 @@ func (s *sqlStore) CheckFileBelongsToUser(ctx context.Context, userID, fileName 
 		Select("id").
 		Where("file_name = ?", fileName).
 		Limit(1)
-	userMediaBinding := usermediabindings.Model{}
-	err = db.Model(&usermediabindings.Model{}).
+	userMediaBinding := storemodels.UserMediaBindingsModel{}
+	err = db.Model(&storemodels.UserMediaBindingsModel{}).
 		Where("media_id = (?)", getMediaByFileNameQuery).
 		First(&userMediaBinding).Error
 

@@ -15,7 +15,6 @@ import (
 	mediastorage "github.com/rishabhkailey/media-service/internal/services/mediaStorage"
 	uploadrequests "github.com/rishabhkailey/media-service/internal/services/uploadRequests"
 	usermediabindings "github.com/rishabhkailey/media-service/internal/services/userMediaBindings"
-	mediaStore "github.com/rishabhkailey/media-service/internal/store/media"
 	storemodels "github.com/rishabhkailey/media-service/internal/store/models"
 	"gorm.io/gorm"
 )
@@ -51,7 +50,7 @@ func (server *Server) InitChunkUpload(c *gin.Context) {
 		return
 	}
 	var uploadRequest storemodels.UploadRequestsModel
-	var uploadingMedia mediaStore.Media
+	var uploadingMedia storemodels.MediaModel
 	{
 		tx := server.Services.CreateTransaction()
 		uploadRequest, err = server.UploadRequests.Create(c.Request.Context(), uploadrequests.CreateUploadRequestCommand{
@@ -305,7 +304,7 @@ func (server *Server) FinishChunkUpload(c *gin.Context) {
 		)
 		return
 	}
-	index, err := mediasearch.MediaToMeiliSearchMediaIndex([]mediaStore.Media{uploadedMedia}, userID)
+	index, err := mediasearch.MediaToMeiliSearchMediaIndex([]storemodels.MediaModel{uploadedMedia}, userID)
 	if err != nil {
 		// todo fail request on search index creation fail?
 		c.Error(

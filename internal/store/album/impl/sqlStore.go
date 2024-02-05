@@ -11,7 +11,7 @@ import (
 	"github.com/jackc/pgconn"
 	"github.com/rishabhkailey/media-service/internal/constants"
 	"github.com/rishabhkailey/media-service/internal/store/album"
-	"github.com/rishabhkailey/media-service/internal/store/media"
+	storemodels "github.com/rishabhkailey/media-service/internal/store/models"
 	"github.com/rishabhkailey/media-service/internal/utils"
 	"github.com/sirupsen/logrus"
 	"gorm.io/gorm"
@@ -32,13 +32,13 @@ func (s *sqlStore) WithTransaction(tx *gorm.DB) album.Store {
 var _ album.Store = (*sqlStore)(nil)
 
 func NewSqlStore(db *gorm.DB, cache *redis.Client) (album.Store, error) {
-	if err := db.Migrator().AutoMigrate(&album.Album{}); err != nil {
+	if err := db.Migrator().AutoMigrate(&storemodels.AlbumModel{}); err != nil {
 		return nil, err
 	}
-	if err := db.Migrator().AutoMigrate(&album.AlbumMediaBindings{}); err != nil {
+	if err := db.Migrator().AutoMigrate(&storemodels.AlbumMediaBindingsModel{}); err != nil {
 		return nil, err
 	}
-	if err := db.Migrator().AutoMigrate(&album.UserAlbumBindings{}); err != nil {
+	if err := db.Migrator().AutoMigrate(&storemodels.UserAlbumBindingsModel{}); err != nil {
 		return nil, err
 	}
 	return &sqlStore{
@@ -47,8 +47,8 @@ func NewSqlStore(db *gorm.DB, cache *redis.Client) (album.Store, error) {
 	}, nil
 }
 
-func (s *sqlStore) InsertAlbum(ctx context.Context, albumName string, thumbnailUrl string) (album.Album, error) {
-	album := album.Album{
+func (s *sqlStore) InsertAlbum(ctx context.Context, albumName string, thumbnailUrl string) (storemodels.AlbumModel, error) {
+	album := storemodels.AlbumModel{
 		Name:         albumName,
 		ThumbnailUrl: thumbnailUrl,
 	}
@@ -57,7 +57,7 @@ func (s *sqlStore) InsertAlbum(ctx context.Context, albumName string, thumbnailU
 }
 
 func (s *sqlStore) InsertUserAlbumBindings(ctx context.Context, userID string, albumID uint) (uint, error) {
-	album := album.UserAlbumBindings{
+	album := storemodels.UserAlbumBindingsModel{
 		UserID:  userID,
 		AlbumID: albumID,
 	}
@@ -72,15 +72,15 @@ func (s *sqlStore) GetByUserId(
 	sort album.Sort,
 	limit int,
 	offset int,
-) (albums []album.Album, err error) {
+) (albums []storemodels.AlbumModel, err error) {
 	db := s.db.WithContext(ctx)
 	// todo join?
 	// cost of join
 	// cost of join > cost of fetching all media_ids of the album and then filter
-	albumByUserIDQuery := db.Model(&album.UserAlbumBindings{}).
+	albumByUserIDQuery := db.Model(&storemodels.UserAlbumBindingsModel{}).
 		Select("album_id").
 		Where("user_id = ?", userID)
-	err = db.Model(&album.Album{}).
+	err = db.Model(&storemodels.AlbumModel{}).
 		Where("id IN (?)", albumByUserIDQuery).
 		Limit(limit).
 		Order(fmt.Sprintf("%s %s", orderBy, sort)).
@@ -96,14 +96,14 @@ func (s *sqlStore) GetAlbumsByUserIdOrderByCreationAt(
 	sort album.Sort,
 	lastAlbumID *uint,
 	limit int,
-) (albums []album.Album, err error) {
+) (albums []storemodels.AlbumModel, err error) {
 	db := s.db.WithContext(ctx)
-	albumsByUserIDQuery := db.Joins("Album").Model(&album.UserAlbumBindings{})
+	albumsByUserIDQuery := db.Joins("Album").Model(&storemodels.UserAlbumBindingsModel{})
 
 	if lastAlbumID != nil {
 		var lastAlbumDate time.Time
 		{
-			err = db.Model(&album.Album{}).
+			err = db.Model(&storemodels.AlbumModel{}).
 				Select("created_at").
 				Where("id = @lastAlbumID", sql.Named("lastAlbumID", lastAlbumID)).
 				First(&lastAlbumDate).Error
@@ -153,7 +153,7 @@ func (s *sqlStore) GetAlbumsByUserIdOrderByCreationAt(
 		)
 	}
 	queryOrderBy := fmt.Sprintf(`"Album"."created_at" %s, "Album"."id" desc`, sort)
-	var userAlbumBindings []album.UserAlbumBindings
+	var userAlbumBindings []storemodels.UserAlbumBindingsModel
 	err = albumsByUserIDQuery.
 		Order(queryOrderBy).
 		Limit(limit).
@@ -174,14 +174,14 @@ func (s *sqlStore) GetAlbumsByUserIdOrderByUpdatedAt(
 	sort album.Sort,
 	lastAlbumID *uint,
 	limit int,
-) (albums []album.Album, err error) {
+) (albums []storemodels.AlbumModel, err error) {
 	db := s.db.WithContext(ctx)
-	albumsByUserIDQuery := db.Joins("Album").Model(&album.UserAlbumBindings{})
+	albumsByUserIDQuery := db.Joins("Album").Model(&storemodels.UserAlbumBindingsModel{})
 
 	if lastAlbumID != nil {
 		var lastAlbumDate time.Time
 		{
-			err = db.Model(&album.Album{}).
+			err = db.Model(&storemodels.AlbumModel{}).
 				Select("updated_at").
 				Where("id = @lastAlbumID", sql.Named("lastAlbumID", lastAlbumID)).
 				First(&lastAlbumDate).Error
@@ -231,7 +231,7 @@ func (s *sqlStore) GetAlbumsByUserIdOrderByUpdatedAt(
 		)
 	}
 	queryOrderBy := fmt.Sprintf(`"Album"."updated_at" %s, "Album"."id" desc`, sort)
-	var userAlbumBindings []album.UserAlbumBindings
+	var userAlbumBindings []storemodels.UserAlbumBindingsModel
 	err = albumsByUserIDQuery.
 		Order(queryOrderBy).
 		Limit(limit).
@@ -245,8 +245,8 @@ func (s *sqlStore) GetAlbumsByUserIdOrderByUpdatedAt(
 	return
 }
 
-func (s *sqlStore) GetByID(ctx context.Context, albumID uint) (result album.Album, err error) {
-	err = s.db.WithContext(ctx).Model(&album.Album{}).First(&result, albumID).Error
+func (s *sqlStore) GetByID(ctx context.Context, albumID uint) (result storemodels.AlbumModel, err error) {
+	err = s.db.WithContext(ctx).Model(&storemodels.AlbumModel{}).First(&result, albumID).Error
 	return
 }
 
@@ -255,7 +255,7 @@ func (s *sqlStore) GetMediaByAlbumIdOrderByDate(ctx context.Context,
 	lastMediaID *uint,
 	sort album.Sort,
 	limit int,
-) (albumMediaBindings []album.AlbumMediaBindings, err error) {
+) (albumMediaBindings []storemodels.AlbumMediaBindingsModel, err error) {
 
 	db := s.db.WithContext(ctx)
 
@@ -270,7 +270,7 @@ func (s *sqlStore) GetMediaByAlbumIdOrderByDate(ctx context.Context,
 			`LEFT JOIN "media_metadata" ON "media"."metadata_id" = "media_metadata"."id"
 			AND "media_metadata"."deleted_at" IS NULL`,
 		).
-		Model(&album.AlbumMediaBindings{})
+		Model(&storemodels.AlbumMediaBindingsModel{})
 
 	if lastMediaID != nil {
 
@@ -289,7 +289,7 @@ func (s *sqlStore) GetMediaByAlbumIdOrderByDate(ctx context.Context,
 				Where("id = (@lastMediaMetadataID)",
 					sql.Named(
 						"lastMediaMetadataID",
-						db.Model(&media.Media{}).
+						db.Model(&storemodels.MediaModel{}).
 							Select("metadata_id").
 							Where("id = ?", lastMediaID),
 					),
@@ -347,7 +347,7 @@ func (s *sqlStore) GetMediaByAlbumIdOrderByDate(ctx context.Context,
 		Find(&albumMediaBindings).Error
 
 	if errors.Is(err, gorm.ErrRecordNotFound) {
-		return []album.AlbumMediaBindings{}, nil
+		return []storemodels.AlbumMediaBindingsModel{}, nil
 	}
 	return
 }
@@ -357,7 +357,7 @@ func (s *sqlStore) GetMediaByAlbumIdOrderByUploadDate(ctx context.Context,
 	lastMediaID *uint,
 	sort album.Sort,
 	limit int,
-) (albumMediaBindings []album.AlbumMediaBindings, err error) {
+) (albumMediaBindings []storemodels.AlbumMediaBindingsModel, err error) {
 	db := s.db.WithContext(ctx)
 
 	query := db.
@@ -370,12 +370,12 @@ func (s *sqlStore) GetMediaByAlbumIdOrderByUploadDate(ctx context.Context,
 			`LEFT JOIN "media_metadata" ON "media"."metadata_id" = "media_metadata"."id"
 			AND "media_metadata"."deleted_at" IS NULL`,
 		).
-		Model(&album.AlbumMediaBindings{})
+		Model(&storemodels.AlbumMediaBindingsModel{})
 
 	if lastMediaID != nil {
 		var lastUploadDate time.Time
 		{
-			err = db.Model(&media.Media{}).
+			err = db.Model(&storemodels.MediaModel{}).
 				Select("created_at").
 				Where(
 					"id = @lastMediaID",
@@ -438,7 +438,7 @@ func (s *sqlStore) GetMediaByAlbumIdOrderByUploadDate(ctx context.Context,
 		Find(&albumMediaBindings).Error
 
 	if errors.Is(err, gorm.ErrRecordNotFound) {
-		return []album.AlbumMediaBindings{}, nil
+		return []storemodels.AlbumMediaBindingsModel{}, nil
 	}
 	return
 }
@@ -449,7 +449,7 @@ func (s *sqlStore) GetMediaByAlbumIdOrderByAddedDate(
 	lastMediaID *uint,
 	sort album.Sort,
 	limit int,
-) (albumMediaBindings []album.AlbumMediaBindings, err error) {
+) (albumMediaBindings []storemodels.AlbumMediaBindingsModel, err error) {
 	db := s.db.WithContext(ctx)
 	// SELECT media_id FROM album_media_bindings
 	query := db.
@@ -462,7 +462,7 @@ func (s *sqlStore) GetMediaByAlbumIdOrderByAddedDate(
 			`LEFT JOIN "media_metadata" ON "media"."metadata_id" = "media_metadata"."id"
 			AND "media_metadata"."deleted_at" IS NULL`,
 		).
-		Model(&album.AlbumMediaBindings{})
+		Model(&storemodels.AlbumMediaBindingsModel{})
 
 	if lastMediaID != nil {
 		// SELECT created_at FROM album_media_bindings where album_id = ? AND media_id = ?
@@ -470,7 +470,7 @@ func (s *sqlStore) GetMediaByAlbumIdOrderByAddedDate(
 		var lastAddedAtDate time.Time
 		{
 
-			err = db.Model(&album.AlbumMediaBindings{}).
+			err = db.Model(&storemodels.AlbumMediaBindingsModel{}).
 				Select("created_at").
 				Where(
 					`"media_id" = @lastMediaID AND album_id = @albumID`,
@@ -531,14 +531,14 @@ func (s *sqlStore) GetMediaByAlbumIdOrderByAddedDate(
 		Find(&albumMediaBindings).Error
 
 	if errors.Is(err, gorm.ErrRecordNotFound) {
-		return []album.AlbumMediaBindings{}, nil
+		return []storemodels.AlbumMediaBindingsModel{}, nil
 	}
 
 	return
 }
 
 func (s *sqlStore) CheckAlbumBelongsToUser(ctx context.Context, userID string, albumID uint) (ok bool, err error) {
-	var userAlbumBinding album.UserAlbumBindings
+	var userAlbumBinding storemodels.UserAlbumBindingsModel
 	err = s.db.WithContext(ctx).First(&userAlbumBinding, "album_id = ?", albumID).Error
 	if errors.Is(err, gorm.ErrRecordNotFound) {
 		return false, nil
@@ -555,13 +555,13 @@ func (s *sqlStore) AddMediaInAlbum(ctx context.Context, albumID uint, mediaIDs [
 		return
 	}
 	newMediaIDs = make([]uint, 0)
-	var albumMediaBindings []album.AlbumMediaBindings
+	var albumMediaBindings []storemodels.AlbumMediaBindingsModel
 	for _, mediaID := range mediaIDs {
 		if utils.Contains(alreadyExist, mediaID) {
 			continue
 		}
 		newMediaIDs = append(newMediaIDs, mediaID)
-		albumMediaBindings = append(albumMediaBindings, album.AlbumMediaBindings{
+		albumMediaBindings = append(albumMediaBindings, storemodels.AlbumMediaBindingsModel{
 			AlbumID: albumID,
 			MediaID: mediaID,
 		})
@@ -589,7 +589,7 @@ func (s *sqlStore) RemoveMediaFromAlbum(ctx context.Context, albumID uint, media
 		return
 	}
 	db := s.db.WithContext(ctx).Begin()
-	err = db.Unscoped().Delete(&album.AlbumMediaBindings{}, "album_id = ? AND media_id IN ?", albumID, mediaIDs).Error
+	err = db.Unscoped().Delete(&storemodels.AlbumMediaBindingsModel{}, "album_id = ? AND media_id IN ?", albumID, mediaIDs).Error
 	if err != nil {
 		db.Rollback()
 		return
@@ -603,24 +603,24 @@ func (s *sqlStore) RemoveMediaFromAlbum(ctx context.Context, albumID uint, media
 }
 
 func (s *sqlStore) FilterMediaIDsByAlbumID(ctx context.Context, albumID uint, mediaIDs []uint) (result []uint, err error) {
-	err = s.db.Model(&album.AlbumMediaBindings{}).Where("media_id IN ? and album_id = ?", mediaIDs, albumID).Pluck("media_id", &result).Error
+	err = s.db.Model(&storemodels.AlbumMediaBindingsModel{}).Where("media_id IN ? and album_id = ?", mediaIDs, albumID).Pluck("media_id", &result).Error
 	return
 }
 
 func (s *sqlStore) DeleteAlbum(ctx context.Context, albumID uint) error {
 	tx := s.db.Begin().WithContext(ctx)
 
-	if err := tx.Unscoped().Delete(&album.UserAlbumBindings{}, "album_id = ?", albumID).Error; err != nil {
+	if err := tx.Unscoped().Delete(&storemodels.UserAlbumBindingsModel{}, "album_id = ?", albumID).Error; err != nil {
 		tx.Rollback()
 		return err
 	}
 
-	if err := tx.Unscoped().Delete(&album.AlbumMediaBindings{}, "album_id = ?", albumID).Error; err != nil {
+	if err := tx.Unscoped().Delete(&storemodels.AlbumMediaBindingsModel{}, "album_id = ?", albumID).Error; err != nil {
 		tx.Rollback()
 		return err
 	}
 
-	if err := tx.Unscoped().Delete(&album.Album{
+	if err := tx.Unscoped().Delete(&storemodels.AlbumModel{
 		Model: gorm.Model{
 			ID: albumID,
 		},
@@ -632,7 +632,7 @@ func (s *sqlStore) DeleteAlbum(ctx context.Context, albumID uint) error {
 	return nil
 }
 
-func (s *sqlStore) UpdateAlbum(ctx context.Context, albumID uint, name *string, thumbnailUrl *string) (updatedAlbum album.Album, err error) {
+func (s *sqlStore) UpdateAlbum(ctx context.Context, albumID uint, name *string, thumbnailUrl *string) (updatedAlbum storemodels.AlbumModel, err error) {
 	err = s.db.WithContext(ctx).First(&updatedAlbum, albumID).Error
 	if err != nil {
 		return
@@ -647,7 +647,7 @@ func (s *sqlStore) UpdateAlbum(ctx context.Context, albumID uint, name *string, 
 	return
 }
 
-func (s *sqlStore) UpdateAlbumMediaCount(ctx context.Context, albumID uint, change int) (updatedAlbum album.Album, err error) {
+func (s *sqlStore) UpdateAlbumMediaCount(ctx context.Context, albumID uint, change int) (updatedAlbum storemodels.AlbumModel, err error) {
 	// album.ID = albumID
 	// album.UpdatedAt = updatedAt
 

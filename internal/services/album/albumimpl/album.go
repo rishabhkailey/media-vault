@@ -8,6 +8,7 @@ import (
 	"github.com/rishabhkailey/media-service/internal/services/album"
 	"github.com/rishabhkailey/media-service/internal/store"
 	albumStore "github.com/rishabhkailey/media-service/internal/store/album"
+	storemodels "github.com/rishabhkailey/media-service/internal/store/models"
 	"golang.org/x/net/context"
 	"gorm.io/gorm"
 )
@@ -24,7 +25,7 @@ func NewService(store store.Store) (album.Service, error) {
 	}, nil
 }
 
-func (s *Service) Create(ctx context.Context, cmd album.CreateAlbumCmd) (album albumStore.Album, err error) {
+func (s *Service) Create(ctx context.Context, cmd album.CreateAlbumCmd) (album storemodels.AlbumModel, err error) {
 	tx := s.store.CreateTransaction()
 	tx.Begin()
 	album, err = s.store.AlbumStore.WithTransaction(tx).InsertAlbum(ctx, cmd.Name, cmd.ThumbnailUrl)
@@ -43,7 +44,7 @@ func (s *Service) Create(ctx context.Context, cmd album.CreateAlbumCmd) (album a
 	return
 }
 
-func (s *Service) GetUserAlbums(ctx context.Context, query album.GetUserAlbumsQuery) ([]albumStore.Album, error) {
+func (s *Service) GetUserAlbums(ctx context.Context, query album.GetUserAlbumsQuery) ([]storemodels.AlbumModel, error) {
 	switch query.OrderBy {
 	case albumStore.AlbumOrderByDate:
 		{
@@ -81,7 +82,7 @@ func (s *Service) GetUserAlbums(ctx context.Context, query album.GetUserAlbumsQu
 	}
 }
 
-func (s *Service) GetUserAlbum(ctx context.Context, query album.GetUserAlbumQuery) (album albumStore.Album, err error) {
+func (s *Service) GetUserAlbum(ctx context.Context, query album.GetUserAlbumQuery) (album storemodels.AlbumModel, err error) {
 	ok, err := s.store.AlbumStore.CheckAlbumBelongsToUser(ctx, query.UserID, query.AlbumID)
 	if err != nil {
 		return
@@ -131,7 +132,7 @@ func (s *Service) DeleteAlbum(ctx context.Context, cmd album.DeleteAlbumCmd) err
 	return s.store.AlbumStore.DeleteAlbum(ctx, cmd.AlbumID)
 }
 
-func (s *Service) GetAlbumMedia(ctx context.Context, query album.GetAlbumMediaQuery) (albumMediaBindings []albumStore.AlbumMediaBindings, err error) {
+func (s *Service) GetAlbumMedia(ctx context.Context, query album.GetAlbumMediaQuery) (albumMediaBindings []storemodels.AlbumMediaBindingsModel, err error) {
 	ok, err := s.store.AlbumStore.CheckAlbumBelongsToUser(ctx, query.UserID, query.AlbumID)
 	if err != nil {
 		return
@@ -177,6 +178,6 @@ func (s *Service) GetAlbumMedia(ctx context.Context, query album.GetAlbumMediaQu
 
 }
 
-func (s *Service) UpdateAlbum(ctx context.Context, cmd album.UpdateAlbumCmd) (albumStore.Album, error) {
+func (s *Service) UpdateAlbum(ctx context.Context, cmd album.UpdateAlbumCmd) (storemodels.AlbumModel, error) {
 	return s.store.AlbumStore.UpdateAlbum(ctx, cmd.AlbumID, cmd.Name, cmd.ThumbnailUrl)
 }

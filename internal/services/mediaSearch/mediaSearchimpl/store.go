@@ -103,9 +103,9 @@ func (s *meiliSearchStore) MonitorTask(taskID int64, taskName string) error {
 		err = errors.New(task.Error.Message)
 	}
 	if err != nil {
-		logrus.Errorf("[monitorTask] %s task failed: %w", taskName, err)
+		logrus.Errorf("[monitorTask] %s task failed: %v", taskName, err)
 	}
-	logrus.Info("[monitorTask] %s task completed", taskName)
+	logrus.Infof("[monitorTask] %s task completed", taskName)
 	return err
 }
 

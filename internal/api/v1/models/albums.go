@@ -5,7 +5,7 @@ import (
 	"time"
 
 	"github.com/rishabhkailey/media-service/internal/services/album"
-	albumStore "github.com/rishabhkailey/media-service/internal/store/album"
+	storemodels "github.com/rishabhkailey/media-service/internal/store/models"
 	"github.com/sirupsen/logrus"
 )
 
@@ -159,7 +159,7 @@ type SingleAlbumMediaResponse struct {
 	AddedAt time.Time `json:"added_at"`
 }
 
-func NewAlbumMediaListResponse(albumMediaBindings []albumStore.AlbumMediaBindings) (GetAlbumMediaListResponse, error) {
+func NewAlbumMediaListResponse(albumMediaBindings []storemodels.AlbumMediaBindingsModel) (GetAlbumMediaListResponse, error) {
 	var response = []SingleAlbumMediaResponse{}
 
 	for _, albumMediaBinding := range albumMediaBindings {

@@ -3,19 +3,19 @@ package media
 import (
 	"context"
 
-	"github.com/rishabhkailey/media-service/internal/store/media"
+	storemodels "github.com/rishabhkailey/media-service/internal/store/models"
 )
 
 type Service interface {
-	Create(context.Context, CreateMediaCommand) (media.Media, error)
-	DeleteOne(context.Context, DeleteOneCommand) error
+	Create(context.Context, CreateMediaCommand) (storemodels.MediaModel, error)
+	CascadeDeleteOne(context.Context, DeleteOneCommand) error
 	DeleteMany(context.Context, DeleteManyCommand) error
-	GetByUploadRequestID(context.Context, GetByUploadRequestQuery) (media.Media, error)
-	GetMediaWithMetadataByUploadRequestID(context.Context, GetByUploadRequestQuery) (media.Media, error)
-	GetByFileName(context.Context, GetByFileNameQuery) (media.Media, error)
-	GetByUserID(context.Context, GetByUserIDQuery) ([]media.Media, error)
-	GetByMediaID(context.Context, GetByMediaIDQuery) (media.Media, error)
-	GetUserMediaByID(context.Context, UserMediaByIDQuery) (media.Media, error)
-	GetByMediaIDs(context.Context, GetByMediaIDsQuery) ([]media.Media, error)
+	GetByUploadRequestID(context.Context, GetByUploadRequestQuery) (storemodels.MediaModel, error)
+	GetMediaWithMetadataByUploadRequestID(context.Context, GetByUploadRequestQuery) (storemodels.MediaModel, error)
+	GetByFileName(context.Context, GetByFileNameQuery) (storemodels.MediaModel, error)
+	GetByUserID(context.Context, GetByUserIDQuery) ([]storemodels.MediaModel, error)
+	GetByMediaID(context.Context, GetByMediaIDQuery) (storemodels.MediaModel, error)
+	GetUserMediaByID(context.Context, UserMediaByIDQuery) (storemodels.MediaModel, error)
+	GetByMediaIDs(context.Context, GetByMediaIDsQuery) ([]storemodels.MediaModel, error)
 	GetTypeByFileName(context.Context, GetTypeByFileNameQuery) (string, error)
 }

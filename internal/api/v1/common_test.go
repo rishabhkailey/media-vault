@@ -23,7 +23,6 @@ import (
 	uploadrequests "github.com/rishabhkailey/media-service/internal/services/uploadRequests"
 	"github.com/rishabhkailey/media-service/internal/services/uploadRequests/uploadrequestsimpl"
 	usermediabindingsimpl "github.com/rishabhkailey/media-service/internal/services/userMediaBindings/userMediaBindingsimpl"
-	"github.com/rishabhkailey/media-service/internal/store/media"
 	storemodels "github.com/rishabhkailey/media-service/internal/store/models"
 	"github.com/stretchr/testify/assert"
 	"gorm.io/gorm"
@@ -98,9 +97,9 @@ func randomString(n int64) string {
 	return randString
 }
 
-func randomMediaList(n int) (mediaList []media.Media) {
+func randomMediaList(n int) (mediaList []storemodels.MediaModel) {
 	for i := 0; i < n; i++ {
-		mediaList = append(mediaList, media.Media{
+		mediaList = append(mediaList, storemodels.MediaModel{
 			Model: gorm.Model{
 				ID:        uint(rand.Uint32()),
 				CreatedAt: time.Now().AddDate(0, 0, -1*rand.Intn(10)),

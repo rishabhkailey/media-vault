@@ -9,21 +9,21 @@ import (
 	"github.com/meilisearch/meilisearch-go"
 	mediasearch "github.com/rishabhkailey/media-service/internal/services/mediaSearch"
 	mediasearchimpl "github.com/rishabhkailey/media-service/internal/services/mediaSearch/mediaSearchimpl"
-	usermediabindings "github.com/rishabhkailey/media-service/internal/store/userMediaBindings"
+	storemodels "github.com/rishabhkailey/media-service/internal/store/models"
 	"github.com/sirupsen/logrus"
 	"gorm.io/gorm"
 )
 
-func getMediaBatch(db *gorm.DB, offset int, limit int) (mediaList []usermediabindings.Model, err error) {
+func getMediaBatch(db *gorm.DB, offset int, limit int) (mediaList []storemodels.UserMediaBindingsModel, err error) {
 	// mediaIdQuery := db.Model(&services.UserMediaBinding{}).Select("media_id").Limit(limit).Offset(offset)
 	// err = db.Joins("Metadata").Joins("Media").Model(&services.UserMediaBinding{}).Limit(limit).Offset(offset).Find(&mediaList).Error
-	err = db.Preload("Media.Metadata").Model(&usermediabindings.Model{}).Limit(limit).Offset(offset).Find(&mediaList).Error
+	err = db.Preload("Media.Metadata").Model(&storemodels.UserMediaBindingsModel{}).Limit(limit).Offset(offset).Find(&mediaList).Error
 	return
 }
 
 func MeiliSearchMigrate(gormDB *gorm.DB, meiliSearch *meilisearch.Client, batchSize int) error {
 	var total int64 = 0
-	if err := gormDB.Model(&usermediabindings.Model{}).Count(&total).Error; err != nil {
+	if err := gormDB.Model(&storemodels.UserMediaBindingsModel{}).Count(&total).Error; err != nil {
 		return fmt.Errorf("[MeiliSearchMigrate] count failed: %w", err)
 	}
 	var offset int64 = 0

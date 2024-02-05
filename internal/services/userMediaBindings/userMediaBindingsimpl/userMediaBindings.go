@@ -5,7 +5,7 @@ import (
 
 	usermediabindings "github.com/rishabhkailey/media-service/internal/services/userMediaBindings"
 	"github.com/rishabhkailey/media-service/internal/store"
-	userMediaBindingsStore "github.com/rishabhkailey/media-service/internal/store/userMediaBindings"
+	storemodels "github.com/rishabhkailey/media-service/internal/store/models"
 )
 
 type Service struct {
@@ -26,8 +26,8 @@ func NewService(store store.Store) (usermediabindings.Service, error) {
 // 	}
 // }
 
-func (s *Service) Create(ctx context.Context, cmd usermediabindings.CreateCommand) (userMediaBindingsStore.Model, error) {
-	userMediaBinding := userMediaBindingsStore.Model{
+func (s *Service) Create(ctx context.Context, cmd usermediabindings.CreateCommand) (storemodels.UserMediaBindingsModel, error) {
+	userMediaBinding := storemodels.UserMediaBindingsModel{
 		UserID:  cmd.UserID,
 		MediaID: cmd.MediaID,
 	}

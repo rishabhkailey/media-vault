@@ -4,13 +4,13 @@ import (
 	"context"
 
 	"github.com/rishabhkailey/media-service/internal/services/media"
-	mediaStore "github.com/rishabhkailey/media-service/internal/store/media"
+	storemodels "github.com/rishabhkailey/media-service/internal/store/models"
 	"gorm.io/gorm"
 )
 
 type FakeService struct {
-	ExpectedMedia     mediaStore.Media
-	ExpectedMediaList []mediaStore.Media
+	ExpectedMedia     storemodels.MediaModel
+	ExpectedMediaList []storemodels.MediaModel
 	ExpectedError     error
 }
 
@@ -24,11 +24,11 @@ func (s *FakeService) WithTransaction(_ *gorm.DB) media.Service {
 	return s
 }
 
-func (s *FakeService) Create(ctx context.Context, cmd media.CreateMediaCommand) (mediaStore.Media, error) {
+func (s *FakeService) Create(ctx context.Context, cmd media.CreateMediaCommand) (storemodels.MediaModel, error) {
 	return s.ExpectedMedia, s.ExpectedError
 }
 
-func (s *FakeService) DeleteOne(ctx context.Context, cmd media.DeleteOneCommand) error {
+func (s *FakeService) CascadeDeleteOne(ctx context.Context, cmd media.DeleteOneCommand) error {
 	return s.ExpectedError
 }
 
@@ -36,27 +36,27 @@ func (s *FakeService) DeleteMany(ctx context.Context, cmd media.DeleteManyComman
 	return s.ExpectedError
 }
 
-func (s *FakeService) GetByUploadRequestID(ctx context.Context, cmd media.GetByUploadRequestQuery) (mediaStore.Media, error) {
+func (s *FakeService) GetByUploadRequestID(ctx context.Context, cmd media.GetByUploadRequestQuery) (storemodels.MediaModel, error) {
 	return s.ExpectedMedia, s.ExpectedError
 }
 
-func (s *FakeService) GetMediaWithMetadataByUploadRequestID(ctx context.Context, cmd media.GetByUploadRequestQuery) (mediaStore.Media, error) {
+func (s *FakeService) GetMediaWithMetadataByUploadRequestID(ctx context.Context, cmd media.GetByUploadRequestQuery) (storemodels.MediaModel, error) {
 	return s.ExpectedMedia, s.ExpectedError
 }
 
-func (s *FakeService) GetByFileName(ctx context.Context, cmd media.GetByFileNameQuery) (mediaStore.Media, error) {
+func (s *FakeService) GetByFileName(ctx context.Context, cmd media.GetByFileNameQuery) (storemodels.MediaModel, error) {
 	return s.ExpectedMedia, s.ExpectedError
 }
 
-func (s *FakeService) GetByUserID(ctx context.Context, cmd media.GetByUserIDQuery) ([]mediaStore.Media, error) {
+func (s *FakeService) GetByUserID(ctx context.Context, cmd media.GetByUserIDQuery) ([]storemodels.MediaModel, error) {
 	return s.ExpectedMediaList, s.ExpectedError
 }
 
-func (s *FakeService) GetByMediaIDs(ctx context.Context, query media.GetByMediaIDsQuery) ([]mediaStore.Media, error) {
+func (s *FakeService) GetByMediaIDs(ctx context.Context, query media.GetByMediaIDsQuery) ([]storemodels.MediaModel, error) {
 	return s.ExpectedMediaList, s.ExpectedError
 }
 
-func (s *FakeService) GetByMediaID(context.Context, media.GetByMediaIDQuery) (mediaStore.Media, error) {
+func (s *FakeService) GetByMediaID(context.Context, media.GetByMediaIDQuery) (storemodels.MediaModel, error) {
 	return s.ExpectedMedia, s.ExpectedError
 }
 
@@ -64,6 +64,6 @@ func (s *FakeService) GetTypeByFileName(ctx context.Context, cmd media.GetTypeBy
 	return s.ExpectedMedia.Metadata.Type, s.ExpectedError
 }
 
-func (s *FakeService) GetUserMediaByID(ctx context.Context, query media.UserMediaByIDQuery) (media mediaStore.Media, err error) {
+func (s *FakeService) GetUserMediaByID(ctx context.Context, query media.UserMediaByIDQuery) (media storemodels.MediaModel, err error) {
 	return s.ExpectedMedia, s.ExpectedError
 }
