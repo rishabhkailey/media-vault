@@ -64,6 +64,7 @@ onBeforeUnmount(() => {
     <div v-if="initializing">loading...</div>
     <div v-else class="d-flex flex-column align-stretch">
       <v-infinite-scroll
+        style="overflow-y: hidden"
         class="bg-secondary-background"
         :items="monthlyMediaList"
         side="end"

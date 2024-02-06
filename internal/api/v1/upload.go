@@ -15,13 +15,13 @@ import (
 	mediastorage "github.com/rishabhkailey/media-service/internal/services/mediaStorage"
 	uploadrequests "github.com/rishabhkailey/media-service/internal/services/uploadRequests"
 	usermediabindings "github.com/rishabhkailey/media-service/internal/services/userMediaBindings"
-	mediaStore "github.com/rishabhkailey/media-service/internal/store/media"
+	storemodels "github.com/rishabhkailey/media-service/internal/store/models"
 	"gorm.io/gorm"
 )
 
 func (server *Server) InitChunkUpload(c *gin.Context) {
-	userID, ok := c.Keys["userID"].(string)
-	if !ok || len(userID) == 0 {
+	userID := c.GetString("user_id")
+	if len(userID) == 0 {
 		c.Error(
 			internalErrors.NewInternalServerError(
 				fmt.Errorf("[InitChunkUpload]: empty userID"),
@@ -49,8 +49,8 @@ func (server *Server) InitChunkUpload(c *gin.Context) {
 		)
 		return
 	}
-	var uploadRequest uploadrequests.Model
-	var uploadingMedia mediaStore.Media
+	var uploadRequest storemodels.UploadRequestsModel
+	var uploadingMedia storemodels.MediaModel
 	{
 		tx := server.Services.CreateTransaction()
 		uploadRequest, err = server.UploadRequests.Create(c.Request.Context(), uploadrequests.CreateUploadRequestCommand{
@@ -65,7 +65,7 @@ func (server *Server) InitChunkUpload(c *gin.Context) {
 			return
 		}
 		mediaMetadata, err := server.MediaMetadata.Create(c.Request.Context(), mediametadata.CreateCommand{
-			Metadata: mediametadata.Metadata{
+			MediaMetadata: storemodels.MediaMetadata{
 				Name: requestBody.FileName,
 				Date: time.UnixMilli(requestBody.Date),
 				Size: uint64(requestBody.Size),
@@ -132,8 +132,8 @@ func (server *Server) InitChunkUpload(c *gin.Context) {
 }
 
 func (server *Server) UploadChunk(c *gin.Context) {
-	userID, ok := c.Keys["userID"].(string)
-	if !ok || len(userID) == 0 {
+	userID := c.GetString("user_id")
+	if len(userID) == 0 {
 		c.Error(
 			internalErrors.NewInternalServerError(
 				fmt.Errorf("[InitChunkUpload]: empty userID"),
@@ -203,8 +203,8 @@ func (server *Server) UploadThumbnail(c *gin.Context) {
 		)
 		return
 	}
-	userID, ok := c.Keys["userID"].(string)
-	if !ok || len(userID) == 0 {
+	userID := c.GetString("user_id")
+	if len(userID) == 0 {
 		c.Error(
 			internalErrors.NewInternalServerError(
 				fmt.Errorf("[UploadThumbnail]: empty userID"),
@@ -271,8 +271,8 @@ func (server *Server) FinishChunkUpload(c *gin.Context) {
 		)
 		return
 	}
-	userID, ok := c.Keys["userID"].(string)
-	if !ok || len(userID) == 0 {
+	userID := c.GetString("user_id")
+	if len(userID) == 0 {
 		c.Error(
 			internalErrors.NewInternalServerError(
 				fmt.Errorf("[FinishChunkUpload]: empty userID"),
@@ -304,7 +304,7 @@ func (server *Server) FinishChunkUpload(c *gin.Context) {
 		)
 		return
 	}
-	index, err := mediasearch.MediaToMeiliSearchMediaIndex([]mediaStore.Media{uploadedMedia}, userID)
+	index, err := mediasearch.MediaToMeiliSearchMediaIndex([]storemodels.MediaModel{uploadedMedia}, userID)
 	if err != nil {
 		// todo fail request on search index creation fail?
 		c.Error(

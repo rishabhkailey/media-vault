@@ -6,8 +6,9 @@ import (
 	"time"
 
 	"github.com/go-redis/redis/v8"
-	usermediabindings "github.com/rishabhkailey/media-service/internal/services/userMediaBindings"
+	"github.com/rishabhkailey/media-service/internal/constants"
 	media "github.com/rishabhkailey/media-service/internal/store/media"
+	storemodels "github.com/rishabhkailey/media-service/internal/store/models"
 	"gorm.io/gorm"
 )
 
@@ -29,7 +30,7 @@ var _ media.Store = (*sqlStore)(nil)
 // }
 
 func NewSqlStoreWithMigrate(db *gorm.DB, cache *redis.Client) (media.Store, error) {
-	if err := db.Migrator().AutoMigrate(&media.Media{}); err != nil {
+	if err := db.Migrator().AutoMigrate(&storemodels.MediaModel{}); err != nil {
 		return nil, err
 	}
 	return &sqlStore{
@@ -45,36 +46,62 @@ func (s *sqlStore) WithTransaction(tx *gorm.DB) media.Store {
 	}
 }
 
-func (s *sqlStore) Insert(ctx context.Context, media *media.Media) (uint, error) {
+func (s *sqlStore) Insert(ctx context.Context, media *storemodels.MediaModel) (uint, error) {
 	err := s.db.WithContext(ctx).Create(&media).Error
 	return media.ID, err
 }
 
-func (s *sqlStore) DeleteOne(ctx context.Context, id uint) error {
-	err := s.db.WithContext(ctx).Delete(&media.Media{
-		Model: gorm.Model{
-			ID: id,
-		},
-	}).Error
+func (s *sqlStore) CascadeDeleteOne(ctx context.Context, mediaID uint, userID string, mediaMetadataId uint) error {
+	tx := s.db.WithContext(ctx).Begin()
+	err := tx.
+		Where("user_id = ? AND media_id = ?", userID, mediaID).
+		Delete(&storemodels.UserMediaBindingsModel{}).Error
+	if err != nil {
+		tx.Rollback()
+		return fmt.Errorf("[mediaimpl.DeleteOne] usermedia binding deletion failed: %w", err)
+	}
+
+	err = tx.Where("media_id = ?", mediaID).
+		Delete(&storemodels.AlbumMediaBindingsModel{}).Error
+	if err != nil {
+		tx.Rollback()
+		return fmt.Errorf("[mediaimpl.DeleteOne] albummedia binding deletion failed: %w", err)
+	}
+
+	err = tx.Where("id = ?", mediaID).
+		Delete(&storemodels.MediaModel{}).Error
+	if err != nil {
+		tx.Rollback()
+		return fmt.Errorf("[mediaimpl.DeleteOne] media deletion failed: %w", err)
+	}
+
+	err = tx.Where("id = ?", mediaMetadataId).
+		Delete(&storemodels.MediaMetadataModel{}).Error
+	if err != nil {
+		tx.Rollback()
+		return fmt.Errorf("[mediaimpl.DeleteOne] MediaMetadataModel deletion failed: %w", err)
+	}
+
+	tx.Commit()
 	return err
 }
 
 func (s *sqlStore) DeleteMany(ctx context.Context, ids []uint) error {
-	err := s.db.WithContext(ctx).Delete(&media.Media{}, ids).Error
+	err := s.db.WithContext(ctx).Delete(&storemodels.MediaModel{}, ids).Error
 	return err
 }
 
-func (s *sqlStore) GetByUploadRequestID(ctx context.Context, uploadRequestID string) (media media.Media, err error) {
+func (s *sqlStore) GetByUploadRequestID(ctx context.Context, uploadRequestID string) (media storemodels.MediaModel, err error) {
 	err = s.db.WithContext(ctx).First(&media, "upload_request_id = ?", uploadRequestID).Error
 	return
 }
 
-func (s *sqlStore) GetMediaWithMetadataByUploadRequestID(ctx context.Context, uploadRequestID string) (media media.Media, err error) {
+func (s *sqlStore) GetMediaWithMetadataByUploadRequestID(ctx context.Context, uploadRequestID string) (media storemodels.MediaModel, err error) {
 	err = s.db.WithContext(ctx).Preload("Metadata").First(&media, "upload_request_id = ?", uploadRequestID).Error
 	return
 }
 
-func (s *sqlStore) GetByFileName(ctx context.Context, fileName string) (media media.Media, err error) {
+func (s *sqlStore) GetByFileName(ctx context.Context, fileName string) (media storemodels.MediaModel, err error) {
 	err = s.db.WithContext(ctx).First(&media, "file_name = ?", fileName).Error
 	return
 }
@@ -85,12 +112,12 @@ func (s *sqlStore) GetByUserIDOrderByDate(ctx context.Context,
 	lastDate *time.Time,
 	sort media.Sort,
 	limit int,
-) (mediaList []media.Media, err error) {
+) (mediaList []storemodels.MediaModel, err error) {
 
 	db := s.db.WithContext(ctx)
-	mediaByUserIDQuery := db.Model(&usermediabindings.Model{}).Select("media_id").Where("user_id = ?", userID)
+	mediaByUserIDQuery := db.Table(constants.USER_MEDIA_BINDINGS_TABLE).Select("media_id").Where("user_id = ?", userID)
 	// table name = media, metadata alias = Metadata
-	query := db.Joins("Metadata").Model(&media.Media{})
+	query := db.Joins("Metadata").Model(&storemodels.MediaModel{})
 	if lastMediaID != nil && lastDate != nil {
 		switch sort {
 		case media.Ascending:
@@ -136,12 +163,12 @@ func (s *sqlStore) GetByUserIDOrderByUploadDate(ctx context.Context,
 	lastDate *time.Time,
 	sort media.Sort,
 	limit int,
-) (mediaList []media.Media, err error) {
+) (mediaList []storemodels.MediaModel, err error) {
 
 	db := s.db.WithContext(ctx)
-	mediaByUserIDQuery := db.Model(&usermediabindings.Model{}).Select("media_id").Where("user_id = ?", userID)
+	mediaByUserIDQuery := db.Table(constants.USER_MEDIA_BINDINGS_TABLE).Select("media_id").Where("user_id = ?", userID)
 	// table name = media, metadata alias = Metadata
-	query := db.Joins("Metadata").Model(&media.Media{})
+	query := db.Joins("Metadata").Model(&storemodels.MediaModel{})
 	if lastMediaID != nil && lastDate != nil {
 		switch sort {
 		case media.Ascending:
@@ -193,7 +220,7 @@ func (s *sqlStore) GetTypeByFileName(ctx context.Context, fileName string) (medi
 		return
 	}
 	db := s.db.WithContext(ctx)
-	media := media.Media{}
+	media := storemodels.MediaModel{}
 	err = db.Preload("Metadata").First(&media, "file_name = ?", fileName).Error
 	if err == nil {
 		mediaType = media.Metadata.Type
@@ -202,13 +229,13 @@ func (s *sqlStore) GetTypeByFileName(ctx context.Context, fileName string) (medi
 	return
 }
 
-func (s *sqlStore) GetByMediaIDs(ctx context.Context, orderBy media.OrderBy, sort media.Sort, mediaIDs []uint) (mediaList []media.Media, err error) {
+func (s *sqlStore) GetByMediaIDs(ctx context.Context, orderBy media.OrderBy, sort media.Sort, mediaIDs []uint) (mediaList []storemodels.MediaModel, err error) {
 	order := fmt.Sprintf(`"Metadata"."%s" %s`, string(orderBy), string(sort))
-	err = s.db.WithContext(ctx).Joins("Metadata").Model(&media.Media{}).Where("media.id IN (?)", mediaIDs).Order(order).Find(&mediaList).Error
+	err = s.db.WithContext(ctx).Joins("Metadata").Model(&storemodels.MediaModel{}).Where("media.id IN (?)", mediaIDs).Order(order).Find(&mediaList).Error
 	return
 }
 
-func (s *sqlStore) GetByMediaID(ctx context.Context, mediaID uint) (m media.Media, err error) {
-	err = s.db.WithContext(ctx).Joins("Metadata").Model(&media.Media{}).Where("media.id = (?)", mediaID).First(&m).Error
+func (s *sqlStore) GetByMediaID(ctx context.Context, mediaID uint) (m storemodels.MediaModel, err error) {
+	err = s.db.WithContext(ctx).Joins("Metadata").Model(&storemodels.MediaModel{}).Where("media.id = (?)", mediaID).First(&m).Error
 	return
 }

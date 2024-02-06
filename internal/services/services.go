@@ -49,28 +49,28 @@ func NewServices(
 	redis *redis.Client,
 	oidcClient *auth.OidcClient,
 ) (*Services, error) {
-	// order matters, order of table creation
-	uploadRequestsService, err := uploadrequestsimpl.NewService(db)
-	if err != nil {
-		return nil, err
-	}
-	mediaMetadataService, err := mediametadataimpl.NewService(db)
-	if err != nil {
-		return nil, err
-	}
-	userMediaBindingsService, err := usermediabindingsimpl.NewService(db)
-	if err != nil {
-		return nil, err
-	}
 	mediaSearchService, err := mediasearchimpl.NewService(ms)
 	if err != nil {
 		return nil, err
 	}
-	authService, err := authserviceimpl.NewService(*oidcClient, userMediaBindingsService, time.Hour*12)
+	store, err := store.NewStore(db, redis, minio)
 	if err != nil {
 		return nil, err
 	}
-	store, err := store.NewStore(db, redis, minio)
+	// order matters, order of table creation
+	uploadRequestsService, err := uploadrequestsimpl.NewService(*store)
+	if err != nil {
+		return nil, err
+	}
+	userMediaBindingsService, err := usermediabindingsimpl.NewService(*store)
+	if err != nil {
+		return nil, err
+	}
+	mediaMetadataService, err := mediametadataimpl.NewService(*store)
+	if err != nil {
+		return nil, err
+	}
+	authService, err := authserviceimpl.NewService(*oidcClient, userMediaBindingsService, time.Hour*12)
 	if err != nil {
 		return nil, err
 	}

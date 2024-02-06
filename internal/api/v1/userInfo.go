@@ -11,8 +11,8 @@ import (
 )
 
 func (s *Server) GetUserInfo(c *gin.Context) {
-	userID, ok := c.Keys["userID"].(string)
-	if !ok || len(userID) == 0 {
+	userID := c.GetString("user_id")
+	if len(userID) == 0 {
 		c.Error(
 			internalErrors.NewInternalServerError(
 				fmt.Errorf("[Search]: empty userID"),
@@ -37,8 +37,8 @@ func (s *Server) GetUserInfo(c *gin.Context) {
 }
 
 func (s *Server) PostUserInfo(c *gin.Context) {
-	userID, ok := c.Keys["userID"].(string)
-	if !ok || len(userID) == 0 {
+	userID := c.GetString("user_id")
+	if len(userID) == 0 {
 		c.Error(
 			internalErrors.NewInternalServerError(
 				fmt.Errorf("[Search]: empty userID"),

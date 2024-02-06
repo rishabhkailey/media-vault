@@ -4,11 +4,12 @@ import (
 	"context"
 
 	mediametadata "github.com/rishabhkailey/media-service/internal/services/mediaMetadata"
+	storemodels "github.com/rishabhkailey/media-service/internal/store/models"
 	"gorm.io/gorm"
 )
 
 type FakeService struct {
-	ExpectedMediaMetadata mediametadata.Model
+	ExpectedMediaMetadata storemodels.MediaMetadataModel
 	ExpectedError         error
 }
 
@@ -22,7 +23,7 @@ func (s *FakeService) WithTransaction(_ *gorm.DB) mediametadata.Service {
 	return s
 }
 
-func (s *FakeService) Create(ctx context.Context, cmd mediametadata.CreateCommand) (mediametadata.Model, error) {
+func (s *FakeService) Create(ctx context.Context, cmd mediametadata.CreateCommand) (storemodels.MediaMetadataModel, error) {
 	return s.ExpectedMediaMetadata, s.ExpectedError
 }
 

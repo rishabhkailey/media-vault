@@ -30,8 +30,7 @@ function getTrucatedMessage(id: number, message: string): string {
 <template>
   <FloatingWindow
     :model-value="popUpErrors.length > 0"
-    height="300px"
-    width="600px"
+    style="max-height: 300px; max-width: 600px"
     :right="10"
     :bottom="10"
   >

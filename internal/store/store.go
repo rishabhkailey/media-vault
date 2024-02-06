@@ -7,17 +7,26 @@ import (
 	albumstoreimpl "github.com/rishabhkailey/media-service/internal/store/album/impl"
 	"github.com/rishabhkailey/media-service/internal/store/media"
 	mediastoreimpl "github.com/rishabhkailey/media-service/internal/store/media/impl"
+	mediametadata "github.com/rishabhkailey/media-service/internal/store/mediaMetadata"
+	mediametadataimpl "github.com/rishabhkailey/media-service/internal/store/mediaMetadata/impl"
+	uploadrequests "github.com/rishabhkailey/media-service/internal/store/uploadRequests"
+	uploadrequestsimpl "github.com/rishabhkailey/media-service/internal/store/uploadRequests/impl"
 	userinfo "github.com/rishabhkailey/media-service/internal/store/userInfo"
 	userinfoimpl "github.com/rishabhkailey/media-service/internal/store/userInfo/impl"
+	usermediabindings "github.com/rishabhkailey/media-service/internal/store/userMediaBindings"
+	usermediabindingsimpl "github.com/rishabhkailey/media-service/internal/store/userMediaBindings/impl"
 	"gorm.io/gorm"
 )
 
 // each service will have all the stores available
 type Store struct {
-	db            *gorm.DB
-	AlbumStore    album.Store
-	UserInfoStore userinfo.Store
-	MediaStore    media.Store
+	db                *gorm.DB
+	AlbumStore        album.Store
+	UserInfoStore     userinfo.Store
+	MediaStore        media.Store
+	UserMediaBindings usermediabindings.Store
+	MediaMetadata     mediametadata.Store
+	UploadRequests    uploadrequests.Store
 }
 
 func NewStore(db *gorm.DB, cache *redis.Client, minio *minio.Client) (*Store, error) {
@@ -33,12 +42,27 @@ func NewStore(db *gorm.DB, cache *redis.Client, minio *minio.Client) (*Store, er
 	if err != nil {
 		return nil, err
 	}
+	userMediaBindingsStore, err := usermediabindingsimpl.NewSqlStore(db)
+	if err != nil {
+		return nil, err
+	}
+	mediaMetadataStore, err := mediametadataimpl.NewSqlStore(db)
+	if err != nil {
+		return nil, err
+	}
+	uploadRequestsStore, err := uploadrequestsimpl.NewSqlStore(db)
+	if err != nil {
+		return nil, err
+	}
 
 	return &Store{
-		db:            db,
-		AlbumStore:    albumStore,
-		UserInfoStore: userInfoStore,
-		MediaStore:    mediaStore,
+		db:                db,
+		AlbumStore:        albumStore,
+		UserInfoStore:     userInfoStore,
+		MediaStore:        mediaStore,
+		UserMediaBindings: userMediaBindingsStore,
+		MediaMetadata:     mediaMetadataStore,
+		UploadRequests:    uploadRequestsStore,
 	}, nil
 }
 

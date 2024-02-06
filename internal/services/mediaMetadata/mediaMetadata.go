@@ -3,12 +3,11 @@ package mediametadata
 import (
 	"context"
 
-	"gorm.io/gorm"
+	storemodels "github.com/rishabhkailey/media-service/internal/store/models"
 )
 
 type Service interface {
-	WithTransaction(tx *gorm.DB) Service
-	Create(context.Context, CreateCommand) (Model, error)
+	Create(context.Context, CreateCommand) (storemodels.MediaMetadataModel, error)
 	DeleteOne(context.Context, DeleteOneCommand) error
 	DeleteMany(context.Context, DeleteManyCommand) error
 	UpdateThumbnail(context.Context, UpdateThumbnailCommand) error

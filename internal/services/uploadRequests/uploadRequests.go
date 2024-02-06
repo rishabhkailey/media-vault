@@ -3,14 +3,13 @@ package uploadrequests
 import (
 	"context"
 
-	"gorm.io/gorm"
+	storemodels "github.com/rishabhkailey/media-service/internal/store/models"
 )
 
 type Service interface {
-	WithTransaction(tx *gorm.DB) Service
-	Create(context.Context, CreateUploadRequestCommand) (Model, error)
+	Create(context.Context, CreateUploadRequestCommand) (storemodels.UploadRequestsModel, error)
 	DeleteOne(context.Context, DeleteOneCommand) error
 	DeleteMany(context.Context, DeleteManyCommand) error
-	GetByID(context.Context, GetByIDQuery) (Model, error)
+	GetByID(context.Context, GetByIDQuery) (storemodels.UploadRequestsModel, error)
 	UpdateStatus(context.Context, UpdateStatusCommand) error
 }

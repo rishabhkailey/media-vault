@@ -6,7 +6,7 @@ import (
 	"time"
 
 	"github.com/rishabhkailey/media-service/internal/services/media"
-	mediaStore "github.com/rishabhkailey/media-service/internal/store/media"
+	storemodels "github.com/rishabhkailey/media-service/internal/store/models"
 	"github.com/sirupsen/logrus"
 )
 
@@ -49,7 +49,7 @@ type GetMediaResponse struct {
 	ThumbnailAspectRatio float32   `json:"thumbnail_aspect_ratio"`
 }
 
-func NewGetMediaListResponse(mediaList []mediaStore.Media) (result GetMediaListResponse, err error) {
+func NewGetMediaListResponse(mediaList []storemodels.MediaModel) (result GetMediaListResponse, err error) {
 	result = []GetMediaResponse{} // required, if not done then we get null in json
 	for _, mediaItem := range mediaList {
 		var item GetMediaResponse
@@ -62,7 +62,7 @@ func NewGetMediaListResponse(mediaList []mediaStore.Media) (result GetMediaListR
 	return
 }
 
-func NewGetMediaResponse(media mediaStore.Media) (item GetMediaResponse, err error) {
+func NewGetMediaResponse(media storemodels.MediaModel) (item GetMediaResponse, err error) {
 	item.MediaUrl, err = parseMediaURL(media.FileName, false)
 	if err != nil {
 		return
@@ -91,6 +91,44 @@ func parseMediaURL(fileName string, thumbnail bool) (string, error) {
 	}
 	return url.JoinPath(path, fileName)
 }
+
+// type DeleteMediaRequest struct {
+// 	UserID  string
+// 	MediaId uint `uri:"media_id" binding:"required"`
+// }
+
+// // BindDeleteMediaRequest bind and validate the request data
+// func BindDeleteMediaRequest(c *gin.Context) (reqBody DeleteMediaRequest, err error) {
+// 	err = c.BindUri(&reqBody)
+// 	if err != nil {
+// 		return reqBody, fmt.Errorf("[BindDeleteMediaRequest] bind failed: %w", err)
+// 	}
+// 	mediaIdParam := c.Param("media_id")
+// 	if len(mediaIdParam) == 0 {
+// 		return reqBody, fmt.Errorf("[BindDeleteMediaRequest]")
+// 	}
+// 	mediaID, err := strconv.ParseUint(mediaIdParam, 10, 64)
+// 	if err != nil {
+// 		c.Error(
+// 			c.Error(
+// 				internalErrors.NewInternalServerError(
+// 					fmt.Errorf("[DeleteMedia] error parsing mediaID: %w", err),
+// 				),
+// 			),
+// 		)
+// 		return
+// 	}
+// 	userID := c.GetString("user_id")
+// 	if len(userID) == 0 {
+// 		c.Error(
+// 			internalErrors.NewInternalServerError(
+// 				fmt.Errorf("[DeleteMedia]: empty userID"),
+// 			),
+// 		)
+// 		return
+// 	}
+
+// }
 
 // type DeleteMultipleMediaRequest struct {
 // 	MediaIDs uint `json:"media_ids"`

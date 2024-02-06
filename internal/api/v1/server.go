@@ -31,8 +31,10 @@ func NewServer(config *config.Config) (*Server, error) {
 	}
 
 	// persistent session store
+	// session.
 	session.InitManager(
 		session.SetStore(db.NewRedisSessionStore(config.Cache)),
+		session.SetCookieName("media_service"),
 	)
 
 	meiliSearchClient, err := db.NewMeiliSearchClient(config.MeiliSearch)

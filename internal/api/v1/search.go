@@ -13,8 +13,8 @@ import (
 
 // todo rename to media search. we will also have album search?
 func (server *Server) Search(c *gin.Context) {
-	userID, ok := c.Keys["userID"].(string)
-	if !ok || len(userID) == 0 {
+	userID := c.GetString("user_id")
+	if len(userID) == 0 {
 		c.Error(
 			internalErrors.NewInternalServerError(
 				fmt.Errorf("[Search]: empty userID"),

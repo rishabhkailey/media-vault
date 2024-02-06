@@ -1,6 +1,6 @@
 import axios, { type AxiosResponse } from "axios";
 import { Chacha20 } from "ts-chacha20";
-import { fileType } from "./file";
+import { getFileType } from "@/js/utils";
 import { generateThumbnailAsArrayBuffer } from "./thumbnail/thumbnail";
 
 type ProgressCallback = (percentage: number) => void;
@@ -104,7 +104,7 @@ function initChunkUpload(
         {
           fileName: file.name,
           size: file.size,
-          mediaType: fileType(file),
+          mediaType: getFileType(file),
           date: file.lastModified,
         },
         {

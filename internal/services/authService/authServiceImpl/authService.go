@@ -104,7 +104,7 @@ func (s *Service) getUserScopeFromSession(ctx context.Context, r *http.Request, 
 		err = fmt.Errorf("[AuthService.getUserScopeFromSession] session not found")
 		return
 	}
-	if value, ok := store.Get("userID"); ok {
+	if value, ok := store.Get("user_id"); ok {
 		userID, _ = value.(string)
 	}
 	if value, ok := store.Get("userScope"); ok {
@@ -135,7 +135,7 @@ func (s *Service) saveUserScopeInSession(ctx context.Context, r *http.Request, w
 	if err != nil {
 		return fmt.Errorf("[AuthService.saveUserScopeInSession] session start failed: %w", err)
 	}
-	store.Set("userID", userID)
+	store.Set("user_id", userID)
 	store.Set("userScope", userScope)
 	expireTime := time.Now().Add(s.maxSessionExpireTime)
 	if expireTime.Unix() > tokenExpireTime {

@@ -4,48 +4,39 @@ import (
 	"context"
 
 	mediametadata "github.com/rishabhkailey/media-service/internal/services/mediaMetadata"
-	"gorm.io/gorm"
+	"github.com/rishabhkailey/media-service/internal/store"
+	storemodels "github.com/rishabhkailey/media-service/internal/store/models"
 )
 
 type Service struct {
-	store store
+	store store.Store
 }
 
 var _ mediametadata.Service = (*Service)(nil)
 
-func NewService(db *gorm.DB) (mediametadata.Service, error) {
-	store, err := newSqlStore(db)
-	if err != nil {
-		return nil, err
-	}
+func NewService(store store.Store) (mediametadata.Service, error) {
 	return &Service{
 		store: store,
 	}, nil
 }
 
-func (s *Service) WithTransaction(tx *gorm.DB) mediametadata.Service {
-	return &Service{
-		store: s.store.WithTransaction(tx),
-	}
-}
-
-func (s *Service) Create(ctx context.Context, cmd mediametadata.CreateCommand) (mediametadata.Model, error) {
-	mediaMetadata := mediametadata.Model{
-		Metadata: cmd.Metadata,
+func (s *Service) Create(ctx context.Context, cmd mediametadata.CreateCommand) (storemodels.MediaMetadataModel, error) {
+	mediaMetadata := storemodels.MediaMetadataModel{
+		MediaMetadata: cmd.MediaMetadata,
 	}
 
-	_, err := s.store.Insert(ctx, &mediaMetadata)
+	_, err := s.store.MediaMetadata.Insert(ctx, &mediaMetadata)
 	return mediaMetadata, err
 }
 
 func (s *Service) DeleteOne(ctx context.Context, cmd mediametadata.DeleteOneCommand) error {
-	return s.store.DeleteOne(ctx, cmd.ID)
+	return s.store.MediaMetadata.DeleteOne(ctx, cmd.ID)
 }
 
 func (s *Service) DeleteMany(ctx context.Context, cmd mediametadata.DeleteManyCommand) error {
-	return s.store.DeleteMany(ctx, cmd.IDs)
+	return s.store.MediaMetadata.DeleteMany(ctx, cmd.IDs)
 }
 
 func (s *Service) UpdateThumbnail(ctx context.Context, cmd mediametadata.UpdateThumbnailCommand) error {
-	return s.store.UpdateThumbnail(ctx, cmd)
+	return s.store.MediaMetadata.UpdateThumbnail(ctx, cmd.ID, cmd.Thumbnail, cmd.ThumbnailAspectRatio)
 }

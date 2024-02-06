@@ -14,7 +14,6 @@ import (
 	mediastorage "github.com/rishabhkailey/media-service/internal/services/mediaStorage"
 	usermediabindings "github.com/rishabhkailey/media-service/internal/services/userMediaBindings"
 	"github.com/rishabhkailey/media-service/internal/utils"
-	"github.com/sirupsen/logrus"
 )
 
 const (
@@ -28,8 +27,8 @@ var SUPPORTED_ORDER_BY = []string{MEDIA_API_ORDER_BY_MEDIA_CREATION_TIME, MEDIA_
 
 // todo- ignore upload status failed media
 func (server *Server) MediaList(c *gin.Context) {
-	userID, ok := c.Keys["userID"].(string)
-	if !ok || len(userID) == 0 {
+	userID := c.GetString("user_id")
+	if len(userID) == 0 {
 		c.Error(
 			internalErrors.NewInternalServerError(
 				fmt.Errorf("[MediaList]: empty userID"),
@@ -201,118 +200,81 @@ func (server *Server) GetThumbnail(c *gin.Context) {
 // multiple delete in same API doesn't make sense
 // if 1 delete fails the complete request will also fail and as we are using transaction for multiple services it will increase the complexity
 func (server *Server) DeleteMedia(c *gin.Context) {
-	mediaIdParam := c.Param("mediaID")
-	if len(mediaIdParam) == 0 {
-		c.AbortWithStatus(http.StatusBadRequest)
-		return
-	}
-	mediaID, err := strconv.ParseUint(mediaIdParam, 10, 64)
+	userID := c.GetString("user_id")
+	mediaID, err := strconv.ParseUint(c.Param("media_id"), 10, 64)
 	if err != nil {
-		c.Error(
-			c.Error(
-				internalErrors.NewInternalServerError(
-					fmt.Errorf("[DeleteMedia] error parsing mediaID: %w", err),
-				),
-			),
-		)
+		c.Error(internalErrors.NewBadRequestError(
+			fmt.Errorf("[DeleteMedia] error parsing mediaID: %w", err),
+			"invalid media id",
+		))
 		return
 	}
-	userID, ok := c.Keys["userID"].(string)
-	if !ok || len(userID) == 0 {
-		c.Error(
-			internalErrors.NewInternalServerError(
-				fmt.Errorf("[DeleteMedia]: empty userID"),
-			),
-		)
-		return
-	}
+
 	belongsToUser, err := server.UserMediaBindings.CheckMediaBelongsToUser(c.Request.Context(), usermediabindings.CheckMediaBelongsToUserQuery{
 		UserID:  userID,
 		MediaID: uint(mediaID),
 	})
 	if err != nil {
-		c.Error(
-			internalErrors.NewInternalServerError(
-				fmt.Errorf("[DeleteMedia] error checking user access: %w", err),
-			),
-		)
+		c.Error(internalErrors.NewInternalServerError(
+			fmt.Errorf("[DeleteMedia] error checking user access: %w", err),
+		))
 		return
 	}
 	if !belongsToUser {
 		c.Error(internalErrors.ErrForbidden)
 		return
 	}
-	{
-		deletingMedia, err := server.Media.GetByMediaID(c.Request.Context(), media.GetByMediaIDQuery{
+
+	mediaToDelete, err := server.Media.GetByMediaID(c.Request.Context(),
+		media.GetByMediaIDQuery{
 			MediaID: uint(mediaID),
 		})
-		if err != nil {
-			c.Error(
-				c.Error(
-					internalErrors.NewInternalServerError(
-						fmt.Errorf("[DeleteMedia] error while getting media: %w", err),
-					),
-				),
-			)
-			return
-		}
-
-		tx := server.Services.CreateTransaction()
-		// todo redo delete with transaction
-		err = server.Media.DeleteOne(c.Request.Context(), media.DeleteOneCommand{
-			ID: deletingMedia.ID,
-		})
-		if err != nil {
-			tx.Rollback()
-			c.Error(
-				c.Error(
-					internalErrors.NewInternalServerError(
-						fmt.Errorf("[DeleteMedia] error while deleting media: %w", err),
-					),
-				),
-			)
-			return
-		}
-
-		err = server.MediaMetadata.WithTransaction(tx).DeleteOne(c.Request.Context(), mediametadata.DeleteOneCommand{
-			ID: deletingMedia.Metadata.ID,
-		})
-		if err != nil {
-			tx.Rollback()
-			c.Error(
-				c.Error(
-					internalErrors.NewInternalServerError(
-						fmt.Errorf("[DeleteMedia] error while deleting media metadata: %w", err),
-					),
-				),
-			)
-			return
-		}
-
-		_, err = server.MediaSearch.DeleteOne(c.Request.Context(), mediasearch.DeleteOneCommand{
-			MediaID: deletingMedia.ID,
-		})
-		if err != nil {
-			// this should not cause much trouble
-			logrus.Warnf("[DeleteMedia] delete search document failed: %v", err)
-		}
-		err = server.MediaStorage.DeleteOne(c.Request.Context(), mediastorage.DeleteOneCommand{
-			FileName:     deletingMedia.FileName,
-			HasThumbnail: deletingMedia.Metadata.Thumbnail,
-		})
-		if err != nil {
-			tx.Rollback()
-			c.Error(
-				c.Error(
-					internalErrors.NewInternalServerError(
-						fmt.Errorf("[DeleteMedia] error while deleting media from storge: %w", err),
-					),
-				),
-			)
-			return
-		}
-		tx.Commit()
+	if err != nil {
+		c.Error(internalErrors.NewInternalServerError(
+			fmt.Errorf("[DeleteMedia] select media query failed: %w", err),
+		))
+		return
 	}
+
+	// delete db entries
+	err = server.Media.CascadeDeleteOne(c.Request.Context(),
+		media.DeleteOneCommand{
+			ID:         uint(mediaID),
+			UserID:     userID,
+			MetadataID: mediaToDelete.Metadata.ID,
+		})
+	if err != nil {
+		c.Error(internalErrors.NewInternalServerError(
+			fmt.Errorf("[DeleteMedia] failed: %w", err),
+		))
+		return
+	}
+
+	// delete from search service
+	searchId, err := server.MediaSearch.DeleteOne(c.Request.Context(),
+		mediasearch.DeleteOneCommand{
+			MediaID: uint(mediaID),
+		})
+	if err != nil {
+		c.Error(internalErrors.NewInternalServerError(
+			fmt.Errorf("[DeleteMedia] delete from search service failed, this will cause discrepancies in search results. document id = %d: %w", searchId, err),
+		))
+		return
+	}
+
+	// delete media file
+	err = server.MediaStorage.DeleteOne(c.Request.Context(),
+		mediastorage.DeleteOneCommand{
+			FileName:     mediaToDelete.FileName,
+			HasThumbnail: mediaToDelete.Metadata.Thumbnail,
+		})
+	if err != nil {
+		c.Error(internalErrors.NewInternalServerError(
+			fmt.Errorf("[DeleteMedia] delete from storage failed, filename = %s: %w", mediaToDelete.FileName, err),
+		))
+		return
+	}
+
 	c.Status(http.StatusOK)
 }
 
@@ -333,7 +295,7 @@ func (server *Server) DeleteMedia(c *gin.Context) {
 // 		)
 // 		return
 // 	}
-// 	userID, ok := c.Keys["userID"].(string)
+// 	userID, ok := c.Keys["user_id"].(string)
 // 	if !ok || len(userID) == 0 {
 // 		c.Error(
 // 			internalErrors.NewInternalServerError(

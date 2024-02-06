@@ -3,8 +3,7 @@ package mediasearch
 import (
 	"fmt"
 
-	usermediabindings "github.com/rishabhkailey/media-service/internal/services/userMediaBindings"
-	mediaStore "github.com/rishabhkailey/media-service/internal/store/media"
+	storemodels "github.com/rishabhkailey/media-service/internal/store/models"
 )
 
 const (
@@ -46,7 +45,7 @@ type Model struct {
 }
 
 type CreateCommand struct {
-	Media  mediaStore.Media
+	Media  storemodels.MediaModel
 	UserID string
 }
 
@@ -67,7 +66,7 @@ type DeleteManyCommand struct {
 	MediaIDs []uint
 }
 
-func UserMediaBindingToMeiliSearchMediaIndex(userMediaBindingList []usermediabindings.Model) (meiliSearchMediaList []Model, err error) {
+func UserMediaBindingToMeiliSearchMediaIndex(userMediaBindingList []storemodels.UserMediaBindingsModel) (meiliSearchMediaList []Model, err error) {
 	defer func() {
 		if r := recover(); r != nil {
 			err = fmt.Errorf("[ToMeiliSearchMediaIndex] panic :%v", r)
@@ -89,7 +88,7 @@ func UserMediaBindingToMeiliSearchMediaIndex(userMediaBindingList []usermediabin
 	return
 }
 
-func MediaToMeiliSearchMediaIndex(mediaList []mediaStore.Media, userID string) (meiliSearchMediaList []Model, err error) {
+func MediaToMeiliSearchMediaIndex(mediaList []storemodels.MediaModel, userID string) (meiliSearchMediaList []Model, err error) {
 	defer func() {
 		if r := recover(); r != nil {
 			err = fmt.Errorf("[ToMeiliSearchMediaIndex] panic :%v", r)

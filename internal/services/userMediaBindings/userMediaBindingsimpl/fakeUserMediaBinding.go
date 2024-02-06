@@ -4,13 +4,13 @@ import (
 	"context"
 
 	usermediabindings "github.com/rishabhkailey/media-service/internal/services/userMediaBindings"
-	mediaStore "github.com/rishabhkailey/media-service/internal/store/media"
+	storemodels "github.com/rishabhkailey/media-service/internal/store/models"
 	"gorm.io/gorm"
 )
 
 type FakeService struct {
 	ExpectedError              error
-	ExpectedUserMediaBinding   usermediabindings.Model
+	ExpectedUserMediaBinding   storemodels.UserMediaBindingsModel
 	ExpectedFileBelongsToUser  bool
 	ExpectedMediaBelongsToUser bool
 }
@@ -25,7 +25,7 @@ func (s *FakeService) WithTransaction(_ *gorm.DB) usermediabindings.Service {
 	return s
 }
 
-func (s *FakeService) Create(ctx context.Context, query usermediabindings.CreateCommand) (usermediabindings.Model, error) {
+func (s *FakeService) Create(ctx context.Context, query usermediabindings.CreateCommand) (storemodels.UserMediaBindingsModel, error) {
 	return s.ExpectedUserMediaBinding, s.ExpectedError
 }
 
@@ -37,7 +37,7 @@ func (s *FakeService) DeleteMany(context.Context, usermediabindings.DeleteManyCo
 	return s.ExpectedError
 }
 
-func (s *FakeService) GetByMediaID(ctx context.Context, query usermediabindings.GetByMediaIDQuery) (usermediabindings.Model, error) {
+func (s *FakeService) GetByMediaID(ctx context.Context, query usermediabindings.GetByMediaIDQuery) (storemodels.UserMediaBindingsModel, error) {
 	return s.ExpectedUserMediaBinding, s.ExpectedError
 }
 
@@ -49,6 +49,6 @@ func (s *FakeService) CheckMediaBelongsToUser(context.Context, usermediabindings
 	return s.ExpectedMediaBelongsToUser, s.ExpectedError
 }
 
-func (s *FakeService) GetUserMedia(ctx context.Context, query usermediabindings.GetUserMediaQuery) ([]mediaStore.Media, error) {
-	return []mediaStore.Media{}, s.ExpectedError
+func (s *FakeService) GetUserMedia(ctx context.Context, query usermediabindings.GetUserMediaQuery) ([]storemodels.MediaModel, error) {
+	return []storemodels.MediaModel{}, s.ExpectedError
 }

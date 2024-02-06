@@ -3,6 +3,8 @@ package album
 import (
 	"context"
 
+	storemodels "github.com/rishabhkailey/media-service/internal/store/models"
+
 	"gorm.io/gorm"
 )
 
@@ -11,12 +13,12 @@ type Store interface {
 	InsertAlbum(ctx context.Context,
 		albumName string,
 		thumbnailUrl string,
-	) (album Album, err error)
+	) (album storemodels.AlbumModel, err error)
 	UpdateAlbum(ctx context.Context,
 		albumID uint,
 		name *string,
 		thumbnailUrl *string,
-	) (album Album, err error)
+	) (album storemodels.AlbumModel, err error)
 	InsertUserAlbumBindings(ctx context.Context,
 		userID string,
 		albumID uint,
@@ -27,7 +29,7 @@ type Store interface {
 		sort Sort,
 		limit int,
 		offset int,
-	) (albums []Album, err error)
+	) (albums []storemodels.AlbumModel, err error)
 	GetAlbumsByUserIdOrderByCreationAt(
 		ctx context.Context,
 		userID string,
@@ -35,7 +37,7 @@ type Store interface {
 		sort Sort,
 		lastAlbumID *uint,
 		limit int,
-	) (albums []Album, err error)
+	) (albums []storemodels.AlbumModel, err error)
 	GetAlbumsByUserIdOrderByUpdatedAt(
 		ctx context.Context,
 		userID string,
@@ -43,10 +45,10 @@ type Store interface {
 		sort Sort,
 		lastAlbumID *uint,
 		limit int,
-	) (albums []Album, err error)
+	) (albums []storemodels.AlbumModel, err error)
 	GetByID(ctx context.Context,
 		albumID uint,
-	) (result Album, err error)
+	) (result storemodels.AlbumModel, err error)
 	// GetMediaByAlbumId(ctx context.Context,
 	// 	albumID uint,
 	// 	orderBy string,
@@ -59,19 +61,19 @@ type Store interface {
 		lastMediaID *uint,
 		sort Sort,
 		limit int,
-	) (mediaList []AlbumMediaBindings, err error)
+	) (mediaList []storemodels.AlbumMediaBindingsModel, err error)
 	GetMediaByAlbumIdOrderByUploadDate(ctx context.Context,
 		albumID uint,
 		lastMediaID *uint,
 		sort Sort,
 		limit int,
-	) (mediaList []AlbumMediaBindings, err error)
+	) (mediaList []storemodels.AlbumMediaBindingsModel, err error)
 	GetMediaByAlbumIdOrderByAddedDate(ctx context.Context,
 		albumID uint,
 		lastMediaID *uint,
 		sort Sort,
 		limit int,
-	) (mediaList []AlbumMediaBindings, err error)
+	) (mediaList []storemodels.AlbumMediaBindingsModel, err error)
 	CheckAlbumBelongsToUser(ctx context.Context,
 		userID string,
 		albumID uint,
@@ -86,10 +88,5 @@ type Store interface {
 	) (removedMediaIDs []uint, err error)
 	DeleteAlbum(ctx context.Context,
 		albumID uint,
-	) error
-	UpdateThumbnail(ctx context.Context,
-		mediaID uint,
-		thumbnail bool,
-		thumbnailAspectRatio float32,
 	) error
 }

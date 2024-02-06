@@ -65,7 +65,9 @@ type UserMediaByIDQuery struct {
 }
 
 type DeleteOneCommand struct {
-	ID uint
+	ID         uint
+	UserID     string
+	MetadataID uint
 }
 
 type DeleteManyCommand struct {
