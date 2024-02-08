@@ -6,12 +6,14 @@ import (
 	"fmt"
 	"net/http"
 	"strconv"
+	"strings"
 	"time"
 
 	"github.com/go-session/session/v3"
 	"github.com/rishabhkailey/media-service/internal/auth"
 	authservice "github.com/rishabhkailey/media-service/internal/services/authService"
 	usermediabindings "github.com/rishabhkailey/media-service/internal/services/userMediaBindings"
+	"github.com/rishabhkailey/media-service/internal/utils"
 	"github.com/sirupsen/logrus"
 )
 
@@ -55,8 +57,8 @@ func (s *Service) GetSessionExpireTime(query authservice.GetSessionExpireTimeQue
 	return
 }
 
-func (s *Service) ValidateUserAccess(query authservice.ValidateUserAccessQuery, scopes []string) (userID string, err error) {
-	userID, userScope, err := s.getUserScope(query.Ctx, query.Request, query.ResponseWriter)
+func (s *Service) ValidateUserAccess(query authservice.ValidateUserAccessQuery, requiredScopes []string, requiredRoles []string) (userID string, err error) {
+	userID, userScope, userRoles, err := s.getUserAccess(query.Ctx, query.Request, query.ResponseWriter)
 	if err != nil {
 		return
 	}
@@ -64,32 +66,35 @@ func (s *Service) ValidateUserAccess(query authservice.ValidateUserAccessQuery, 
 		err = fmt.Errorf("[AuthService.ValidateUserAccess]: empty userID")
 		return
 	}
-	if !auth.ValidateScope(userScope, scopes) {
+	if !utils.ContainsSlice(strings.Split(userScope, " "), requiredScopes) {
+		err = authservice.ErrForbidden
+	}
+	if !utils.ContainsSlice(userRoles, requiredRoles) {
 		err = authservice.ErrForbidden
 	}
 	return
 }
 
-func (s *Service) getUserScope(ctx context.Context, r *http.Request, w http.ResponseWriter) (userID, userScope string, err error) {
-	userID, userScope, err = s.getUserScopeFromSession(ctx, r, w)
+func (s *Service) getUserAccess(ctx context.Context, r *http.Request, w http.ResponseWriter) (userID, userScope string, userRoles []string, err error) {
+	userID, userScope, userRoles, err = s.getUserAccessFromSession(r, w)
 	if err == nil {
 		return
 	}
-	logrus.Debug("[AuthService.getUserScope] unable to get user scope from session: %w", err)
-	userID, userScope, expireTime, err := s.getUserScopeFromOidcProvider(ctx, r, w)
+	logrus.Debug("[AuthService.getUserAccess] unable to get user scope from session: %w", err)
+	userID, userScope, userRoles, expireTime, err := s.getUserAccessFromOidcProvider(ctx, r, w)
 	if err == nil {
-		err := s.saveUserScopeInSession(ctx, r, w, userID, userScope, expireTime)
+		err := s.saveUserAccessInSession(ctx, r, w, userID, userScope, userRoles, expireTime)
 		if err != nil {
-			logrus.Warnf("[AuthService.getUserScope] unable to save session: %v", err)
+			logrus.Warnf("[AuthService.getUserAccess] unable to save session: %v", err)
 		}
 	}
 	return
 }
 
-func (s *Service) getUserScopeFromSession(ctx context.Context, r *http.Request, w http.ResponseWriter) (userID, userScope string, err error) {
-	store, err := session.Start(ctx, w, r)
+func (s *Service) getUserAccessFromSession(r *http.Request, w http.ResponseWriter) (userID, userScope string, userRoles []string, err error) {
+	store, err := session.Start(r.Context(), w, r)
 	if err != nil {
-		err = fmt.Errorf("[AuthService.getUserScopeFromSession] session start failed: %w", err)
+		err = fmt.Errorf("[AuthService.getUserAccessFromSession] session start failed: %w", err)
 		return
 	}
 	var sessionExpireTime int64
@@ -101,7 +106,7 @@ func (s *Service) getUserScopeFromSession(ctx context.Context, r *http.Request, 
 		}
 	}
 	if sessionExpireTime < time.Now().Unix() {
-		err = fmt.Errorf("[AuthService.getUserScopeFromSession] session not found")
+		err = fmt.Errorf("[AuthService.getUserAccessFromSession] session not found")
 		return
 	}
 	if value, ok := store.Get("user_id"); ok {
@@ -110,10 +115,24 @@ func (s *Service) getUserScopeFromSession(ctx context.Context, r *http.Request, 
 	if value, ok := store.Get("userScope"); ok {
 		userScope, _ = value.(string)
 	}
+	if value, ok := store.Get("userRoles"); ok {
+		userRolesString, _ := value.(string)
+		userRoles = strings.Split(userRolesString, ";")
+	}
 	return
 }
 
-func (s *Service) getUserScopeFromOidcProvider(ctx context.Context, r *http.Request, w http.ResponseWriter) (userID, userScope string, tokenExpireTime int64, err error) {
+func (s *Service) getUserAccessFromOidcProvider(
+	ctx context.Context,
+	r *http.Request,
+	w http.ResponseWriter,
+) (
+	userID string,
+	userScope string,
+	userRoles []string,
+	tokenExpireTime int64,
+	err error,
+) {
 	token, ok := auth.GetBearerToken(r)
 	if !ok {
 		err = authservice.ErrUnauthorized
@@ -121,22 +140,33 @@ func (s *Service) getUserScopeFromOidcProvider(ctx context.Context, r *http.Requ
 	}
 	tokenInfo, err := s.oidcClient.IntrospectToken(token)
 	if err != nil {
-		err = fmt.Errorf("[AuthService.getUserScopeFromOidcProvider] token interospection failed: %w", err)
+		err = fmt.Errorf("[AuthService.getUserAccessFromOidcProvider] token interospection failed: %w", err)
 		return
 	}
 	userScope = tokenInfo.Scope
 	userID = tokenInfo.Subject
 	tokenExpireTime = tokenInfo.ExpireTime
+	userRoles = tokenInfo.RealmAccess.Roles
 	return
 }
 
-func (s *Service) saveUserScopeInSession(ctx context.Context, r *http.Request, w http.ResponseWriter, userID, userScope string, tokenExpireTime int64) (err error) {
+// redudant ctx argument, we can use request.Context()
+func (s *Service) saveUserAccessInSession(
+	ctx context.Context,
+	r *http.Request,
+	w http.ResponseWriter,
+	userID,
+	userScope string,
+	userRoles []string,
+	tokenExpireTime int64,
+) (err error) {
 	store, err := session.Start(ctx, w, r)
 	if err != nil {
 		return fmt.Errorf("[AuthService.saveUserScopeInSession] session start failed: %w", err)
 	}
 	store.Set("user_id", userID)
 	store.Set("userScope", userScope)
+	store.Set("userRoles", strings.Join(userRoles, ";"))
 	expireTime := time.Now().Add(s.maxSessionExpireTime)
 	if expireTime.Unix() > tokenExpireTime {
 		expireTime = time.Unix(tokenExpireTime, 0)
@@ -152,7 +182,7 @@ func (s *Service) saveUserScopeInSession(ctx context.Context, r *http.Request, w
 }
 
 func (s *Service) ValidateUserMediaAccess(query authservice.ValidateUserMediaAccessQuery) (err error) {
-	userID, _, err := s.getUserScope(query.Ctx, query.Request, query.ResponseWriter)
+	userID, _, _, err := s.getUserAccess(query.Ctx, query.Request, query.ResponseWriter)
 	if err != nil {
 		return
 	}
@@ -216,11 +246,11 @@ func (s *Service) SaveUserMediaAccessInSession(ctx context.Context, r *http.Requ
 }
 
 func (s *Service) RefreshSession(query authservice.RefreshSessionQuery) (expireTime int64, err error) {
-	userID, userScope, expireTime, err := s.getUserScopeFromOidcProvider(query.Request.Context(), query.Request, query.ResponseWriter)
+	userID, userScope, userRoles, expireTime, err := s.getUserAccessFromOidcProvider(query.Request.Context(), query.Request, query.ResponseWriter)
 	if err != nil {
 		return
 	}
-	err = s.saveUserScopeInSession(query.Request.Context(), query.Request, query.ResponseWriter, userID, userScope, expireTime)
+	err = s.saveUserAccessInSession(query.Request.Context(), query.Request, query.ResponseWriter, userID, userScope, userRoles, expireTime)
 	if err != nil {
 		return
 	}

@@ -24,7 +24,7 @@ func (s *FakeService) GetSessionExpireTime(query authservice.GetSessionExpireTim
 	return s.ExpectedSessionExpireTime, s.ExpectedError
 }
 
-func (s *FakeService) ValidateUserAccess(query authservice.ValidateUserAccessQuery, scopes []string) (userID string, err error) {
+func (s *FakeService) ValidateUserAccess(query authservice.ValidateUserAccessQuery, requiredScopes []string, requiredRoles []string) (userID string, err error) {
 	return s.ExpectedUserID, s.ExpectedError
 }
 

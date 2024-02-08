@@ -9,6 +9,7 @@ import (
 	"net/http"
 	"net/url"
 	"strings"
+	"time"
 
 	"github.com/coreos/go-oidc/v3/oidc"
 	authservice "github.com/rishabhkailey/media-service/internal/services/authService"
@@ -73,7 +74,7 @@ func NewOidcClient(issuerUrl, clientID, clientSecret, redirectURI string) (*Oidc
 	oauth2Config := oauth2.Config{
 		ClientID:     clientID,
 		ClientSecret: clientSecret,
-		Scopes:       []string{oidc.ScopeOpenID, "user", "email"},
+		Scopes:       []string{oidc.ScopeOpenID, "roles", "email"},
 		RedirectURL:  redirectURI,
 		Endpoint:     oidcProvider.Endpoint(),
 	}
@@ -86,14 +87,19 @@ func NewOidcClient(issuerUrl, clientID, clientSecret, redirectURI string) (*Oidc
 	}, nil
 }
 
+type RealmAccess struct {
+	Roles []string `json:"roles"`
+}
+
 type TokenInfo struct {
-	Active     bool   `json:"active"`
-	ClientID   string `json:"client_id"`
-	Subject    string `json:"sub"`
-	Scope      string `json:"scope"`
-	IssuedTime int64  `json:"iat"`
-	ExpireTime int64  `json:"exp"`
-	RealName   string `json:"realName"`
+	Active      bool        `json:"active"`
+	ClientID    string      `json:"client_id"`
+	Subject     string      `json:"sub"`
+	Scope       string      `json:"scope"`
+	IssuedTime  int64       `json:"iat"`
+	ExpireTime  int64       `json:"exp"`
+	UserName    string      `json:"username"`
+	RealmAccess RealmAccess `json:"realm_access"`
 }
 
 func (client *OidcClient) IntrospectToken(token string) (*TokenInfo, error) {
@@ -127,6 +133,9 @@ func (client *OidcClient) IntrospectToken(token string) (*TokenInfo, error) {
 	var responseBody TokenInfo
 	if err = json.Unmarshal(body, &responseBody); err != nil {
 		return nil, fmt.Errorf("could not unmarshal json response: %w", err)
+	}
+	if !responseBody.Active || responseBody.ExpireTime < time.Now().Unix() {
+		return nil, fmt.Errorf("either token is expired or it is not active: %w", authservice.ErrForbidden)
 	}
 	return &responseBody, nil
 }

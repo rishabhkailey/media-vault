@@ -17,7 +17,7 @@ func (server *Server) UserAuthMiddleware(c *gin.Context) {
 			ResponseWriter: c.Writer,
 			Request:        c.Request,
 		},
-	}, []string{authservice.UserScope})
+	}, []string{}, []string{authservice.UserRole})
 	if errors.Is(err, authservice.ErrUnauthorized) {
 		c.Abort()
 		c.Error(internalErrors.ErrUnauthorized)

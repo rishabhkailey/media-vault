@@ -1,7 +1,7 @@
 package authservice
 
 type Service interface {
-	ValidateUserAccess(query ValidateUserAccessQuery, scopes []string) (userID string, err error)
+	ValidateUserAccess(query ValidateUserAccessQuery, requiredScopes []string, requiredRoles []string) (userID string, err error)
 	TerminateSession(cmd TerminateSessionCmd) error
 	ValidateUserMediaAccess(query ValidateUserMediaAccessQuery) error
 	GetSessionExpireTime(query GetSessionExpireTimeQuery) (int64, error)

@@ -124,7 +124,7 @@ func (s *sqlStore) GetAlbumsByUserIdOrderByCreationAt(
 							("Album"."created_at" > @lastAlbumDate)
 						)
 						)`,
-					sql.Named("user_id", userID),
+					sql.Named("userID", userID),
 					sql.Named("lastAlbumDate", lastAlbumDate),
 					sql.Named("lastAlbumID", lastAlbumID),
 				)
@@ -140,7 +140,7 @@ func (s *sqlStore) GetAlbumsByUserIdOrderByCreationAt(
 							("Album"."created_at" < @lastAlbumDate)
 						)
 						)`,
-					sql.Named("user_id", userID),
+					sql.Named("userID", userID),
 					sql.Named("lastAlbumDate", lastAlbumDate),
 					sql.Named("lastAlbumID", lastAlbumID),
 				)
@@ -149,7 +149,7 @@ func (s *sqlStore) GetAlbumsByUserIdOrderByCreationAt(
 	} else {
 		albumsByUserIDQuery = albumsByUserIDQuery.Where(
 			`user_id = @userID `,
-			sql.Named("user_id", userID),
+			sql.Named("userID", userID),
 		)
 	}
 	queryOrderBy := fmt.Sprintf(`"Album"."created_at" %s, "Album"."id" desc`, sort)
@@ -176,7 +176,8 @@ func (s *sqlStore) GetAlbumsByUserIdOrderByUpdatedAt(
 	limit int,
 ) (albums []storemodels.AlbumModel, err error) {
 	db := s.db.WithContext(ctx)
-	albumsByUserIDQuery := db.Joins("Album").Model(&storemodels.UserAlbumBindingsModel{})
+	albumsByUserIDQuery := db.Joins("Album").
+		Model(&storemodels.UserAlbumBindingsModel{})
 
 	if lastAlbumID != nil {
 		var lastAlbumDate time.Time
@@ -202,7 +203,7 @@ func (s *sqlStore) GetAlbumsByUserIdOrderByUpdatedAt(
 							("Album"."updated_at" > @lastAlbumDate)
 						)
 						)`,
-					sql.Named("user_id", userID),
+					sql.Named("userID", userID),
 					sql.Named("lastAlbumDate", lastAlbumDate),
 					sql.Named("lastAlbumID", lastAlbumID),
 				)
@@ -218,7 +219,7 @@ func (s *sqlStore) GetAlbumsByUserIdOrderByUpdatedAt(
 							("Album"."updated_at" < @lastAlbumDate)
 						)
 						)`,
-					sql.Named("user_id", userID),
+					sql.Named("userID", userID),
 					sql.Named("lastAlbumDate", lastAlbumDate),
 					sql.Named("lastAlbumID", lastAlbumID),
 				)
@@ -227,7 +228,7 @@ func (s *sqlStore) GetAlbumsByUserIdOrderByUpdatedAt(
 	} else {
 		albumsByUserIDQuery = albumsByUserIDQuery.Where(
 			`user_id = @userID `,
-			sql.Named("user_id", userID),
+			sql.Named("userID", userID),
 		)
 	}
 	queryOrderBy := fmt.Sprintf(`"Album"."updated_at" %s, "Album"."id" desc`, sort)

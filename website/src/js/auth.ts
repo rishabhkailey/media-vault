@@ -1,4 +1,4 @@
-import { UserManager, type User, WebStorageStateStore } from "oidc-client-ts";
+import { UserManager, User, WebStorageStateStore } from "oidc-client-ts";
 import { v4 } from "uuid";
 
 export interface InternalState {
@@ -13,9 +13,9 @@ export const userManager = new UserManager({
   client_id: import.meta.env.VITE_AUTH_SERVICE_CLIENT_ID,
   redirect_uri: window.location.origin + "/pkce",
   response_type: "code",
-  scope: "openid profile email user",
+  fetchRequestCredentials: "omit",
+  scope: "openid profile email roles",
   post_logout_redirect_uri: window.location.origin,
-  // silent_redirect_uri: window.location.origin + "/static/silent-renew.html",
   accessTokenExpiringNotificationTimeInSeconds: 10,
   automaticSilentRenew: true,
   // if true it removes the nonce
@@ -25,6 +25,7 @@ export const userManager = new UserManager({
   userStore: new WebStorageStateStore({ store: window.localStorage }),
 });
 
+// todo extra argument userManager we can just use the global defined
 export function signinUsingUserManager(
   userManager: UserManager,
   redirectToHome: boolean,
@@ -67,6 +68,7 @@ export async function handlePostLoginUsingUserManager(
           const internalState = user.state as InternalState;
           if (
             internalState.nonce.length === 0 ||
+            user.profile.nonce?.length == undefined ||
             user.profile.nonce?.length === 0 ||
             internalState.nonce.length !== user.profile.nonce?.length
           ) {
