@@ -8,11 +8,13 @@ import (
 	"io"
 	"net/http"
 	"net/url"
+	"slices"
 	"strings"
 	"time"
 
 	"github.com/coreos/go-oidc/v3/oidc"
 	authservice "github.com/rishabhkailey/media-service/internal/services/authService"
+	"github.com/rishabhkailey/media-service/internal/utils"
 	"github.com/sirupsen/logrus"
 	"golang.org/x/oauth2"
 )
@@ -92,14 +94,16 @@ type RealmAccess struct {
 }
 
 type TokenInfo struct {
-	Active      bool        `json:"active"`
-	ClientID    string      `json:"client_id"`
-	Subject     string      `json:"sub"`
-	Scope       string      `json:"scope"`
-	IssuedTime  int64       `json:"iat"`
-	ExpireTime  int64       `json:"exp"`
-	UserName    string      `json:"username"`
-	RealmAccess RealmAccess `json:"realm_access"`
+	Active      bool                      `json:"active"`
+	ClientID    string                    `json:"client_id"`
+	Subject     string                    `json:"sub"`
+	Scope       string                    `json:"scope"`
+	IssuedTime  int64                     `json:"iat"`
+	ExpireTime  int64                     `json:"exp"`
+	UserName    string                    `json:"username"`
+	RealmAccess RealmAccess               `json:"realm_access"`
+	Audience    utils.StringOrStringSlice `json:"aud"`
+	// TODO: the above RealmAccess claim name is configurable in mappers settings of keycloak
 }
 
 func (client *OidcClient) IntrospectToken(token string) (*TokenInfo, error) {
@@ -130,12 +134,16 @@ func (client *OidcClient) IntrospectToken(token string) (*TokenInfo, error) {
 	if err != nil {
 		return nil, fmt.Errorf("unable to read response body: %v", err)
 	}
-	var responseBody TokenInfo
-	if err = json.Unmarshal(body, &responseBody); err != nil {
+	fmt.Println(string(body))
+	var tokenInfo TokenInfo
+	if err = json.Unmarshal(body, &tokenInfo); err != nil {
 		return nil, fmt.Errorf("could not unmarshal json response: %w", err)
 	}
-	if !responseBody.Active || responseBody.ExpireTime < time.Now().Unix() {
+	if !tokenInfo.Active || tokenInfo.ExpireTime < time.Now().Unix() {
 		return nil, fmt.Errorf("either token is expired or it is not active: %w", authservice.ErrForbidden)
 	}
-	return &responseBody, nil
+	if !slices.Contains(tokenInfo.Audience.List(), client.Oauth2Config.ClientID) {
+		return nil, fmt.Errorf("audience mismatch: %w", authservice.ErrForbidden)
+	}
+	return &tokenInfo, nil
 }
