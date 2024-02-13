@@ -326,14 +326,12 @@ func (server *Server) FinishChunkUpload(c *gin.Context) {
 	}
 	response, err := v1models.NewGetMediaResponse(uploadedMedia)
 	if err != nil {
-		if err != nil {
-			c.Error(
-				internalErrors.NewInternalServerError(
-					fmt.Errorf("[FinishChunkUpload] NewGetMediaResponse failed: %w", err),
-				),
-			)
-			return
-		}
+		c.Error(
+			internalErrors.NewInternalServerError(
+				fmt.Errorf("[FinishChunkUpload] NewGetMediaResponse failed: %w", err),
+			),
+		)
+		return
 	}
 	c.JSON(http.StatusOK, &v1models.FinishUploadResponse{
 		GetMediaResponse: response,

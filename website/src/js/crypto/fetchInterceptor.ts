@@ -1,3 +1,4 @@
+import { getNonceFromFileName } from "./utils";
 import { type IRequestRange, getRequestRange } from "../request";
 import {
   newChaCha20Decryptor,
@@ -5,21 +6,13 @@ import {
 } from "./chacha20Decryptor";
 
 function getNonceFromUrl(url: string): string {
-  let nonce = "";
-  if (url.indexOf("/v1/media/") !== -1) {
-    nonce = url.substring(url.indexOf("/v1/media/") + "/v1/media/".length);
-  }
-  if (url.indexOf("/v1/thumbnail/") !== -1) {
-    nonce = url.substring(
-      url.indexOf("/v1/thumbnail/") + "/v1/thumbnail/".length,
-    );
-  }
-  console.log("nonce", nonce);
-  if (nonce.length === 0) {
+  const fileName = new RegExp(`/v1/file/(?<fileName>[^/]+)(/thumbnail)?$`).exec(
+    url,
+  )?.groups?.fileName;
+  if (fileName === undefined) {
     throw new Error("invalid url");
   }
-  nonce = nonce.substring(0, 12);
-  return nonce;
+  return getNonceFromFileName(fileName);
 }
 
 // todo better name

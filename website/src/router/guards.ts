@@ -4,7 +4,7 @@ import { useUserInfoStore } from "@/piniaStore/userInfo";
 import { storeToRefs } from "pinia";
 import { userManager } from "@/js/auth";
 import type { NavigationGuard } from "vue-router";
-import { updateOrRegisterServiceWorker } from "@/js/serviceWorker/registeration";
+import { updateOrRegisterServiceWorker } from "@/js/serviceWorker/src/registeration";
 import { promiseTimeout } from "@/js/utils";
 import { aboutRoute, errorScreenRoute } from "./routesConstants";
 

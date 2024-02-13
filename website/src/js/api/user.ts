@@ -1,5 +1,6 @@
 import axios from "axios";
 
+// todo access token required?
 export async function revokeSession(): Promise<boolean> {
   const response = await axios.post("/v1/terminateSession");
   if (response.status !== 200) {

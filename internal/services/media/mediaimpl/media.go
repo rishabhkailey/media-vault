@@ -73,7 +73,3 @@ func (s *Service) GetByMediaIDs(ctx context.Context, query media.GetByMediaIDsQu
 func (s *Service) GetByMediaID(ctx context.Context, query media.GetByMediaIDQuery) (storemodels.MediaModel, error) {
 	return s.store.MediaStore.GetByMediaID(ctx, query.MediaID)
 }
-
-func (s *Service) GetUserMediaByID(ctx context.Context, query media.UserMediaByIDQuery) (media storemodels.MediaModel, err error) {
-	return
-}

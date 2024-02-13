@@ -25,6 +25,56 @@ const (
 
 var SUPPORTED_ORDER_BY = []string{MEDIA_API_ORDER_BY_MEDIA_CREATION_TIME, MEDIA_API_ORDER_BY_UPLOAD_TIME}
 
+func (server *Server) GetMedia(c *gin.Context) {
+	userID := c.GetString("user_id")
+	mediaID, err := strconv.ParseUint(c.Param("media_id"), 10, 64)
+	if err != nil {
+		c.Error(internalErrors.NewBadRequestError(
+			fmt.Errorf("[GetMedia] error parsing mediaID: %w", err),
+			"invalid media id",
+		))
+		return
+	}
+
+	belongsToUser, err := server.UserMediaBindings.CheckMediaBelongsToUser(c.Request.Context(), usermediabindings.CheckMediaBelongsToUserQuery{
+		MediaID: uint(mediaID),
+		UserID:  userID,
+	})
+	if err != nil {
+		c.Error((internalErrors.NewInternalServerError(err)))
+		return
+	}
+	if !belongsToUser {
+		c.Error((internalErrors.NewForbiddenError(err)))
+		return
+	}
+
+	media, err := server.Media.GetByMediaID(c.Request.Context(), media.GetByMediaIDQuery{
+		MediaID: uint(mediaID),
+	})
+	if err != nil {
+		c.Error(
+			internalErrors.NewInternalServerError(
+				fmt.Errorf("[GetMedia] db.GetByMediaID failed: %w", err),
+			),
+		)
+		return
+	}
+
+	response, err := v1models.NewGetMediaResponse(media)
+	if err != nil {
+		c.Error(
+			internalErrors.NewInternalServerError(
+				fmt.Errorf("[GetMedia] NewGetMediaResponse failed: %w", err),
+			),
+		)
+		return
+	}
+	c.JSON(http.StatusOK, &v1models.FinishUploadResponse{
+		GetMediaResponse: response,
+	})
+}
+
 // todo- ignore upload status failed media
 func (server *Server) MediaList(c *gin.Context) {
 	userID := c.GetString("user_id")
@@ -85,7 +135,7 @@ func (server *Server) MediaList(c *gin.Context) {
 	c.JSON(http.StatusOK, &response)
 }
 
-func (server *Server) GetMedia(c *gin.Context) {
+func (server *Server) GetMediaFile(c *gin.Context) {
 	fileName := c.Param("fileName")
 	if len(fileName) == 0 {
 		c.Error(
@@ -122,13 +172,13 @@ func (server *Server) GetMedia(c *gin.Context) {
 		return
 	}
 	if parsedRangeHeader == nil || len(parsedRangeHeader.Ranges) == 0 {
-		server.getMedia(c, fileName, mediaType)
+		server.getMediaFile(c, fileName, mediaType)
 		return
 	}
-	server.GetMediaRange(c, parsedRangeHeader.Ranges[0], fileName, mediaType) // todo support for multiple ranges
+	server.GetMediaFileRange(c, parsedRangeHeader.Ranges[0], fileName, mediaType) // todo support for multiple ranges
 }
 
-func (server *Server) getMedia(c *gin.Context, fileName string, contentType string) {
+func (server *Server) getMediaFile(c *gin.Context, fileName string, contentType string) {
 	// we can not set headers and status once we have started writting the response
 	c.Header("Content-Type", contentType)
 	c.Header("Connection", "keep-alive")
@@ -151,7 +201,7 @@ func (server *Server) getMedia(c *gin.Context, fileName string, contentType stri
 // todo browsers which don't support range requests
 // todo what to do on first request without range
 // https://vjs.zencdn.net/v/oceans.mp4 this return a 200 response with content length only?
-func (server *Server) GetMediaRange(c *gin.Context, r utils.Range, fileName string, contentType string) {
+func (server *Server) GetMediaFileRange(c *gin.Context, r utils.Range, fileName string, contentType string) {
 	c.Status(http.StatusPartialContent)
 	c.Header("Content-Type", contentType)
 	c.Header("Connection", "keep-alive")
@@ -172,7 +222,7 @@ func (server *Server) GetMediaRange(c *gin.Context, r utils.Range, fileName stri
 	}
 }
 
-func (server *Server) GetThumbnail(c *gin.Context) {
+func (server *Server) GetThumbnailFile(c *gin.Context) {
 	fileName := c.Param("fileName")
 	if len(fileName) == 0 {
 		c.AbortWithStatus(http.StatusBadRequest)
