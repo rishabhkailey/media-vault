@@ -1,6 +1,6 @@
 // eslint-disable-next-line no-undef
 module.exports = {
-  entry: "./serviceWorker.ts",
+  entry: "./src/serviceWorker.ts",
   output: {
     filename: "serviceWorker.js",
   },

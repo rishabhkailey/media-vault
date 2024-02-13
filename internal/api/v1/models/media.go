@@ -2,7 +2,6 @@ package v1models
 
 import (
 	"fmt"
-	"net/url"
 	"time"
 
 	"github.com/rishabhkailey/media-service/internal/services/media"
@@ -63,7 +62,7 @@ func NewGetMediaListResponse(mediaList []storemodels.MediaModel) (result GetMedi
 }
 
 func NewGetMediaResponse(media storemodels.MediaModel) (item GetMediaResponse, err error) {
-	item.MediaUrl, err = parseMediaURL(media.FileName, false)
+	item.MediaUrl = parseMediaURL(media.FileName)
 	if err != nil {
 		return
 	}
@@ -76,20 +75,18 @@ func NewGetMediaResponse(media storemodels.MediaModel) (item GetMediaResponse, e
 	item.Thumbnail = media.Metadata.Thumbnail
 	item.ThumbnailAspectRatio = media.Metadata.ThumbnailAspectRatio
 	if media.Metadata.Thumbnail {
-		item.ThumbnailUrl, err = parseMediaURL(media.FileName, true)
-		if err != nil {
-			return
-		}
+		item.ThumbnailUrl = parseMediaThumbnailUrl(media.FileName)
 	}
 	return
 }
 
-func parseMediaURL(fileName string, thumbnail bool) (string, error) {
-	path := "/v1/media"
-	if thumbnail {
-		path = "/v1/thumbnail"
-	}
-	return url.JoinPath(path, fileName)
+// todo add base url?
+func parseMediaThumbnailUrl(fileName string) string {
+	return fmt.Sprintf("/v1/file/%s/thumbnail", fileName)
+}
+
+func parseMediaURL(fileName string) string {
+	return fmt.Sprintf("/v1/file/%s", fileName)
 }
 
 // type DeleteMediaRequest struct {

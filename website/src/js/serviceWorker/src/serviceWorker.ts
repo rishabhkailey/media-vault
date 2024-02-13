@@ -1,5 +1,5 @@
-import { EncryptionKeyChannelWorker } from "../channels/encryptionKey";
-import { internalFetch } from "../crypto/fetchInterceptor";
+import { EncryptionKeyChannelWorker } from "../../channels/encryptionKey";
+import { internalFetch } from "../../crypto/fetchInterceptor";
 // stream saver worker code + our custom code for decryption
 
 declare let self: ServiceWorkerGlobalScope;
@@ -97,11 +97,13 @@ self.onfetch = (event) => {
   // ****custom code start****
   // *************************
   const urlObj = new URL(url);
+  console.log(urlObj.pathname);
+  console.log(new RegExp(`/v1/file/[^/]+(/thumbnail)?$`).test(urlObj.pathname));
   if (
-    event?.request?.method === "GET" &&
-    typeof event?.request?.url === "string" &&
-    (urlObj.pathname.indexOf("/v1/media/") !== -1 ||
-      urlObj.pathname.indexOf("/v1/thumbnail/") !== -1)
+    event.request.method === "GET" &&
+    new RegExp(`/v1/file/[^/]+(/thumbnail)?$`).test(urlObj.pathname)
+    // (urlObj.pathname.indexOf("/v1/media/") !== -1 ||
+    //   urlObj.pathname.indexOf("/v1/thumbnail/") !== -1)
   ) {
     return event.respondWith(
       internalFetch(

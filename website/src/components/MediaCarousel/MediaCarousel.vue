@@ -6,14 +6,20 @@ import { onMounted, onUpdated, ref } from "vue";
 import { computed } from "vue";
 import { MEDIA_CAROUSEL_HEADER_Z_INDEX } from "@/js/constants/z-index";
 
-const props = defineProps<{
-  index: number;
-  mediaList: Array<Media>;
-  loadMoreMedia: LoadMoreMedia;
-  allMediaLoaded: boolean;
-  routeName: string;
-  animationOriginSelector: string;
-}>();
+const props = withDefaults(
+  defineProps<{
+    index: number;
+    mediaList: Array<Media>;
+    loadMoreMedia: LoadMoreMedia;
+    allMediaLoaded: boolean;
+    routeName: string;
+    animationOriginSelector: string;
+    loading?: boolean;
+  }>(),
+  {
+    loading: false,
+  },
+);
 
 const emits = defineEmits<{
   (e: "close"): void;
@@ -25,13 +31,10 @@ const emits = defineEmits<{
 const media = computed<Media>(() => {
   return props.mediaList[props.index];
 });
-
 const rootContainer = ref<HTMLElement | null>(null);
 
 function loadMoreMediaIfRequired() {
   console.log("loadMoreMediaIfRequired");
-  console.log(props.index > props.mediaList.length - 2);
-  console.log(!props.allMediaLoaded);
   if (props.index > props.mediaList.length - 2 && !props.allMediaLoaded) {
     props.loadMoreMedia().catch((err) => {
       appendError(
@@ -287,7 +290,14 @@ async function close() {
       class="ma-0 pa-0 d-flex flex-row flex-grow-1 d-flex flex-column justify-center align-center"
       style="height: 100%; width: 100%"
     >
+      <v-progress-circular
+        v-if="props.loading"
+        indeterminate
+        :size="80"
+        :width="5"
+      ></v-progress-circular>
       <v-window
+        v-else
         style="height: 100%; width: 100%"
         :model-value="index"
         @update:model-value="

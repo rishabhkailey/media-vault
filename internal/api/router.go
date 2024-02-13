@@ -46,6 +46,7 @@ func NewRouter(v1ApiServer *v1Api.Server, config config.Config) (*gin.Engine, er
 			v1UserProtected.POST("/finishChunkUpload", v1ApiServer.FinishChunkUpload)
 			v1UserProtected.POST("/uploadThumbnail", v1ApiServer.UploadThumbnail)
 			v1UserProtected.GET("/mediaList", v1ApiServer.MediaList)
+			v1UserProtected.GET("/media/:media_id", v1ApiServer.GetMedia)
 			v1UserProtected.GET("/search", v1ApiServer.Search)
 			v1UserProtected.DELETE("/media/:media_id", v1ApiServer.DeleteMedia)
 			v1UserProtected.POST("/album", v1ApiServer.CreateAlbum)
@@ -64,8 +65,8 @@ func NewRouter(v1ApiServer *v1Api.Server, config config.Config) (*gin.Engine, er
 		v1FileAccessProtected := v1.Group("/")
 		v1FileAccessProtected.Use(v1ApiServer.SessionBasedMediaFileAuthMiddleware)
 		{
-			v1FileAccessProtected.GET("/media/:fileName", v1ApiServer.GetMedia)
-			v1FileAccessProtected.GET("/thumbnail/:fileName", v1ApiServer.GetThumbnail)
+			v1FileAccessProtected.GET("/file/:fileName", v1ApiServer.GetMediaFile)
+			v1FileAccessProtected.GET("/file/:fileName/thumbnail", v1ApiServer.GetThumbnailFile)
 		}
 
 		// bearer token only

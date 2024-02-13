@@ -2,6 +2,7 @@ import axios, { type AxiosResponse } from "axios";
 import { Chacha20 } from "ts-chacha20";
 import { getFileType } from "@/js/utils";
 import { generateThumbnailAsArrayBuffer } from "@/js/thumbnail/thumbnail";
+import { getNonceFromFileName } from "../crypto/utils";
 
 type ProgressCallback = (percentage: number) => void;
 // todo update promise<any> to request info or something
@@ -20,9 +21,8 @@ export function chunkUpload(
 ): Promise<Media> {
   return new Promise((resolve, reject) => {
     initChunkUpload(file, bearerToken, controller)
-      .then((chunkRequestInfo) => {
-        // const password = "01234567890123456789012345678901";
-        const nonce = chunkRequestInfo.fileName.substring(0, 12);
+      .then((chunkRequestInfo): void => {
+        const nonce = getNonceFromFileName(chunkRequestInfo.fileName);
         console.log("upload nonce", nonce);
         const textEncoder = new TextEncoder();
         const encryptor = new Chacha20(
