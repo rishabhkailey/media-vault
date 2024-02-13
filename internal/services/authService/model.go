@@ -41,3 +41,6 @@ var ErrForbidden = errors.New("forbidden")
 // const AdminScope = "media-service/admin"
 const UserScope = "user"
 const AdminScope = "admin"
+
+const UserRole = "media-vault/user"
+const AdminRole = "media-vault/admin"

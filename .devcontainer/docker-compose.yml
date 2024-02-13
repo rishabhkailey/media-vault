@@ -6,17 +6,33 @@ volumes:
   minio-data:
   meilisearch-data:
 
+
 services:
   app:
-    build: 
+    build:
       context: .
       dockerfile: Dockerfile
     env_file:
       - .env
     volumes:
       - ../..:/workspaces:cached
+    container_name: media-service_devcontainer-app-1
     command: sleep infinity
-    network_mode: host
+    # network_mode: host
+    # all containers port in network service:app will be handeled here
+    ports:
+    - 8080:8080 # auth service
+    - 8081:8081 # keycloak
+    - 9090:9090 # minio
+    
+  auth-service:
+    image: ghcr.io/rishabhkailey/authservice:intial-setup
+    restart: unless-stopped
+    env_file:
+      - .env
+    # ports mapping will not work here due to network_mode
+    # add port mapping for this service in app service
+    network_mode: "service:app"
 
   postgres:
     image: postgres:15.1
@@ -25,8 +41,15 @@ services:
       - postgres-data:/var/lib/postgresql/data
     env_file:
       - .env
-    network_mode: host
-      
+    # network_mode: host
+    # network_mode: "service:app"
+    healthcheck:
+      test: [ "CMD-SHELL", "pg_isready", "-d", "db_prod" ]
+      interval: 30s
+      timeout: 60s
+      retries: 5
+      start_period: 80s
+
   redis:
     image: bitnami/redis:7.0.5
     restart: unless-stopped
@@ -34,8 +57,9 @@ services:
       - .env
     volumes:
       - redis-data:/bitnami'
-    network_mode: host
-  
+    # network_mode: host
+    # network_mode: "service:app"
+
   # bitnami minio issues with TLS
   # minio:
   #   image: bitnami/minio:2022.12.12-debian-11-r7
@@ -60,52 +84,60 @@ services:
     volumes:
       - minio-data:/data
       - ./certs:/root/.minio/certs
-    network_mode: host
+    # ports:
+    #   - 9090:9090
+    # network_mode: host
+    network_mode: "service:app"
 
   meilisearch:
     image: getmeili/meilisearch:v1.1
     restart: unless-stopped
     env_file:
       - .env
-    network_mode: host
+    ports:
+      - 7700:7700
     volumes:
       - meilisearch-data:/meili_data
-  
-  auth-service:
-    image: ghcr.io/rishabhkailey/authservice:intial-setup
-    restart: unless-stopped
+    # network_mode: host
+    # network_mode: "service:app"
+
+  keycloak:
+    image: quay.io/keycloak/keycloak:18.0.0 
+    command: ["start-dev", "--spi-theme-static-max-age=-1", "--spi-theme-cache-themes=false", "--spi-theme-cache-templates=false"]
     env_file:
       - .env
-    network_mode: host
-  
-  hydra-sql-migration:
-    image: oryd/hydra:v1.10.6
-    env_file:
-      - .env.hydra
-    # todo get dsn from env
-    # command: migrate sql --yes $$DSN
-    command: migrate sql --yes 'postgres://postgres:postgres@localhost:5432/postgres?sslmode=disable'
-    network_mode: host
-    depends_on:
-      postgres:
-        condition: service_completed_successfully
-  
-  hydra:
-    image: oryd/hydra:v1.10.6
-    network_mode: host
-    command: serve all
-    env_file:
-      - .env.hydra
-    depends_on:
-      hydra-sql-migration:
-        condition: service_completed_successfully
-    # ports 4444, 4445
+    network_mode: "service:app"
 
-  hydra-login-consent:
-    image: oryd/hydra-login-consent-node:v1.10.6
-    network_mode: host
-    env_file:
-      - .env.hydra
-    # ports 3000
 
-  
+    # hydra-sql-migration:
+    #   image: oryd/hydra:v1.10.6
+    #   env_file:
+    #     - .env.hydra
+    #   # todo get dsn from env
+    #   # command: migrate sql --yes $$DSN
+    #   command: migrate sql --yes 'postgres://postgres:postgres@localhost:5432/postgres?sslmode=disable'
+    #   network_mode: host
+    #   depends_on:
+    #     postgres:
+    #       condition: service_healthy
+
+    # hydra:
+    #   image: oryd/hydra:v1.10.6
+    #   network_mode: host
+    #   command: serve all
+    #   env_file:
+    #     - .env.hydra
+    #   depends_on:
+    #     hydra-sql-migration:
+    #       condition: service_completed_successfully
+    #   # ports 4444, 4445
+
+    # hydra-login-consent:
+    #   image: oryd/hydra-login-consent-node:v1.10.6
+    #   network_mode: host
+    #   env_file:
+    #     - .env.hydra
+    #   # ports 3000
+
+# todo
+# https://grafana.com/blog/2023/08/29/grafana-pyroscope-1.0-release-continuous-profiling/

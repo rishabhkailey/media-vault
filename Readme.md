@@ -41,6 +41,18 @@ scopes
 * anonymous
 
 
+### Keycloak setup
+* create following realm roles
+  * `media-vault/user`
+* create a test user and assign the above role
+* create a client with access type public for the spa website
+  * In client > mappers make sure to add `realm roles`
+  * update the client id accordingly in website/.env.local
+* create a client with access type confidential for media service backend
+  * In client > mappers make sure to add `realm roles`
+  * update client id and secret in the config/
+
+
 moov atom
 ```bash
 # check position of moov
