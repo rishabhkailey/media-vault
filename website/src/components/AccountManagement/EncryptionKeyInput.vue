@@ -48,6 +48,7 @@ function submitHandler() {
           >
             <v-row class="px-4 py-2">
               <v-text-field
+                data-test-id="encryption-key-input"
                 class="input-fields"
                 v-model="encryptionKey"
                 label="encryption key"
@@ -82,6 +83,7 @@ function submitHandler() {
                 type="submit"
                 color="primary"
                 prepend-icon="mdi-lock-open-outline"
+                data-test-id="encryption-key-submit-button"
               >
                 Unlock
               </v-btn>

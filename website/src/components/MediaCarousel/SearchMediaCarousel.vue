@@ -2,9 +2,15 @@
 import { useSearchStore } from "@/piniaStore/search";
 import MediaCarousel from "@/components/MediaCarousel/MediaCarousel.vue";
 import { storeToRefs } from "pinia";
-import { ref } from "vue";
+import { onBeforeMount, ref } from "vue";
 import { useRoute, useRouter } from "vue-router";
 import { useAuthStore } from "@/piniaStore/auth";
+import {
+  errorScreenRoute,
+  searchMediaPreviewRoute,
+  searchRoute,
+} from "@/router/routesConstants";
+import { getQueryParamNumberValue, getQueryParamStringValue } from "@/js/utils";
 
 const router = useRouter();
 const route = useRoute();
@@ -14,53 +20,32 @@ const index = ref(0);
 const mediaID = ref(0);
 const query = ref("");
 
-initParams();
 function initParams() {
   // media_id
-  let mediaIdParam = Array.isArray(route.params.media_id)
-    ? route.params.media_id[0]
-    : route.params.media_id;
-  if (Number.isNaN(mediaIdParam)) {
-    router.replace({
-      name: "errorscreen",
-      query: {
-        title: "Invalid Media ID",
-        message: `got media id "${mediaIdParam}", expected a number.`,
-      },
-    });
-    return;
+  let mediaIdParam = getQueryParamNumberValue(route.params, "media_id");
+  if (mediaIdParam === undefined) {
+    throw new Error("invalid media id param");
   }
   mediaID.value = Number(mediaIdParam);
 
+  // media index
+  let indexParam = getQueryParamNumberValue(route.params, "index");
+  if (indexParam === undefined) {
+    throw new Error("invalid index param");
+  }
+  index.value = indexParam;
+
   // query
-  let queryParam = Array.isArray(route.params.query)
-    ? route.params.query[0]
-    : route.params.query;
-  if (queryParam.length === 0) {
-    router.replace({
-      name: "errorscreen",
-      query: {
-        title: "Invalid Search Query",
-        message: `got search query "${queryParam}", expected a number.`,
-      },
-    });
-    return;
+  let queryParam = getQueryParamStringValue(route.params, "query");
+  if (queryParam === undefined || queryParam.length === 0) {
+    throw new Error("invalid search param");
   }
   query.value = queryParam;
-
-  // media index
-  let indexParam = Array.isArray(route.params.index)
-    ? route.params.index[0]
-    : route.params.index;
-  if (!Number.isNaN(indexParam)) {
-    index.value = Number(indexParam);
-  }
 }
 
 let allMediaLoaded = ref(true);
 let mediaList = ref<Array<Media>>([]);
 let loadMoreMedia: LoadMoreMedia;
-initMediaPreviewRefsAndStore();
 
 function initMediaPreviewRefsAndStore() {
   const searchStore = useSearchStore();
@@ -89,15 +74,29 @@ function initSingleMediaPreviewRefsAndStore() {
 function updateIndex(newIndex: number) {
   console.log(newIndex);
   index.value = newIndex;
-  router.push({
-    name: `SearchMediaPreview`,
-    params: {
-      index: newIndex,
-      media_id: mediaList.value[newIndex].id,
-      query: query.value,
-    },
-  });
+  router.push(
+    searchMediaPreviewRoute(
+      newIndex,
+      mediaList.value[newIndex].id,
+      query.value,
+    ),
+  );
 }
+
+onBeforeMount(() => {
+  try {
+    initParams();
+    initMediaPreviewRefsAndStore();
+  } catch (err) {
+    console.log(err);
+    router.push(
+      errorScreenRoute(
+        "AlbumMediaCarousel component intialization failed",
+        `error message = "${err}"`,
+      ),
+    );
+  }
+});
 </script>
 <template>
   <MediaCarousel
@@ -110,12 +109,7 @@ function updateIndex(newIndex: number) {
     :animation-origin-selector="`#thumbnail_${mediaList[index].id}`"
     @close="
       () => {
-        router.push({
-          name: `search`,
-          params: {
-            query: query,
-          },
-        });
+        router.push(searchRoute(query));
       }
     "
   />

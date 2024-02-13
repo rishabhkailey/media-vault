@@ -5,12 +5,14 @@ import FloatingWindow from "@/components/Modals/FloatingWindow.vue";
 import { useAuthStore } from "@/piniaStore/auth";
 import { userManager } from "@/js/auth";
 import { signinUsingUserManager } from "@/js/auth";
-import axios from "axios";
 import { useDisplay } from "vuetify";
 import { useRouter } from "vue-router";
 import { storeToRefs } from "pinia";
 import MobileAppBar from "./Size/MobileAppBar.vue";
 import DesktopAppBar from "./Size/DesktopAppBar.vue";
+import { logOut } from "@/components/AccountManagement/utils";
+import { searchRoute } from "@/router/routesConstants";
+import { UPLOAD_WINDOW_Z_INDEX } from "@/js/constants/z-index";
 
 const router = useRouter();
 const display = useDisplay();
@@ -36,25 +38,15 @@ const { authenticated, userName, email } = storeToRefs(authStore);
 const selectedFiles = ref<Array<File>>([]);
 const FileUploadDialogModel = ref(false);
 
-const logOut = async () => {
-  loading.value = true;
-  try {
-    await userManager.revokeTokens(["access_token", "refresh_token"]);
-    authStore.reset();
-    await userManager.removeUser();
-    let response = await axios.post("/v1/terminateSession");
-    if (response.status !== 200) {
-      console.log("terminate session failed");
-    }
-  } catch (err) {
-    console.log("logout failed ", err);
-  } finally {
-    loading.value = false;
-  }
-};
 const logIn = () => {
   signinUsingUserManager(userManager, false);
 };
+function onLogOutClick() {
+  loading.value = true;
+  logOut().finally(() => {
+    loading.value = false;
+  });
+}
 const uploadFiles = (files: Array<File>) => {
   selectedFiles.value = files;
   FileUploadDialogModel.value = true;
@@ -66,12 +58,7 @@ const searchSubmit = (query: string) => {
   if (search.value.trim().length === 0) {
     return;
   }
-  router.push({
-    name: `search`,
-    params: {
-      query: query,
-    },
-  });
+  router.push(searchRoute(query));
 };
 </script>
 
@@ -79,7 +66,7 @@ const searchSubmit = (query: string) => {
   <v-row v-if="smallDisplay">
     <MobileAppBar
       :navigation-bar="props.sidebarOpen"
-      :search-query="search"
+      v-model:search-query="search"
       :authenticated="authenticated"
       :email="email"
       :user-name="userName"
@@ -88,7 +75,7 @@ const searchSubmit = (query: string) => {
       @select-files-for-upload="(files) => uploadFiles(files)"
       @update:navigation-bar="(value) => emits('update:sidebarOpen', value)"
       @login="logIn"
-      @logout="logOut"
+      @logout="onLogOutClick"
     />
   </v-row>
   <v-row v-else>
@@ -102,12 +89,17 @@ const searchSubmit = (query: string) => {
       @search-submit="(query) => searchSubmit(query)"
       @select-files-for-upload="(files) => uploadFiles(files)"
       @login="logIn"
-      @logout="logOut"
+      @logout="onLogOutClick"
     />
   </v-row>
   <!-- todo move this to somewhere else? -->
   <!-- may be to selectButtom component? -->
-  <FloatingWindow v-model="FileUploadDialogModel" :bottom="10" :right="10">
+  <FloatingWindow
+    :z-index="UPLOAD_WINDOW_Z_INDEX"
+    v-model="FileUploadDialogModel"
+    :bottom="10"
+    :right="10"
+  >
     <FileUploadDialog
       :model-value="true"
       :files="selectedFiles"

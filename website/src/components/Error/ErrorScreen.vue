@@ -1,5 +1,6 @@
 <script setup lang="ts">
 import { getQueryParamStringValue } from "@/js/utils";
+import { homeRoute } from "@/router/routesConstants";
 import { ref, onMounted } from "vue";
 import { useRoute } from "vue-router";
 
@@ -10,19 +11,12 @@ const message = ref("");
 const returnUri = ref("");
 
 onMounted(() => {
-  subTitle.value = getQueryParamStringValue(
-    route.query,
-    "title",
-    "Received invalid error title from server",
-  );
+  subTitle.value =
+    getQueryParamStringValue(route.query, "title") ?? "unknown error";
 
-  message.value = getQueryParamStringValue(
-    route.query,
-    "message",
-    "Received invalid error message from server",
-  );
+  message.value = getQueryParamStringValue(route.query, "message") ?? "";
 
-  returnUri.value = getQueryParamStringValue(route.query, "return_uri", "");
+  returnUri.value = getQueryParamStringValue(route.query, "return_uri") ?? "";
 });
 </script>
 
@@ -37,13 +31,7 @@ onMounted(() => {
     :text="message"
   >
     <v-card-actions>
-      <v-btn
-        prepend-icon="mdi-home"
-        :to="{
-          name: 'Home',
-        }"
-        >go home</v-btn
-      >
+      <v-btn prepend-icon="mdi-home" :to="homeRoute()">go home</v-btn>
       <v-btn v-if="returnUri.length > 0" prepend-icon="" :to="returnUri"
         >Return to Last Page</v-btn
       >

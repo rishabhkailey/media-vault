@@ -98,7 +98,7 @@ app.use(VueVideoPlayer);
 app.use(VueAxios, axios);
 
 // router depends on pinia and userMananger
-import router from "./router";
+import { router } from "./router";
 app.use(router);
 
 app.mount("#app");

@@ -6,8 +6,7 @@ import PKCEVue from "@/views/PKCE.vue";
 import TestView from "@/views/TestView.vue";
 import SearchView from "@/views/SearchView.vue";
 import HomePageVue from "@/views/HomePage.vue";
-import AlbumsList from "@/components/Album/AlbumsList.vue";
-import AlbumMediaGrid from "@/components/Album/AlbumMediaGrid.vue";
+import AlbumsGrid from "@/components/Album/AlbumsGrid.vue";
 import AboutPage from "@/views/AboutPage.vue";
 import InitialSetup from "@/views/InitialSetup.vue";
 import EnterEncryptionKey from "@/views/EnterEncryptionKey.vue";
@@ -15,8 +14,25 @@ import UserMediaCarousel from "@/components/MediaCarousel/UserMediaCarousel.vue"
 import SearchMediaCarousel from "@/components/MediaCarousel/SearchMediaCarousel.vue";
 import AlbumMediaCarousel from "@/components/MediaCarousel/AlbumMediaCarousel.vue";
 import { encryptionKeyGaurd, loginGaurd, serviceWrokerGaurd } from "./guards";
+import {
+  ABOUT_ROUTE_NAME,
+  ALBUMS_ROUTE_NAME,
+  ALBUM_MEDIA_PREVIEW_ROUTE_NAME,
+  ALBUM_ROUTE_NAME,
+  ENTER_ENCRYPTION_KEY_ROUTE_NAME,
+  ERROR_SCREEN_ROUTE_NAME,
+  HOME_ROUTE_NAME,
+  INITIAL_SETUP_ROUTE_NAME,
+  MEDIA_PREVIEW_ROUTE_NAME,
+  NOT_FOUND_ROUTE_NAME,
+  PKCE_ROUTE_NAME,
+  SEARCH_MEDIA_PREVIEW_ROUTE_NAME,
+  SEARCH_ROUTE_NAME,
+} from "./routesConstants";
+import AlbumMedia from "@/views/AlbumMedia.vue";
+
 // todo pages without redirect from vue should be lazy loaded on external/server redirect
-const router = createRouter({
+export const router = createRouter({
   history: createWebHistory(import.meta.env.BASE_URL),
   scrollBehavior(to, from, savedPosition) {
     if (savedPosition !== null) {
@@ -28,7 +44,7 @@ const router = createRouter({
   routes: [
     {
       path: "/:pathMatch(.*)*",
-      name: "NotFound",
+      name: NOT_FOUND_ROUTE_NAME,
       component: NotFoundPage,
     },
     {
@@ -40,11 +56,11 @@ const router = createRouter({
         {
           path: "",
           component: HomePageVue,
-          name: "Home",
+          name: HOME_ROUTE_NAME,
           children: [
             {
               path: "/media/:media_id/index/:index",
-              name: "MediaPreview",
+              name: MEDIA_PREVIEW_ROUTE_NAME,
               component: UserMediaCarousel,
             },
           ],
@@ -52,28 +68,28 @@ const router = createRouter({
         {
           path: "search/:query",
           component: SearchView,
-          name: "search",
+          name: SEARCH_ROUTE_NAME,
           children: [
             {
               path: "/search/:query/media/:media_id/index/:index",
-              name: "SearchMediaPreview",
+              name: SEARCH_MEDIA_PREVIEW_ROUTE_NAME,
               component: SearchMediaCarousel,
             },
           ],
         },
         {
           path: "/albums",
-          component: AlbumsList,
-          name: "Albums",
+          component: AlbumsGrid,
+          name: ALBUMS_ROUTE_NAME,
         },
         {
           path: "/album/:album_id",
-          component: AlbumMediaGrid,
-          name: "Album",
+          component: AlbumMedia,
+          name: ALBUM_ROUTE_NAME,
           children: [
             {
               path: "/album/:album_id/media/:media_id/index/:index",
-              name: "AlbumMediaPreview",
+              name: ALBUM_MEDIA_PREVIEW_ROUTE_NAME,
               component: AlbumMediaCarousel,
             },
           ],
@@ -82,28 +98,28 @@ const router = createRouter({
     },
     {
       path: "/error",
-      name: "errorscreen",
+      name: ERROR_SCREEN_ROUTE_NAME,
       component: ErrorScreenView,
     },
     {
       path: "/encryption-key",
-      name: "encryptionKey",
+      name: ENTER_ENCRYPTION_KEY_ROUTE_NAME,
       component: EnterEncryptionKey,
       beforeEnter: [loginGaurd],
     },
     {
       path: "/about",
-      name: "about",
+      name: ABOUT_ROUTE_NAME,
       component: AboutPage,
     },
     {
       path: "/initial-setup",
-      name: "initialSetup",
+      name: INITIAL_SETUP_ROUTE_NAME,
       component: InitialSetup,
     },
     {
       path: "/pkce",
-      name: "pkce",
+      name: PKCE_ROUTE_NAME,
       component: PKCEVue,
     },
     {
@@ -113,5 +129,3 @@ const router = createRouter({
     },
   ],
 });
-
-export default router;

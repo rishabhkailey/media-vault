@@ -6,6 +6,7 @@ import { storeToRefs } from "pinia";
 import SelectWrapper from "@/components/SelectWrapper/SelectWrapper.vue";
 import createJustifiedLayout from "justified-layout";
 import { useErrorsStore } from "@/piniaStore/errors";
+import MediaThumbnail from "./MediaThumbnail.vue";
 // interface doesn't work https://github.com/vuejs/core/issues/4294
 // const props = defineProps<DailyMedia>();
 const props = defineProps<{
@@ -15,7 +16,6 @@ const props = defineProps<{
   year: number;
   indexMediaList: Array<IndexMedia>;
   loadAllMediaUntil: (date: Date) => Promise<any>;
-  // todo load all day media function
 }>();
 
 const emits = defineEmits<{
@@ -85,7 +85,10 @@ watch(
     let aspectRatios: Array<number> = [];
     console.log(newIndexMediaList);
     for (let i = startIndex; i < newIndexMediaList.length; i++) {
-      console.log(i);
+      // for media with no thumbnail
+      if (newIndexMediaList[i].media.thumbnail_aspect_ratio == 0) {
+        newIndexMediaList[i].media.thumbnail_aspect_ratio = 1;
+      }
       aspectRatios.push(newIndexMediaList[i].media.thumbnail_aspect_ratio);
     }
     const geometry = createJustifiedLayout(aspectRatios, {
@@ -157,11 +160,19 @@ async function selectDayMedia(value: boolean) {
         :select-on-content-click="selectedMediaIDsCount > 0"
       >
         <!-- todo unknown date -->
-        {{
-          `${daysShort[props.day]}, ${monthShort[props.month]} ${props.date}, ${
-            props.year
-          }`
-        }}
+        <span
+          style="
+            font-size: 0.875rem;
+            font-weight: 500;
+            letter-spacing: 0.0175em;
+          "
+        >
+          {{
+            `${daysShort[props.day]}, ${monthShort[props.month]} ${
+              props.date
+            }, ${props.year}`
+          }}
+        </span>
       </SelectWrapper>
     </v-card-subtitle>
     <div
@@ -200,17 +211,15 @@ async function selectDayMedia(value: boolean) {
           "
           selectIconSize="large"
         >
-          <v-img
-            :id="`thumbnail_${props.indexMediaList[index].media.id}`"
-            :src="props.indexMediaList[index].media.thumbnail_url"
-            :width="width"
-            :height="height"
-            transition="scale"
+          <MediaThumbnail
             :class="{
               'shrink-transition': true,
               shrink: getSelection(props.indexMediaList[index].media.id),
             }"
-            cover
+            :media="props.indexMediaList[index].media"
+            :width="width"
+            :height="height"
+            transition="scale"
           />
         </SelectWrapper>
       </div>

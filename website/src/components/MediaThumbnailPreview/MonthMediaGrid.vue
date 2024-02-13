@@ -27,8 +27,10 @@ const dailyMediaList = computed<Array<DailyMedia>>(() =>
 </script>
 
 <template>
-  <v-card class="bg-secondary-background">
-    <v-card-title>{{ `${monthLong[props.month]} ${props.year}` }}</v-card-title>
+  <v-card class="bg-secondary-background mt-2">
+    <v-card-title style="font-size: 1.75rem; font-weight: 400">
+      {{ `${monthLong[props.month]} ${props.year}` }}
+    </v-card-title>
     <v-divider class="mb-2" :thickness="2" />
     <div class="d-flex flex-row flex-wrap">
       <DayMediaGrid

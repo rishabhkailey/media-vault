@@ -13,7 +13,8 @@ const props = defineProps<{
 const { mobile: mobileDevice } = useDisplay();
 const allwaysShowSelectButton = computed<boolean>(() => {
   return (
-    props.alwaysShowSelectButton || (mobileDevice.value && props.alwaysShowSelectOnMobile)
+    props.alwaysShowSelectButton ||
+    (mobileDevice.value && props.alwaysShowSelectOnMobile)
   );
 });
 

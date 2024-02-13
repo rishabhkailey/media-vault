@@ -1,4 +1,5 @@
 <script setup lang="ts">
+import { HOME_ROUTE_NAME } from "@/router/routesConstants";
 import { useRouter } from "vue-router";
 
 const props = withDefaults(
@@ -8,8 +9,8 @@ const props = withDefaults(
   }>(),
   {
     redirect: false,
-    redirectComponentName: "Home",
-  }
+    redirectComponentName: HOME_ROUTE_NAME,
+  },
 );
 
 const emits = defineEmits<{
@@ -29,6 +30,14 @@ const router = useRouter();
 </script>
 <template>
   <v-btn @click.stop="clickHandler">
-    <img src="/src/assets/logo.svg" style="height: 30px" /> placeholder
+    <span
+      style="
+        font-size: 20px;
+        text-transform: capitalize;
+        text-shadow: 7px 7px 2px #0f0f0f;
+      "
+    >
+      <span>Media </span><span>Vault</span>
+    </span>
   </v-btn>
 </template>

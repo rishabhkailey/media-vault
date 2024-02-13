@@ -6,6 +6,7 @@ import (
 
 	lru "github.com/hashicorp/golang-lru/v2"
 	mediastorage "github.com/rishabhkailey/media-service/internal/services/mediaStorage"
+	"github.com/sirupsen/logrus"
 )
 
 type FileCacheWrapper struct {
@@ -33,19 +34,22 @@ func (f FileCacheWrapper) Stat() (stat fs.FileInfo, err error) {
 var _ mediastorage.File = (*FileCacheWrapper)(nil)
 
 type StoreCacheWrapper struct {
-	cache *lru.ARCCache[string, FileCacheWrapper]
+	cache *lru.Cache[string, FileCacheWrapper]
 	store store
 }
 
 func NewStoreCacheWrapper(store store) (*StoreCacheWrapper, error) {
 	// todo object size/memory usage?
-	arcCache, err := lru.NewARC[string, FileCacheWrapper](1000)
+	cache, err := lru.NewWithEvict[string, FileCacheWrapper](1000, func(key string, value FileCacheWrapper) {
+		err := value.File.Close()
+		logrus.Warnf("[cache.evict] failed to close the file it may leads to memory leak: %v", err)
+	})
 	if err != nil {
 		return nil, err
 	}
 	return &StoreCacheWrapper{
 		store: store,
-		cache: arcCache,
+		cache: cache,
 	}, err
 }
 

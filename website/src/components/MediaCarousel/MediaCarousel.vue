@@ -2,8 +2,9 @@
 import MediaViewer from "@/components/MediaViewer/MediaViewer.vue";
 import { download } from "@/js/encryptedFileDownload";
 import { useErrorsStore } from "@/piniaStore/errors";
-import { onMounted, ref } from "vue";
+import { onMounted, onUpdated, ref } from "vue";
 import { computed } from "vue";
+import { MEDIA_CAROUSEL_HEADER_Z_INDEX } from "@/js/constants/z-index";
 
 const props = defineProps<{
   index: number;
@@ -26,6 +27,21 @@ const media = computed<Media>(() => {
 });
 
 const rootContainer = ref<HTMLElement | null>(null);
+
+function loadMoreMediaIfRequired() {
+  console.log("loadMoreMediaIfRequired");
+  console.log(props.index > props.mediaList.length - 2);
+  console.log(!props.allMediaLoaded);
+  if (props.index > props.mediaList.length - 2 && !props.allMediaLoaded) {
+    props.loadMoreMedia().catch((err) => {
+      appendError(
+        "Failed to load more media please refresh the page if facing any issues",
+        `error - ${err}`,
+        10,
+      );
+    });
+  }
+}
 
 function scaleWindowToThumbnailSizeWithoutCrop(
   window: DOMRect,
@@ -210,6 +226,11 @@ function downloadMedia(media: Media) {
 onMounted(() => {
   startBackgroundOpenAnimation();
   startImageOpenAnimation();
+  loadMoreMediaIfRequired();
+});
+
+onUpdated(() => {
+  loadMoreMediaIfRequired();
 });
 
 async function close() {
@@ -243,14 +264,7 @@ async function close() {
   >
     <!-- header -->
     <div
-      class="pt-1 pr-4 d-flex justify-end align-center background2 final-background3"
-      style="
-        box-shadow: 0px 5px 15px rgb(50, 50, 50, 0.3);
-        position: absolute;
-        width: 100vw;
-        top: 0;
-        z-index: 5000;
-      "
+      class="pt-1 pr-4 d-flex justify-end align-center media-carousel-header"
     >
       <v-btn
         icon="mdi-download"
@@ -276,7 +290,11 @@ async function close() {
       <v-window
         style="height: 100%; width: 100%"
         :model-value="index"
-        @update:model-value="(value) => emits('update:index', value)"
+        @update:model-value="
+          (value) => {
+            emits('update:index', value);
+          }
+        "
         :continuous="false"
         :show-arrows="true"
         touch
@@ -306,3 +324,14 @@ async function close() {
     </div>
   </div>
 </template>
+
+<style scoped>
+.media-carousel-header {
+  box-shadow: 0px 5px 15px rgb(50, 50, 50, 0.3);
+  position: absolute;
+  width: 100vw;
+  top: 0;
+  z-index: v-bind(MEDIA_CAROUSEL_HEADER_Z_INDEX);
+  background-color: rgba(0, 0, 0, 0.4);
+}
+</style>

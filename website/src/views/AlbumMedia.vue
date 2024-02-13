@@ -1,10 +1,10 @@
 <script setup lang="ts">
 import { useRoute } from "vue-router";
-import SearchMediaGrid from "../components/Search/SearchMediaGrid.vue";
 import { generateQueryParamsKey } from "@/js/utils";
+import AlbumMediaGrid from "@/components/Album/AlbumMediaGrid.vue";
 const route = useRoute();
 </script>
 
 <template>
-  <SearchMediaGrid :key="generateQueryParamsKey(route.params, 'query')" />
+  <AlbumMediaGrid :key="generateQueryParamsKey(route.params, 'album_id')" />
 </template>

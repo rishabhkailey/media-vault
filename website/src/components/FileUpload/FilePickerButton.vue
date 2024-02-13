@@ -33,6 +33,7 @@ const cancel = () => {
           v-if="props.iconOnly"
           :icon="props.icon"
           color="primary"
+          data-test-id="upload-file-button"
           @click.stop="() => (selectFileDialog = true)"
         />
         <v-btn
@@ -40,6 +41,7 @@ const cancel = () => {
           class="bg-primary mx-2"
           :prepend-icon="props.icon"
           :text="props.label"
+          data-test-id="upload-file-button"
           @click.stop="() => (selectFileDialog = true)"
         />
       </template>
@@ -57,6 +59,7 @@ const cancel = () => {
                 placeholder="select files"
                 label="select files"
                 v-model="selectedFiles"
+                data-test-id="upload-file-input"
                 counter
                 multiple
                 clearable
@@ -93,6 +96,7 @@ const cancel = () => {
                 <v-btn color="red" @click.stop="cancel">Cancel</v-btn>
                 <v-btn
                   color="primary"
+                  data-test-id="upload-files-selection-confirm-button"
                   @click.stop="
                     () => {
                       emits('select', selectedFiles);

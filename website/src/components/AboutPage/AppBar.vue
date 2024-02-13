@@ -1,11 +1,27 @@
 <script setup lang="ts">
+import AppLogoButton from "@/components/Logo/AppLogoButton.vue";
+import AccountButton from "../AppBar/NormalAppBar/AccountButton.vue";
 import { userManager } from "@/js/auth";
 import { signinUsingUserManager } from "@/js/auth";
-import AppLogoButton from "@/components/Logo/AppLogoButton.vue";
+import { storeToRefs } from "pinia";
+import { useAuthStore } from "@/piniaStore/auth";
+import { ref } from "vue";
+import { logOut } from "../AccountManagement/utils";
 
-const logIn = () => {
+const authStore = useAuthStore();
+const { authenticated, userName, email } = storeToRefs(authStore);
+
+function logIn() {
   signinUsingUserManager(userManager, true);
-};
+}
+
+const loading = ref(false);
+function onLogOutClick() {
+  loading.value = true;
+  logOut().finally(() => {
+    loading.value = false;
+  });
+}
 </script>
 
 <template>
@@ -27,10 +43,14 @@ const logIn = () => {
       </v-col>
       <v-col>
         <v-row class="d-flex flex-row flex-nowrap justify-end align-center">
-          <v-btn class="bg-primary mx-2" @click.stop="logIn">
-            <v-icon icon="mdi-login" />
-            Sign In
-          </v-btn>
+          <AccountButton
+            :authenticated="authenticated"
+            :loading="loading"
+            :user-name="userName"
+            :email="email"
+            @logout="onLogOutClick"
+            @login="logIn"
+          />
         </v-row>
       </v-col>
     </v-row>

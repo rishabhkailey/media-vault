@@ -1,11 +1,8 @@
 <script setup lang="ts">
-import axios from "axios";
-import { computed, watch, onBeforeUnmount } from "vue";
+import { computed, onBeforeUnmount } from "vue";
 import { useAuthStore } from "@/piniaStore/auth";
 import MonthMediaGrid from "./MonthMediaGrid.vue";
 import { getMonthlyMediaIndex } from "@/js/date";
-import { storeToRefs } from "pinia";
-import { useLoadingStore } from "@/piniaStore/loading";
 import { useMediaSelectionStore } from "@/piniaStore/mediaSelection";
 
 const props = defineProps<{
@@ -26,31 +23,10 @@ const emits = defineEmits<{
 }>();
 
 const authStore = useAuthStore();
-const { accessToken } = storeToRefs(authStore);
 console.log(authStore);
 const monthlyMediaList = computed<Array<MonthlyMedia>>(() =>
   getMonthlyMediaIndex(props.mediaList, props.mediaDateGetter),
 );
-
-const { initializing } = storeToRefs(useLoadingStore());
-watch(initializing, async (newValue, oldValue) => {
-  console.log("initializing changed to ", newValue);
-  if (newValue === oldValue) {
-    return;
-  }
-  if (!newValue) {
-    let response = await axios.post(
-      "/v1/refreshSession",
-      {},
-      {
-        headers: {
-          Authorization: `Bearer ${accessToken.value}`,
-        },
-      },
-    );
-    console.log(response);
-  }
-});
 
 const { reset: resetMediaSelection } = useMediaSelectionStore();
 
@@ -61,8 +37,7 @@ onBeforeUnmount(() => {
 
 <template>
   <div class="pa-0 ma-0">
-    <div v-if="initializing">loading...</div>
-    <div v-else class="d-flex flex-column align-stretch">
+    <div class="d-flex flex-column align-stretch">
       <v-infinite-scroll
         style="overflow-y: hidden"
         class="bg-secondary-background"

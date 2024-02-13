@@ -14,6 +14,7 @@ const props = withDefaults(
     modelValue: boolean;
     class?: any;
     style?: StyleValue;
+    zIndex: number;
   }>(),
   {
     height: "",
@@ -66,3 +67,9 @@ const positionStyle = computed<Array<StyleValue>>(() => {
     </div>
   </Teleport>
 </template>
+
+<style scoped>
+.floating-over-body {
+  z-index: v-bind(zIndex);
+}
+</style>

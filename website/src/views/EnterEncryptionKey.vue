@@ -4,6 +4,7 @@ import EncryptionKeyInput from "@/components/AccountManagement/EncryptionKeyInpu
 import { storeToRefs } from "pinia";
 import { useRoute, useRouter, type NavigationFailure } from "vue-router";
 import { useErrorsStore } from "@/piniaStore/errors";
+import { homeRoute } from "@/router/routesConstants";
 const route = useRoute();
 const router = useRouter();
 const userInfoStore = useUserInfoStore();
@@ -56,9 +57,7 @@ async function returnToOriginalEndpoint() {
     10,
   );
   // todo return uri
-  router.push({
-    name: "Home",
-  });
+  router.push(homeRoute());
   return;
 }
 </script>
