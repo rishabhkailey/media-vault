@@ -211,28 +211,26 @@ export const useMediaStore = defineStore("media", () => {
   async function deleteMultipleMedia(
     mediaIDs: Array<number>,
   ): Promise<Array<number>> {
-    const failedMediaIDs = new Set<number>();
-    const successMediaIDs = new Set<number>();
-
-    for (const mediaID of mediaIDs) {
-      try {
-        const resp = await axios.delete(`/v1/media/${mediaID}`, {
-          headers: {
-            Authorization: `Bearer ${accessToken.value}`,
-          },
-        });
-        if (resp.status !== 200) {
-          failedMediaIDs.add(mediaID);
-          continue;
-        } else {
-          successMediaIDs.add(mediaID);
-        }
-      } catch {
-        failedMediaIDs.add(mediaID);
+    try {
+      const resp = await axios.delete(`/v1/media/`, {
+        headers: {
+          Authorization: `Bearer ${accessToken.value}`,
+        },
+        data: {
+          media_ids: mediaIDs,
+        },
+      });
+      if (resp.status !== 200) {
+        throw new Error(`got ${resp.status} status code from server`);
       }
+    } catch (err) {
+      // to handle partial deletion
+      reset();
+      throw err;
     }
-    removeMediaByIDs(Array.from(successMediaIDs));
-    return Array.from(failedMediaIDs);
+
+    removeMediaByIDs(Array.from(mediaIDs));
+    return Array.from(mediaIDs);
   }
 
   return {
