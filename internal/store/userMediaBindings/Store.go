@@ -16,5 +16,6 @@ type Store interface {
 	// DeleteMany(ctx context.Context, userID string, mediaIDs []uint) error
 	GetByMediaID(context.Context, uint) (storemodels.UserMediaBindingsModel, error)
 	CheckFileBelongsToUser(ctx context.Context, userID, fileName string) (bool, error)
+	CheckMultipleMediaBelongsToUser(ctx context.Context, userID string, mediaIDs []uint) (bool, error)
 	// GetUserMedia(context.Context, usermediabindings.GetUserMediaQuery) ([]mediaStore.Media, error)
 }

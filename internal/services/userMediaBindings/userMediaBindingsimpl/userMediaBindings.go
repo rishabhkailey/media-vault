@@ -63,3 +63,7 @@ func (s *Service) CheckMediaBelongsToUser(ctx context.Context, query usermediabi
 	}
 	return userMediaBinding.UserID == query.UserID, err
 }
+
+func (s *Service) CheckMultipleMediaBelongsToUser(ctx context.Context, query usermediabindings.CheckMultipleMediaBelongsToUserQuery) (bool, error) {
+	return s.store.UserMediaBindings.CheckMultipleMediaBelongsToUser(ctx, query.UserID, query.MediaIDs)
+}

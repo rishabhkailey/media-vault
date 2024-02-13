@@ -3,11 +3,13 @@ package usermediabindingsimpl
 import (
 	"context"
 	"errors"
+	"fmt"
 
 	// usermediabindings "github.com/rishabhkailey/media-service/internal/services/userMediaBindings"
 	"github.com/rishabhkailey/media-service/internal/constants"
 	storemodels "github.com/rishabhkailey/media-service/internal/store/models"
 	usermediabindings "github.com/rishabhkailey/media-service/internal/store/userMediaBindings"
+	"github.com/rishabhkailey/media-service/internal/utils"
 	"gorm.io/gorm"
 )
 
@@ -76,4 +78,19 @@ func (s *sqlStore) CheckFileBelongsToUser(ctx context.Context, userID, fileName 
 		return
 	}
 	return userMediaBinding.UserID == userID, nil
+}
+
+func (s *sqlStore) CheckMultipleMediaBelongsToUser(ctx context.Context, userID string, mediaIDs []uint) (bool, error) {
+	var userOwnedMediaIds []uint
+	err := s.db.WithContext(ctx).Model(&storemodels.UserMediaBindingsModel{}).
+		Select("media_id").
+		Where("user_id = ? AND media_id IN (?)", userID, mediaIDs).
+		Find(&userOwnedMediaIds).Error
+	if err != nil {
+		return false, fmt.Errorf("[usermediabindingsimpl.CheckMultipleMediaBelongsToUser] failed to check user access: %w", err)
+	}
+	if !utils.ContainsSlice(userOwnedMediaIds, mediaIDs) {
+		return false, nil
+	}
+	return true, nil
 }

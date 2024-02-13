@@ -52,3 +52,6 @@ func (s *FakeService) CheckMediaBelongsToUser(context.Context, usermediabindings
 func (s *FakeService) GetUserMedia(ctx context.Context, query usermediabindings.GetUserMediaQuery) ([]storemodels.MediaModel, error) {
 	return []storemodels.MediaModel{}, s.ExpectedError
 }
+func (s *FakeService) CheckMultipleMediaBelongsToUser(ctx context.Context, query usermediabindings.CheckMultipleMediaBelongsToUserQuery) (bool, error) {
+	return s.ExpectedMediaBelongsToUser, s.ExpectedError
+}

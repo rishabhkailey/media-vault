@@ -49,7 +49,7 @@ type GetByUserIDQuery struct {
 	PerPage     int64
 }
 
-type GetByMediaIDsQuery struct {
+type GetByMediaIDsWithSortQuery struct {
 	MediaIDs []uint
 	OrderBy  string
 	Sort     string
@@ -57,6 +57,9 @@ type GetByMediaIDsQuery struct {
 
 type GetByMediaIDQuery struct {
 	MediaID uint
+}
+type GetByMediaIDsQuery struct {
+	MediaIDs []uint
 }
 
 type UserMediaByIDQuery struct {
@@ -71,5 +74,6 @@ type DeleteOneCommand struct {
 }
 
 type DeleteManyCommand struct {
-	IDs []uint
+	MediaIDs []uint
+	UserID   string
 }

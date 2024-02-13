@@ -229,7 +229,7 @@ func (s *sqlStore) GetTypeByFileName(ctx context.Context, fileName string) (medi
 	return
 }
 
-func (s *sqlStore) GetByMediaIDs(ctx context.Context, orderBy media.OrderBy, sort media.Sort, mediaIDs []uint) (mediaList []storemodels.MediaModel, err error) {
+func (s *sqlStore) GetByMediaIDsWithSort(ctx context.Context, orderBy media.OrderBy, sort media.Sort, mediaIDs []uint) (mediaList []storemodels.MediaModel, err error) {
 	order := fmt.Sprintf(`"Metadata"."%s" %s`, string(orderBy), string(sort))
 	err = s.db.WithContext(ctx).Joins("Metadata").Model(&storemodels.MediaModel{}).Where("media.id IN (?)", mediaIDs).Order(order).Find(&mediaList).Error
 	return
@@ -237,5 +237,60 @@ func (s *sqlStore) GetByMediaIDs(ctx context.Context, orderBy media.OrderBy, sor
 
 func (s *sqlStore) GetByMediaID(ctx context.Context, mediaID uint) (m storemodels.MediaModel, err error) {
 	err = s.db.WithContext(ctx).Joins("Metadata").Model(&storemodels.MediaModel{}).Where("media.id = (?)", mediaID).First(&m).Error
+	return
+}
+
+func (s *sqlStore) GetByMediaIDs(ctx context.Context, mediaIDs []uint) (mediaList []storemodels.MediaModel, err error) {
+	err = s.db.WithContext(ctx).Joins("Metadata").Model(&storemodels.MediaModel{}).Where("media.id IN (?)", mediaIDs).Find(&mediaList).Error
+	return
+}
+
+func (s *sqlStore) CascadeDeleteMany(ctx context.Context, userID string, mediaIDs []uint) (
+	deletedUserMediaBindings []storemodels.UserMediaBindingsModel,
+	deletedAlbumMediaBindings []storemodels.AlbumMediaBindingsModel,
+	deletedMedia []storemodels.MediaModel,
+	deletedMediaMetadata []storemodels.MediaMetadataModel,
+	err error,
+) {
+
+	tx := s.db.WithContext(ctx).Begin()
+	err = tx.
+		Where("user_id = ? AND media_id IN (?)", userID, mediaIDs).
+		Delete(&deletedUserMediaBindings).Error
+	if err != nil {
+		tx.Rollback()
+		err = fmt.Errorf("[mediaimpl.DeleteOne] usermedia binding deletion failed: %w", err)
+		return
+	}
+
+	err = tx.Where("media_id IN (?)", mediaIDs).
+		Delete(&deletedAlbumMediaBindings).Error
+	if err != nil {
+		tx.Rollback()
+		err = fmt.Errorf("[mediaimpl.DeleteOne] albummedia binding deletion failed: %w", err)
+		return
+	}
+
+	err = tx.Where("id IN (?)", mediaIDs).
+		Delete(&deletedMedia).Error
+	if err != nil {
+		tx.Rollback()
+		err = fmt.Errorf("[mediaimpl.DeleteOne] media deletion failed: %w", err)
+		return
+	}
+
+	var mediaMetadataIDs []uint
+	for _, media := range deletedMedia {
+		mediaMetadataIDs = append(mediaMetadataIDs, media.MetadataID)
+	}
+	err = tx.Where("id IN (?)", mediaMetadataIDs).
+		Delete(&deletedMediaMetadata).Error
+	if err != nil {
+		tx.Rollback()
+		err = fmt.Errorf("[mediaimpl.DeleteOne] MediaMetadataModel deletion failed: %w", err)
+		return
+	}
+
+	tx.Commit()
 	return
 }

@@ -57,7 +57,7 @@ func (server *Server) Search(c *gin.Context) {
 		)
 		return
 	}
-	mediaList, err := server.Media.GetByMediaIDs(c.Request.Context(), media.GetByMediaIDsQuery{
+	mediaList, err := server.Media.GetByMediaIDsWithSort(c.Request.Context(), media.GetByMediaIDsWithSortQuery{
 		MediaIDs: mediaIDs,
 		OrderBy:  requestBody.OrderBy,
 		Sort:     requestBody.Sort,

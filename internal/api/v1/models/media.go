@@ -89,44 +89,13 @@ func parseMediaURL(fileName string) string {
 	return fmt.Sprintf("/v1/file/%s", fileName)
 }
 
-// type DeleteMediaRequest struct {
-// 	UserID  string
-// 	MediaId uint `uri:"media_id" binding:"required"`
-// }
+type DeleteMediaRequest struct {
+	MediaIDs []uint `json:"media_ids" binding:"required"`
+}
 
-// // BindDeleteMediaRequest bind and validate the request data
-// func BindDeleteMediaRequest(c *gin.Context) (reqBody DeleteMediaRequest, err error) {
-// 	err = c.BindUri(&reqBody)
-// 	if err != nil {
-// 		return reqBody, fmt.Errorf("[BindDeleteMediaRequest] bind failed: %w", err)
-// 	}
-// 	mediaIdParam := c.Param("media_id")
-// 	if len(mediaIdParam) == 0 {
-// 		return reqBody, fmt.Errorf("[BindDeleteMediaRequest]")
-// 	}
-// 	mediaID, err := strconv.ParseUint(mediaIdParam, 10, 64)
-// 	if err != nil {
-// 		c.Error(
-// 			c.Error(
-// 				internalErrors.NewInternalServerError(
-// 					fmt.Errorf("[DeleteMedia] error parsing mediaID: %w", err),
-// 				),
-// 			),
-// 		)
-// 		return
-// 	}
-// 	userID := c.GetString("user_id")
-// 	if len(userID) == 0 {
-// 		c.Error(
-// 			internalErrors.NewInternalServerError(
-// 				fmt.Errorf("[DeleteMedia]: empty userID"),
-// 			),
-// 		)
-// 		return
-// 	}
-
-// }
-
-// type DeleteMultipleMediaRequest struct {
-// 	MediaIDs uint `json:"media_ids"`
-// }
+func (r DeleteMediaRequest) Validate() error {
+	if len(r.MediaIDs) == 0 {
+		return fmt.Errorf("[DeleteMediaRequest.Validate]: empty media ids slice")
+	}
+	return nil
+}

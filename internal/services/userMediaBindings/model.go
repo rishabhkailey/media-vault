@@ -19,6 +19,11 @@ type CheckMediaBelongsToUserQuery struct {
 	MediaID uint
 }
 
+type CheckMultipleMediaBelongsToUserQuery struct {
+	UserID   string
+	MediaIDs []uint
+}
+
 type GetUserMediaQuery struct {
 	UserID  string
 	OrderBy string

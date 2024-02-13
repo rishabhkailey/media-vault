@@ -32,6 +32,16 @@ func (s *FakeService) CascadeDeleteOne(ctx context.Context, cmd media.DeleteOneC
 	return s.ExpectedError
 }
 
+func (s *FakeService) CascadeDeleteMany(ctx context.Context, cmd media.DeleteManyCommand) (
+	deletedUserMediaBindings []storemodels.UserMediaBindingsModel,
+	deletedAlbumMediaBindings []storemodels.AlbumMediaBindingsModel,
+	deletedMedia []storemodels.MediaModel,
+	deletedMediaMetadata []storemodels.MediaMetadataModel,
+	err error,
+) {
+	return
+}
+
 func (s *FakeService) DeleteMany(ctx context.Context, cmd media.DeleteManyCommand) error {
 	return s.ExpectedError
 }
@@ -52,7 +62,7 @@ func (s *FakeService) GetByUserID(ctx context.Context, cmd media.GetByUserIDQuer
 	return s.ExpectedMediaList, s.ExpectedError
 }
 
-func (s *FakeService) GetByMediaIDs(ctx context.Context, query media.GetByMediaIDsQuery) ([]storemodels.MediaModel, error) {
+func (s *FakeService) GetByMediaIDsWithSort(ctx context.Context, query media.GetByMediaIDsWithSortQuery) ([]storemodels.MediaModel, error) {
 	return s.ExpectedMediaList, s.ExpectedError
 }
 
@@ -66,4 +76,8 @@ func (s *FakeService) GetTypeByFileName(ctx context.Context, cmd media.GetTypeBy
 
 func (s *FakeService) GetUserMediaByID(ctx context.Context, query media.UserMediaByIDQuery) (media storemodels.MediaModel, err error) {
 	return s.ExpectedMedia, s.ExpectedError
+}
+
+func (s *FakeService) GetByMediaIDs(ctx context.Context, query media.GetByMediaIDsQuery) ([]storemodels.MediaModel, error) {
+	return s.ExpectedMediaList, s.ExpectedError
 }
