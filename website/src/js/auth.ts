@@ -14,7 +14,7 @@ export const userManager = new UserManager({
   redirect_uri: window.location.origin + "/pkce",
   response_type: "code",
   fetchRequestCredentials: "omit",
-  scope: "openid profile email roles",
+  scope: "openid profile email roles media-vault/access",
   post_logout_redirect_uri: window.location.origin,
   accessTokenExpiringNotificationTimeInSeconds: 10,
   automaticSilentRenew: true,
@@ -24,12 +24,12 @@ export const userManager = new UserManager({
   stateStore: new WebStorageStateStore({ store: window.localStorage }),
   userStore: new WebStorageStateStore({ store: window.localStorage }),
 });
-
+// userManager callback for refresh token
 // todo extra argument userManager we can just use the global defined
 export function signinUsingUserManager(
   userManager: UserManager,
   redirectToHome: boolean,
-) {
+): Promise<void> {
   const nonce = v4();
   const state: InternalState = {
     internalRedirectPath: "/",
@@ -40,7 +40,7 @@ export function signinUsingUserManager(
     state.internalRedirectPath = location.pathname;
     state.internalRedirectQuery = location.search;
   }
-  userManager
+  return userManager
     .signinRedirect({
       nonce: nonce,
       state: state,
@@ -61,9 +61,6 @@ export async function handlePostLoginUsingUserManager(
       .signinRedirectCallback()
       .then((user: User) => {
         userManager.storeUser(user);
-        console.log(user);
-        // store token in store or store userManager in store?
-        // todo validate internal redirect
         try {
           const internalState = user.state as InternalState;
           if (
@@ -85,4 +82,10 @@ export async function handlePostLoginUsingUserManager(
         return;
       });
   });
+}
+
+export async function logOutUsingUserManager(): Promise<boolean> {
+  await userManager.revokeTokens(["access_token", "refresh_token"]);
+  await userManager.removeUser();
+  return true;
 }

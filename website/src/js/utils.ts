@@ -40,25 +40,23 @@ export function timestamp(): string {
 export function getQueryParamStringValue(
   query: LocationQuery,
   key: string,
-  defaultValue: string,
-): string {
+): string | undefined {
   try {
     const queryParam = query[key];
     if (queryParam && typeof queryParam === "string") {
       return queryParam;
     } else {
-      return defaultValue;
+      return undefined;
     }
   } catch (err) {
-    return defaultValue;
+    return undefined;
   }
 }
 
 export function getQueryParamNumberValue(
   query: LocationQuery,
   key: string,
-  defaultValue: number,
-): number {
+): number | undefined {
   try {
     const queryParam = query[key];
     if (
@@ -68,10 +66,10 @@ export function getQueryParamNumberValue(
     ) {
       return Number(queryParam);
     } else {
-      return defaultValue;
+      return undefined;
     }
   } catch (err) {
-    return defaultValue;
+    return undefined;
   }
 }
 
@@ -105,10 +103,29 @@ export function getFileType(file: File): string {
       return "image/jpeg";
     case "jpeg":
       return "image/jpeg";
+    case "webp":
+      return "image/webp";
     case "mp4":
       return "video/mp4";
     case "webm":
       return "video/webm";
   }
   return "unknown";
+}
+
+// useful for creating keys for components to rerender them on route change
+export function generateQueryParamsKey(
+  query: LocationQuery,
+  ...keys: Array<string>
+): string | undefined {
+  try {
+    let componentKey = "";
+    keys.forEach((key) => {
+      componentKey += `${key}=${getQueryParamStringValue(query, key)};`;
+    });
+    return componentKey;
+  } catch (err) {
+    console.log(err);
+    return "";
+  }
 }

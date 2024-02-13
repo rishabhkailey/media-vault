@@ -8,12 +8,12 @@ import AlbumCard from "./AlbumCard.vue";
 import { useRouter } from "vue-router";
 import KebabMenuWrapper from "../KebabMenuWrapper/KebabMenuWrapper.vue";
 import ConfirmationPopupVue from "@/components/Modals/ConfirmationModal.vue";
+import { albumRoute } from "@/router/routesConstants";
 
 const router = useRouter();
 const albumStore = useAlbumStore();
 const { albums } = storeToRefs(albumStore);
 const { loadMoreAlbums, deleteAlbum } = albumStore;
-const { initializing } = storeToRefs(useLoadingStore());
 const showCreateAlbumModal = ref(false);
 const deleteConfirmationOverlay = ref(false);
 const toDeleteAlbumID = ref(0);
@@ -42,8 +42,7 @@ function onDeleteConfirm(albumID: number) {
 }
 </script>
 <template>
-  <div v-if="initializing">Loading...</div>
-  <v-col v-else>
+  <v-col>
     <v-row>
       <v-toolbar :collapse="false" title="Albums" color="surface">
         <v-btn
@@ -65,9 +64,8 @@ function onDeleteConfirm(albumID: number) {
       <!-- <SizeWrapper v-slot="{ width }"> -->
       <!-- cols = 12 (default will only work for xs) -->
       <v-infinite-scroll
-        :min-height="100"
-        :min-width="100"
         :items="albums"
+        style="width: 100%; height: 100%"
         @load="
           ({ done }) => {
             loadMoreAlbums()
@@ -104,12 +102,7 @@ function onDeleteConfirm(albumID: number) {
               :album="album"
               @click="
                 () => {
-                  router.push({
-                    name: 'Album',
-                    params: {
-                      album_id: album.id,
-                    },
-                  });
+                  router.push(albumRoute(album.id));
                 }
               "
             />

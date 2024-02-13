@@ -1,13 +1,17 @@
 <script setup lang="ts">
-import { onMounted, ref, watch } from "vue";
+import { onMounted, ref } from "vue";
 import { useRoute, useRouter } from "vue-router";
 import { useAlbumStore } from "@/piniaStore/album";
 import { storeToRefs } from "pinia";
 import { useAlbumMediaStore } from "@/piniaStore/albumMedia";
 import MediaGrid from "../MediaThumbnailPreview/MediaGrid.vue";
 import ConfirmationModal from "@/components/Modals/ConfirmationModal.vue";
-import { base64UrlEncode, getQueryParamNumberValue } from "@/js/utils";
+import { getQueryParamNumberValue } from "@/js/utils";
+import { albumsRoute, albumMediaPreviewRoute } from "@/router/routesConstants";
+import { MEDIA_PREVIEW_CONTAINER_Z_INDEX } from "@/js/constants/z-index";
+import ErrorMessage from "../Error/ErrorMessage.vue";
 
+const errorMessage = ref("");
 const albumStore = useAlbumStore();
 const { getAlbumByID, deleteAlbum } = albumStore;
 
@@ -15,18 +19,17 @@ const albumMediaStore = useAlbumMediaStore();
 const { loadMoreMedia, setAlbumID, loadAllMediaUntil } = albumMediaStore;
 const { mediaList, allMediaLoaded } = storeToRefs(albumMediaStore);
 
-// in case of error it will return empty string
-const getAlbumIdFromRoute = () => {
-  let albumID = getQueryParamNumberValue(route.params, "album_id", -1);
-  if (albumID === -1) {
+function getAlbumIdFromRoute(): number {
+  let albumID = getQueryParamNumberValue(route.params, "album_id");
+  if (albumID === undefined) {
     errorMessage.value = "invalid or empty album id";
+    return -1;
   }
   return albumID;
-};
+}
 
 const route = useRoute();
-const errorMessage = ref("");
-let albumID = ref<number>(getAlbumIdFromRoute());
+let albumID = ref<number>(-1);
 console.log("album id in script", albumID.value);
 
 const album = ref<Album>({
@@ -51,9 +54,7 @@ function onDeleteConfirm() {
       deleteInProgress.value = false;
       deleteConfirmationOverlay.value = false;
       deleteErrorMessage.value = "";
-      router.push({
-        name: "Albums",
-      });
+      router.push(albumsRoute());
     })
     .catch((err) => {
       deleteErrorMessage.value = "something went wrong, " + err;
@@ -70,26 +71,12 @@ const loadAlbum = () => {
       loading.value = false;
     })
     .catch((err) => {
-      errorMessage.value = "something went wrong. " + err;
+      errorMessage.value = "invalid or empty album id" + err;
     });
 };
 
-// when user switch album
-watch(
-  () => route.params.album_id,
-  () => {
-    let newAlbumId = getAlbumIdFromRoute();
-    if (newAlbumId === -1 || newAlbumId === albumID.value) {
-      return;
-    }
-    console.log("album id updated", newAlbumId);
-    albumID.value = newAlbumId;
-    loadAlbum();
-  },
-);
-
-// when first time user open the album page
 onMounted(() => {
+  albumID.value = getAlbumIdFromRoute();
   console.log("album id in mounted", albumID.value);
   if (albumID.value === -1) {
     return;
@@ -98,6 +85,13 @@ onMounted(() => {
 });
 </script>
 <template>
+  <ErrorMessage
+    v-if="errorMessage.length > 0"
+    :message="errorMessage"
+    title="Something went wrong"
+    :expanded-by-default="true"
+    @close="() => (errorMessage = '')"
+  />
   <h1 v-if="loading">Loading...</h1>
   <v-col v-else>
     <v-row>
@@ -145,23 +139,31 @@ onMounted(() => {
         :media-date-getter="(media: Media) => media.uploaded_at"
         @thumbnail-click="
           (clickedMediaID, clickedIndex, thumbnailClickLocation) => {
-            router.push({
-              name: `AlbumMediaPreview`,
-              params: {
-                index: clickedIndex,
-                media_id: clickedMediaID,
-                album_id: albumID,
-              },
-              hash: `#${base64UrlEncode(thumbnailClickLocation)}`,
-            });
+            router.push(
+              albumMediaPreviewRoute(
+                clickedIndex,
+                clickedMediaID,
+                albumID,
+                thumbnailClickLocation,
+              ),
+            );
           }
         "
       />
     </v-row>
   </v-col>
   <Teleport to="body">
-    <div style="position: absolute; top: 0px; left: 0px; z-index: 9999999">
+    <div class="media-preview-container">
       <RouterView />
     </div>
   </Teleport>
 </template>
+
+<style scoped>
+.media-preview-container {
+  position: absolute;
+  top: 0px;
+  left: 0px;
+  z-index: v-bind(MEDIA_PREVIEW_CONTAINER_Z_INDEX);
+}
+</style>

@@ -1,8 +1,9 @@
 <script setup lang="ts">
-import { reactive } from "vue";
+import ErrorMessage from "./ErrorMessage.vue";
 import { storeToRefs } from "pinia";
 import { useErrorsStore } from "@/piniaStore/errors";
 import FloatingWindow from "@/components/Modals/FloatingWindow.vue";
+import { POPUP_ERROR_WINDOW_Z_INDEX } from "@/js/constants/z-index";
 
 const props = withDefaults(
   defineProps<{
@@ -16,16 +17,6 @@ const props = withDefaults(
 const errorsStore = useErrorsStore();
 const { popUpErrors } = storeToRefs(errorsStore);
 const { removeError } = errorsStore;
-const expandedErrorMessageMap = reactive<Map<number, boolean>>(new Map());
-function getTrucatedMessage(id: number, message: string): string {
-  if (
-    message.length <= props.maxMessgeLength ||
-    expandedErrorMessageMap.get(id) === true
-  ) {
-    return message;
-  }
-  return message.substring(0, props.maxMessgeLength) + "...";
-}
 </script>
 <template>
   <FloatingWindow
@@ -33,49 +24,18 @@ function getTrucatedMessage(id: number, message: string): string {
     style="max-height: 300px; max-width: 600px"
     :right="10"
     :bottom="10"
+    :z-index="POPUP_ERROR_WINDOW_Z_INDEX"
   >
-    <div style="height: 100%; overflow-y: auto">
-      <v-alert
+    <div style="max-height: 300px; overflow-y: auto">
+      <ErrorMessage
         v-for="{ title, message, id } in popUpErrors"
-        :key="id"
-        :elevation="3"
-        type="error"
+        :message="message"
         :title="title"
-        :text="getTrucatedMessage(id, message)"
-        variant="elevated"
-        class="ma-1"
-      >
-        <template #append>
-          <div class="d-flex flex-column">
-            <v-btn
-              icon="mdi-close"
-              @click="() => removeError(id)"
-              size="x-small"
-              variant="text"
-            />
-            <v-btn
-              v-if="
-                message.length > props.maxMessgeLength &&
-                expandedErrorMessageMap.get(id) !== true
-              "
-              icon="mdi-arrow-expand"
-              @click="() => expandedErrorMessageMap.set(id, true)"
-              size="x-small"
-              variant="text"
-            />
-            <v-btn
-              v-if="
-                message.length > props.maxMessgeLength &&
-                expandedErrorMessageMap.get(id) === true
-              "
-              icon="mdi-arrow-collapse"
-              @click="() => expandedErrorMessageMap.set(id, false)"
-              size="x-small"
-              variant="text"
-            />
-          </div>
-        </template>
-      </v-alert>
+        :expanded-by-default="false"
+        :max-messge-length="props.maxMessgeLength"
+        :key="id"
+        @close="() => removeError(id)"
+      />
     </div>
   </FloatingWindow>
 </template>

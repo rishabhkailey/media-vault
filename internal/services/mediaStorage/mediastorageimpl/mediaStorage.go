@@ -70,11 +70,11 @@ func (s *Service) HttpGetRangeHandler(ctx context.Context, query mediastorage.Ht
 func (s *Service) HttpGetMediaHandler(ctx context.Context, query mediastorage.HttpGetMediaHandlerQuery) (err error) {
 	file, err := s.store.GetByFileName(ctx, query.FileName)
 	if err != nil {
-		return err
+		return fmt.Errorf("[mediaService.HttpGetMediaHandler] GetByFileName failed :%v", err)
 	}
 	stat, err := file.Stat()
 	if err != nil {
-		return err
+		return fmt.Errorf("[mediaService.HttpGetMediaHandler] file.Stat failed :%v", err)
 	}
 	defer func() {
 		if r := recover(); r != nil {

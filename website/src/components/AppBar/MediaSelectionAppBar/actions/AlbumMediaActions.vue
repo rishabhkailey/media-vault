@@ -5,22 +5,36 @@ import { useMediaStore } from "@/piniaStore/media";
 import { useLoadingStore } from "@/piniaStore/loading";
 import { storeToRefs } from "pinia";
 import ConfirmationModal from "@/components/Modals/ConfirmationModal.vue";
-import { useRoute } from "vue-router";
+import { useRoute, useRouter } from "vue-router";
 import { useAlbumStore } from "@/piniaStore/album";
 import { useAlbumMediaStore } from "@/piniaStore/albumMedia";
 import { useErrorsStore } from "@/piniaStore/errors";
+import { getQueryParamNumberValue } from "@/js/utils";
+import { errorScreenRoute } from "@/router/routesConstants";
 
 const mediaSelectionStore = useMediaSelectionStore();
 const { reset: resetMediaSelection, updateSelection } = mediaSelectionStore;
 const { selectedMediaIDs } = storeToRefs(mediaSelectionStore);
-
 const { removeMediaByIDsFromLocalState } = useAlbumMediaStore();
 const { deleteMultipleMedia } = useMediaStore();
 const { setGlobalLoading, setProgress } = useLoadingStore();
-
 const { appendError } = useErrorsStore();
-
 const deleteConfirmationPopUp = ref(false);
+const router = useRouter();
+
+function getAlbumIdFromRoute(): number {
+  let albumID = getQueryParamNumberValue(route.params, "album_id");
+  if (albumID === undefined) {
+    router.push(
+      errorScreenRoute(
+        "Failed to render Album's Media page",
+        "invalid or empty album id",
+      ),
+    );
+    return 0;
+  }
+  return albumID;
+}
 
 // batch deleting
 // if we have a lot of media selected deleting 1 by 1 cause rerender for every delete, and it causes high cpu usage in browser
@@ -70,9 +84,7 @@ const route = useRoute();
 const removeSelectedMediaError = ref("");
 const removeSelectedMediaInProgress = ref(false);
 const removedMediaFromAlbumPopUp = ref(false);
-const albumID = Array.isArray(route.params.album_id)
-  ? route.params.album_id[0]
-  : route.params.album_id;
+const albumID = getAlbumIdFromRoute();
 const { removeMediaFromAlbum } = useAlbumStore();
 
 function removeSelectedMedia() {

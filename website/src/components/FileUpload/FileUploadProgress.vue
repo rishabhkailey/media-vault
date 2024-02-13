@@ -11,9 +11,14 @@ const emits = defineEmits<{
 }>();
 </script>
 <template>
-  <v-list-item :key="props.name" :title="props.name" :subtitle="props.size">
+  <v-list-item
+    class="ma-0 pa-1"
+    data-test-id="uploading-files-progress-list-item"
+    :key="props.name"
+    :title="props.name"
+    :subtitle="props.size"
+  >
     <template v-slot:prepend>
-      <!-- todo create a separate component with simple logic -->
       <v-avatar>
         <v-progress-circular
           :size="70"
@@ -21,8 +26,12 @@ const emits = defineEmits<{
           :color="props.failed ? 'red' : 'primary'"
           :model-value="props.failed ? '100' : props.progress"
         >
-          <!-- todo text size -->
-          {{ props.failed ? "!" : Math.round(props.progress) + "%" }}
+          <span
+            style="font-size: 0.75em"
+            data-test-id="uploading-files-progress-list-item-progress"
+          >
+            {{ props.failed ? "!" : Math.round(props.progress) + "%" }}</span
+          >
         </v-progress-circular>
       </v-avatar>
     </template>
@@ -32,12 +41,14 @@ const emits = defineEmits<{
         color="grey-lighten-1"
         icon="mdi-close"
         variant="text"
+        data-test-id="uploading-files-progress-list-item-cancel-button"
         @click.stop="() => emits('cancel')"
       />
-      <v-btn
+      <v-icon
         v-if="props.completed && !props.failed"
         color="grey-lighten-1"
         icon="mdi-check"
+        data-test-id="uploading-files-progress-list-item-completed-icon"
         variant="text"
       />
       <!-- rotate-right -->
@@ -51,6 +62,7 @@ const emits = defineEmits<{
             color="grey-lighten-1"
             icon="mdi-rotate-right"
             variant="text"
+            data-test-id="uploading-files-progress-list-item-retry-button"
             v-bind="props"
           />
         </template>

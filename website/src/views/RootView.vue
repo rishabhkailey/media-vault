@@ -7,26 +7,33 @@ import { useUserInfoStore } from "@/piniaStore/userInfo";
 import { storeToRefs } from "pinia";
 import { EncryptionKeyChannelClient } from "@/js/channels/encryptionKey";
 import PopUpError from "@/components/Error/PopUpError.vue";
+import { onMounted } from "vue";
+import { userManager } from "@/js/auth";
+import { useAuthStore } from "@/piniaStore/auth";
 
 const display = useDisplay();
 
 const userInfoStore = useUserInfoStore();
 const { usableEncryptionKey } = storeToRefs(userInfoStore);
-
+const { setUserAuthInfo } = useAuthStore();
 const smallDisplay = computed(
   () => display.mobile.value || display.smAndDown.value,
 );
 
 const displaySidebar = ref(!smallDisplay.value);
 
-// todo is this here ok?
-// or rename the component to app?
 const encryptionKeyChannel = new EncryptionKeyChannelClient(
   usableEncryptionKey.value,
 );
 
 watch(usableEncryptionKey, () => {
   encryptionKeyChannel.encryptionKey = usableEncryptionKey.value;
+});
+
+onMounted(() => {
+  userManager.events.addUserLoaded((user) => {
+    setUserAuthInfo(user);
+  });
 });
 </script>
 

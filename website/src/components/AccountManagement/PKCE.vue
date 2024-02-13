@@ -5,6 +5,7 @@ import { useRouter, type LocationQueryRaw } from "vue-router";
 import { handlePostLoginUsingUserManager } from "@/js/auth";
 import { useAuthStore } from "@/piniaStore/auth";
 import { userManager } from "@/js/auth";
+import { errorScreenRoute } from "@/router/routesConstants";
 const authStore = useAuthStore();
 // not oidc state but state to persist some data after redirect, data will be stored in browser local storage
 interface InternalState {
@@ -21,7 +22,7 @@ const handlePostLogin = async () => {
       if (user.profile.email === undefined) {
         throw new Error("email missing from the response");
       }
-      authStore.setUserInfo(user);
+      authStore.setUserAuthInfo(user);
       let internalState = user.state as InternalState;
       if (
         internalState.internalRedirectPath.length !== 0 ||
@@ -42,13 +43,7 @@ const handlePostLogin = async () => {
       }
     })
     .catch((err) => {
-      router.push({
-        name: "errorscreen",
-        query: {
-          title: "Sign in Failed",
-          message: err,
-        },
-      });
+      router.push(errorScreenRoute("Sign in Failed", err));
       console.log(err);
     });
 };

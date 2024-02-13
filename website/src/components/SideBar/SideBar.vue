@@ -1,12 +1,10 @@
 <script setup lang="ts">
-import { useAlbumStore } from "@/piniaStore/album";
-import { storeToRefs } from "pinia";
 import { computed } from "vue";
-import { useRouter } from "vue-router";
 import { useDisplay } from "vuetify";
+import AlbumsVerticalList from "@/components/Album/AlbumsVerticalList.vue";
+import { homeRoute } from "@/router/routesConstants";
 const display = useDisplay();
 
-const router = useRouter();
 const props = defineProps<{
   modelValue: boolean;
 }>();
@@ -16,17 +14,6 @@ const emit = defineEmits<{
 const smallDisplay = computed(
   () => display.mobile.value || display.smAndDown.value,
 );
-
-const albumStore = useAlbumStore();
-const { albums, allAlbumsLoaded } = storeToRefs(albumStore);
-const { loadMoreAlbums } = albumStore;
-
-const maxNumberOfAlbums = 4;
-const albumsSubSlice = computed<Array<Album>>(() => {
-  return albums.value.length > maxNumberOfAlbums
-    ? albums.value.slice(0, 4)
-    : albums.value;
-});
 </script>
 
 <template>
@@ -47,98 +34,11 @@ const albumsSubSlice = computed<Array<Album>>(() => {
         prepend-icon="mdi-home"
         title="Home"
         value="Home"
-        :to="{
-          name: 'Home',
-        }"
+        :to="homeRoute()"
         :exact="true"
         color="primary"
       ></v-list-item>
-      <v-list-group value="Albums">
-        <!-- todo move to separate component in navigationBar directory -->
-        <template v-slot:activator="{ props, isOpen }">
-          <v-list-item
-            title="Albums"
-            prepend-icon="mdi-image-album"
-            color=""
-            @click="
-              () => {
-                router.push({
-                  name: 'Albums',
-                });
-              }
-            "
-            value="Albums"
-          >
-            <template #append>
-              <v-icon
-                :icon="isOpen ? 'mdi-menu-up' : 'mdi-menu-down'"
-                v-bind="props"
-                @click.stop.prevent="() => {}"
-              />
-            </template>
-          </v-list-item>
-        </template>
-        <v-infinite-scroll
-          :min-height="100"
-          :min-width="100"
-          :items="albums"
-          @load="
-            ({ done }) => {
-              loadMoreAlbums()
-                .then((status) => {
-                  done(status);
-                })
-                .catch((_) => {
-                  done('error');
-                });
-            }
-          "
-        >
-          <v-list-item
-            v-for="album in albumsSubSlice"
-            :key="album.id"
-            :title="album.name"
-            prepend-icon="mdi-image"
-            :value="album.name"
-            :to="{
-              name: 'Album',
-              params: {
-                album_id: album.id,
-              },
-            }"
-            color="primary"
-          >
-            <template #prepend>
-              <div class="mr-3">
-                <v-img
-                  style="width: 1.5em; height: 1.5em"
-                  cover
-                  :src="album.thumbnail_url"
-                  v-if="album.thumbnail_url.length > 0"
-                >
-                  <template #error>
-                    <v-icon icon="mdi-image" />
-                  </template>
-                </v-img>
-                <v-icon v-else icon="mdi-image" />
-              </div>
-            </template>
-          </v-list-item>
-          <v-list-item
-            v-if="albums.length > maxNumberOfAlbums"
-            title="View all albums"
-            prepend-icon="mdi-arrow-right-thin"
-            :to="{
-              name: 'Albums',
-            }"
-            color="primary"
-          ></v-list-item>
-          <div
-            v-if="!(allAlbumsLoaded || albums.length >= 5)"
-            class="d-flex flex-row justify-center"
-          ></div>
-        </v-infinite-scroll>
-      </v-list-group>
+      <AlbumsVerticalList />
     </v-list>
   </v-navigation-drawer>
 </template>

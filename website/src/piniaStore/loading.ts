@@ -21,12 +21,12 @@ export const useLoadingStore = defineStore("loading", () => {
     progress.value = _progress;
   }
 
-  // initializing used to wait for service worker to register and other init things
-  const initializing = ref(false);
+  // not used any more we are using router gaurds now to wait for the service worker registeration
+  // const initializing = ref(false);
 
-  function setInitializing(_initializing: boolean) {
-    initializing.value = _initializing;
-  }
+  // function setInitializing(_initializing: boolean) {
+  //   initializing.value = _initializing;
+  // }
 
   return {
     // global
@@ -35,8 +35,7 @@ export const useLoadingStore = defineStore("loading", () => {
     indeterminate,
     setGlobalLoading,
     setProgress,
-    // initializing
-    initializing,
-    setInitializing,
+    // initializing,
+    // setInitializing,
   };
 });

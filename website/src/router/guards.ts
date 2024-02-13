@@ -3,43 +3,10 @@ import { useAuthStore } from "@/piniaStore/auth";
 import { useUserInfoStore } from "@/piniaStore/userInfo";
 import { storeToRefs } from "pinia";
 import { userManager } from "@/js/auth";
-import type {
-  LocationQueryRaw,
-  NavigationGuard,
-  RouteLocationNamedRaw,
-} from "vue-router";
+import type { NavigationGuard } from "vue-router";
 import { updateOrRegisterServiceWorker } from "@/js/serviceWorker/registeration";
 import { promiseTimeout } from "@/js/utils";
-
-const aboutNavigationPath: RouteLocationNamedRaw = {
-  name: "about",
-};
-
-function errorScreenRoute(
-  title: string,
-  error: any,
-  returnUri?: string,
-): RouteLocationNamedRaw {
-  const query: LocationQueryRaw = {
-    title: title,
-  };
-
-  if (returnUri !== undefined) {
-    query.return_uri = returnUri;
-  }
-
-  if (typeof error === "string") {
-    query.message = error;
-  }
-  if (error instanceof Error) {
-    query.message = error.message + "\n" + error.stack;
-  }
-
-  return {
-    name: "errorscreen",
-    query: query,
-  };
-}
+import { aboutRoute, errorScreenRoute } from "./routesConstants";
 
 // ensure user is logged in and user onboarding is also done
 export const loginGaurd: NavigationGuard = async (to) => {
@@ -55,13 +22,15 @@ export const loginGaurd: NavigationGuard = async (to) => {
   // load user from local storage
   try {
     const user = await userManager.getUser();
+    console.log(user);
+    // todo check user access, because on auth server restart even if the token is not expired access token doesn't work but as we have user info from local storage it doesn't ask for login
     if (
       user !== null &&
       (user.expired === false || user.expired === undefined)
     ) {
       // usermanager automatically tries to renew the token before expiration
       // if already expired we are not setting user auth info
-      authStore.setUserInfo(user);
+      authStore.setUserAuthInfo(user);
     }
   } catch (err) {
     // ignore error and user will remain unauthenticated
@@ -70,7 +39,7 @@ export const loginGaurd: NavigationGuard = async (to) => {
 
   if (!authenticated.value) {
     if (to.name === "Home") {
-      return aboutNavigationPath;
+      return aboutRoute();
     }
     signinUsingUserManager(userManager, false);
     return false;

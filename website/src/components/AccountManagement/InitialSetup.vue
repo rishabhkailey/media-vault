@@ -4,6 +4,7 @@ import AppLogoButton from "../Logo/AppLogoButton.vue";
 import { useUserInfoStore } from "@/piniaStore/userInfo";
 import { useRouter, type NavigationFailure, useRoute } from "vue-router";
 import { useErrorsStore } from "@/piniaStore/errors";
+import { homeRoute } from "@/router/routesConstants";
 
 const { postUserInfo } = useUserInfoStore();
 const { appendError } = useErrorsStore();
@@ -80,9 +81,7 @@ async function returnToOriginalEndpoint() {
       10,
     );
   }
-  router.push({
-    name: "Home",
-  });
+  router.push(homeRoute());
   return;
 }
 

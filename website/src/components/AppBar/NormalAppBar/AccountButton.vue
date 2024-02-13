@@ -16,6 +16,7 @@ const emits = defineEmits<{
     v-if="!props.authenticated"
     class="bg-primary mx-2"
     @click.stop="() => emits('login')"
+    data-test-id="signin-button"
   >
     <v-icon icon="mdi-login" />
     Sign In
@@ -39,7 +40,11 @@ const emits = defineEmits<{
       </template>
       <template v-slot:actions>
         <div class="d-flex justify-center flex-grow-1">
-          <v-btn class="bg-primary mx-2" @click.stop="() => emits('logout')">
+          <v-btn
+            class="bg-primary mx-2"
+            :loading="props.loading"
+            @click.stop="() => emits('logout')"
+          >
             <v-icon icon="mdi-logout" />
             Sign Out
           </v-btn>

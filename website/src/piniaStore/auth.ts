@@ -1,10 +1,13 @@
+import { refreshSessionWithResourceServer } from "@/js/api/user";
 import type { AxiosResponse } from "axios";
 import axios from "axios";
 import type { User } from "oidc-client-ts";
 import { defineStore } from "pinia";
 import { computed, ref } from "vue";
+import { useErrorsStore } from "./errors";
 
 export const useAuthStore = defineStore("auth", () => {
+  const { appendError } = useErrorsStore();
   const authenticated = ref(false);
   const userName = ref("");
   const email = ref("");
@@ -14,7 +17,7 @@ export const useAuthStore = defineStore("auth", () => {
   const expired = computed(() => Date.now() / 1000 > expireAt.value);
   // todo: if about to expire refresh the token?
 
-  function setUserInfo(user: User) {
+  function setUserAuthInfo(user: User) {
     console.log(user);
     if (user.profile.email === undefined) {
       throw new Error("Invalid user details. email missing.");
@@ -32,6 +35,13 @@ export const useAuthStore = defineStore("auth", () => {
       // default 24 hours
       expireAt.value = Date.now() / 1000 + 24 * 60 * 60;
     }
+    refreshSessionWithResourceServer(accessToken.value).catch((err) => {
+      appendError(
+        "failed to refresh session with resource server",
+        `if facing any issues please refresh the page. error message: ${err}`,
+        -1,
+      );
+    });
   }
 
   function setAuthenticated(_authenticated: boolean) {
@@ -58,7 +68,7 @@ export const useAuthStore = defineStore("auth", () => {
     });
   }
 
-  function loadUserInfo(): Promise<boolean> {
+  function loadUserAuthInfo(): Promise<boolean> {
     return new Promise((resolve, reject) => {
       axios
         .get("/v1/userinfo")
@@ -103,11 +113,11 @@ export const useAuthStore = defineStore("auth", () => {
     email,
     accessToken,
     expired,
-    setUserInfo,
+    setUserAuthInfo,
     setAuthenticated,
     setTokens,
     logOut,
-    loadUserInfo,
+    loadUserAuthInfo,
     reset,
   };
 });

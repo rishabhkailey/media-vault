@@ -100,6 +100,7 @@ onMounted(() => {
 
 <template>
   <v-card
+    data-test-id="uploading-files-dialog-notcallapsed"
     :style="[
       'overflow-x: hidden; overflow-y: hidden',
       `height: ${props.height}`,
@@ -119,7 +120,7 @@ onMounted(() => {
         class="flex-grow-1"
         style="display: block; overflow-y: scroll; overflow-x: hidden"
       >
-        <v-list lines="two">
+        <v-list lines="two" data-test-id="uploading-files-progress-list">
           <FileUploadProgress
             v-for="(file, index) in props.files"
             :key="file.name"

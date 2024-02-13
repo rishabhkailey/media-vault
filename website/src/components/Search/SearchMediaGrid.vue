@@ -1,35 +1,48 @@
 <script setup lang="ts">
 import MediaGrid from "@/components/MediaThumbnailPreview/MediaGrid.vue";
-import { onBeforeMount } from "vue";
+import { onBeforeMount, ref } from "vue";
 import { useRoute, useRouter } from "vue-router";
 import { useSearchStore } from "@/piniaStore/search";
 import { useAuthStore } from "@/piniaStore/auth";
 import { storeToRefs } from "pinia";
-import { base64UrlEncode } from "@/js/utils";
-
+import { getQueryParamStringValue } from "@/js/utils";
+import { searchMediaPreviewRoute } from "@/router/routesConstants";
+import { MEDIA_PREVIEW_CONTAINER_Z_INDEX } from "@/js/constants/z-index";
+import ErrorMessage from "../Error/ErrorMessage.vue";
+const errorMessage = ref("");
 const router = useRouter();
 
 const route = useRoute();
-const searchQuery = Array.isArray(route.params.query)
-  ? route.params.query[0]
-  : route.params.query;
+function getSearchQuery(): string {
+  const queryParam = getQueryParamStringValue(route.params, "query");
+  if (queryParam === undefined) {
+    errorMessage.value = "Invalid search query";
+    return "";
+  }
+  return queryParam;
+}
 
 const { accessToken } = storeToRefs(useAuthStore());
 const searchStore = useSearchStore();
 const { mediaList, allMediaLoaded } = storeToRefs(searchStore);
 const { loadMoreSearchResults, setQuery, getMediaDateAccordingToOrderBy } =
   searchStore;
-onBeforeMount(() => {
+const searchQuery = ref("");
+
+onBeforeMount(async () => {
+  await router.isReady();
+  console.log("onBeforeMount called");
   // as we are using global store for search results, it can still have results of old media search
   // this will ensure to update search query and results in store
-  setQuery(searchQuery);
+  searchQuery.value = getSearchQuery();
+  setQuery(searchQuery.value);
 });
 
 function loadAllMediaUntil(date: Date): Promise<boolean> {
   return new Promise((resolve, reject) => {
     let lastMedia = mediaList.value[mediaList.value.length - 1];
     while (date < lastMedia.date && !allMediaLoaded.value) {
-      loadMoreSearchResults(accessToken.value, searchQuery)
+      loadMoreSearchResults(accessToken.value, searchQuery.value)
         .then(() => {
           lastMedia = mediaList.value[mediaList.value.length - 1];
         })
@@ -45,6 +58,13 @@ function loadAllMediaUntil(date: Date): Promise<boolean> {
 </script>
 
 <template>
+  <ErrorMessage
+    v-if="errorMessage.length > 0"
+    :message="errorMessage"
+    title="Something went wrong"
+    :expanded-by-default="true"
+    @close="() => (errorMessage = '')"
+  />
   <MediaGrid
     :media-list="mediaList"
     :all-media-loaded="allMediaLoaded"
@@ -53,22 +73,29 @@ function loadAllMediaUntil(date: Date): Promise<boolean> {
     :media-date-getter="getMediaDateAccordingToOrderBy"
     @thumbnail-click="
       (clickedMediaID, clickedIndex, thumbnailClickLocation) => {
-        router.push({
-          name: `SearchMediaPreview`,
-          params: {
-            index: clickedIndex,
-            media_id: clickedMediaID,
-            query: searchQuery,
-          },
-          hash: `#${base64UrlEncode(thumbnailClickLocation)}`,
-        });
+        router.push(
+          searchMediaPreviewRoute(
+            clickedIndex,
+            clickedMediaID,
+            searchQuery,
+            thumbnailClickLocation,
+          ),
+        );
       }
     "
   />
   <Teleport to="body">
-    <div style="position: absolute; top: 0px; left: 0px; z-index: 9999999">
+    <div class="media-preview-container">
       <RouterView />
     </div>
   </Teleport>
-  <!-- :load-more-media="() => loadMoreSearchResults(accessToken, searchQuery)" -->
 </template>
+
+<style scoped>
+.media-preview-container {
+  position: absolute;
+  top: 0px;
+  left: 0px;
+  z-index: v-bind(MEDIA_PREVIEW_CONTAINER_Z_INDEX);
+}
+</style>

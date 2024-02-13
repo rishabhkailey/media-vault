@@ -1,9 +1,10 @@
 <script setup lang="ts">
 import MediaGrid from "@/components/MediaThumbnailPreview/MediaGrid.vue";
-import { base64UrlEncode } from "@/js/utils";
 import { useMediaStore } from "@/piniaStore/media";
+import { mediaPreviewRoute } from "@/router/routesConstants";
 import { storeToRefs } from "pinia";
 import { useRouter } from "vue-router";
+import { MEDIA_PREVIEW_CONTAINER_Z_INDEX } from "@/js/constants/z-index";
 
 const router = useRouter();
 const mediaStore = useMediaStore();
@@ -24,6 +25,20 @@ async function loadAllMediaUntil(date: Date): Promise<boolean> {
   }
   return true;
 }
+function handleThumbnailClick(
+  clickedMediaID: number,
+  clickedIndex: number,
+  thumbnailClickLocation: ThumbnailClickLocation | undefined,
+) {
+  try {
+    router.push(
+      mediaPreviewRoute(clickedIndex, clickedMediaID, thumbnailClickLocation),
+    );
+  } catch (err) {
+    // todo error page?
+    console.log("error in homepage", err);
+  }
+}
 </script>
 
 <template>
@@ -33,22 +48,20 @@ async function loadAllMediaUntil(date: Date): Promise<boolean> {
     :load-more-media="() => loadMoreMedia()"
     :load-all-media-until="loadAllMediaUntil"
     :media-date-getter="getMediaDateAccordingToOrderBy"
-    @thumbnail-click="
-      (clickedMediaID, clickedIndex, thumbnailClickLocation) => {
-        router.push({
-          name: `MediaPreview`,
-          params: {
-            index: clickedIndex,
-            media_id: clickedMediaID,
-          },
-          hash: `#${base64UrlEncode(thumbnailClickLocation)}`,
-        });
-      }
-    "
+    @thumbnail-click="handleThumbnailClick"
   />
   <Teleport to="body">
-    <div style="position: absolute; top: 0px; left: 0px; z-index: 9999999">
+    <div class="media-preview-container">
       <RouterView />
     </div>
   </Teleport>
 </template>
+
+<style scoped>
+.media-preview-container {
+  position: absolute;
+  top: 0px;
+  left: 0px;
+  z-index: v-bind(MEDIA_PREVIEW_CONTAINER_Z_INDEX);
+}
+</style>
