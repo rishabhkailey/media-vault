@@ -15,52 +15,25 @@ const { reset: resetMediaSelection, updateSelection } = mediaSelectionStore;
 const { selectedMediaIDs } = storeToRefs(mediaSelectionStore);
 const { appendError } = useErrorsStore();
 const { deleteMultipleMedia } = useMediaStore();
-const { setGlobalLoading, setProgress } = useLoadingStore();
+const { setGlobalLoading } = useLoadingStore();
 
-const { removeMediaByIDsFromLocalState } = useAlbumMediaStore();
 const deleteConfirmationPopUp = ref(false);
-// const deleteButton = ref<HTMLElement | undefined>(undefined);
 
-// batch deleting
-// if we have a lot of media selected deleting 1 by 1 cause rerender for every delete, and it causes high cpu usage in browser
 async function deleteSelectedMedia() {
   // we don't want this to be reactive
   let mediaIDs = [...selectedMediaIDs.value];
-  let failedIDs = new Array<number>();
-  let count = mediaIDs.length;
   resetMediaSelection();
   setGlobalLoading(true, false, 0);
-  const batchSize = 30;
-  for (let index = 0; index < count; index += batchSize) {
-    let end = Math.min(index + batchSize, mediaIDs.length);
-    let mediaIDsToDelete = mediaIDs.slice(index, end);
-    try {
-      let failedMediaIDs = await deleteMultipleMedia(mediaIDsToDelete);
-      failedIDs.push(...failedMediaIDs);
-      setProgress((100 * (index + batchSize)) / count);
-    } catch (err) {
-      failedIDs.push(...mediaIDsToDelete);
-      let errorMessage = "";
-      if (typeof err == "string") {
-        errorMessage = err;
-      }
-      if (err instanceof Error) {
-        errorMessage = err.message + " " + err.stack;
-      }
-      appendError("unexpected error", errorMessage, 10);
-    }
-  }
-  if (failedIDs.length > 0) {
+  try {
+    await deleteMultipleMedia(mediaIDs);
+  } catch (err) {
+    mediaIDs.forEach((id) => updateSelection(id, true));
     appendError(
       "deletion failed",
-      `We weren't able to delete ${failedIDs.length} items. They're still selected, so you can try deleting them again.`,
+      `there was an issue in deletion if the files are still selected please try to delete again. error message - ${err}`,
       -1,
     );
   }
-  failedIDs.forEach((id) => updateSelection(id, true));
-  removeMediaByIDsFromLocalState(
-    mediaIDs.filter((id) => !failedIDs.includes(id)),
-  );
   setGlobalLoading(false, false, 0);
 }
 

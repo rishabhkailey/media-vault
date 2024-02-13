@@ -35,7 +35,17 @@ const dailyMediaList = computed<Array<DailyMedia>>(() =>
     <div class="d-flex flex-row flex-wrap">
       <DayMediaGrid
         v-for="(dailyMedia, index) in dailyMediaList"
-        :key="index"
+        :key="
+          dailyMedia.date +
+          '_' +
+          dailyMedia.month +
+          '_' +
+          dailyMedia.year +
+          '_' +
+          dailyMedia.media.length +
+          '_' +
+          index
+        "
         :month="dailyMedia.month"
         :day="dailyMedia.day"
         :year="dailyMedia.year"

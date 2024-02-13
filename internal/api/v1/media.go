@@ -14,6 +14,7 @@ import (
 	mediastorage "github.com/rishabhkailey/media-service/internal/services/mediaStorage"
 	usermediabindings "github.com/rishabhkailey/media-service/internal/services/userMediaBindings"
 	"github.com/rishabhkailey/media-service/internal/utils"
+	"github.com/sirupsen/logrus"
 )
 
 const (
@@ -246,10 +247,105 @@ func (server *Server) GetThumbnailFile(c *gin.Context) {
 	}
 }
 
-// todo a child method returning error?
-// multiple delete in same API doesn't make sense
-// if 1 delete fails the complete request will also fail and as we are using transaction for multiple services it will increase the complexity
 func (server *Server) DeleteMedia(c *gin.Context) {
+	userID := c.GetString("user_id")
+	var requestBody v1models.DeleteMediaRequest
+	if err := c.Bind(&requestBody); err != nil {
+		c.Error(
+			internalErrors.NewBadRequestError(
+				fmt.Errorf("[MediaList] invalid request: %w", err),
+				"bad request",
+			),
+		)
+		return
+	}
+	if err := requestBody.Validate(); err != nil {
+		c.Error(
+			internalErrors.NewBadRequestError(
+				fmt.Errorf("[MediaList] invalid request: %w", err),
+				"bad request",
+			),
+		)
+		return
+	}
+
+	belongsToUser, err := server.UserMediaBindings.CheckMultipleMediaBelongsToUser(c.Request.Context(), usermediabindings.CheckMultipleMediaBelongsToUserQuery{
+		UserID:   userID,
+		MediaIDs: requestBody.MediaIDs,
+	})
+	if err != nil {
+		c.Error(internalErrors.NewInternalServerError(
+			fmt.Errorf("[DeleteMedia] error checking user access: %w", err),
+		))
+		return
+	}
+	if !belongsToUser {
+		c.Error(internalErrors.ErrForbidden)
+		return
+	}
+
+	mediaToDelete, err := server.Media.GetByMediaIDs(c.Request.Context(),
+		media.GetByMediaIDsQuery{
+			MediaIDs: requestBody.MediaIDs,
+		})
+	if err != nil {
+		c.Error(internalErrors.NewInternalServerError(
+			fmt.Errorf("[DeleteMedia] select media query failed: %w", err),
+		))
+		return
+	}
+
+	// delete db entries
+	_, _, _, _, err = server.Media.CascadeDeleteMany(c.Request.Context(),
+		media.DeleteManyCommand{
+			MediaIDs: requestBody.MediaIDs,
+			UserID:   userID,
+		})
+	if err != nil {
+		c.Error(internalErrors.NewInternalServerError(
+			fmt.Errorf("[DeleteMedia] failed: %w", err),
+		))
+		return
+	}
+
+	// todo use 422 Unprocessable Entity status code?
+	// delete from search service
+	searchId, err := server.MediaSearch.DeleteMany(c.Request.Context(),
+		mediasearch.DeleteManyCommand{
+			MediaIDs: requestBody.MediaIDs,
+		})
+	if err != nil {
+		c.Error(internalErrors.NewInternalServerError(
+			fmt.Errorf("[DeleteMedia] delete from search service failed, this will cause discrepancies in search results. document id = %d: %w", searchId, err),
+		))
+		return
+	}
+
+	var deleteMediaFileCmd mediastorage.DeleteManyCommand
+	for _, media := range mediaToDelete {
+		deleteMediaFileCmd.DeleteCmds = append(deleteMediaFileCmd.DeleteCmds, mediastorage.DeleteOneCommand{
+			FileName:     media.FileName,
+			HasThumbnail: media.Metadata.Thumbnail,
+		})
+	}
+
+	// delete media file
+	failedFileNames, errors := server.MediaStorage.DeleteMany(c.Request.Context(),
+		deleteMediaFileCmd)
+	if len(errors) != 0 {
+		for index, failedFileNames := range failedFileNames {
+			logrus.Warnf("[DeleteMedia] failed to delete %s file: %v", failedFileNames, errors[index])
+		}
+		c.Error(internalErrors.NewInternalServerError(
+			fmt.Errorf("[DeleteMedia] failed to delete %d files from storage", len(errors)),
+		))
+		return
+	}
+
+	c.Status(http.StatusOK)
+}
+
+func (server *Server) DeleteSingleMedia(c *gin.Context) {
 	userID := c.GetString("user_id")
 	mediaID, err := strconv.ParseUint(c.Param("media_id"), 10, 64)
 	if err != nil {

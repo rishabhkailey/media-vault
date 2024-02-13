@@ -38,10 +38,19 @@ func (s *Service) Create(ctx context.Context, cmd media.CreateMediaCommand) (sto
 func (s *Service) CascadeDeleteOne(ctx context.Context, query media.DeleteOneCommand) error {
 	return s.store.MediaStore.CascadeDeleteOne(ctx, query.ID, query.UserID, query.MetadataID)
 }
-
-func (s *Service) DeleteMany(ctx context.Context, query media.DeleteManyCommand) error {
-	return s.store.MediaStore.DeleteMany(ctx, query.IDs)
+func (s *Service) CascadeDeleteMany(ctx context.Context, query media.DeleteManyCommand) (
+	deletedUserMediaBindings []storemodels.UserMediaBindingsModel,
+	deletedAlbumMediaBindings []storemodels.AlbumMediaBindingsModel,
+	deletedMedia []storemodels.MediaModel,
+	deletedMediaMetadata []storemodels.MediaMetadataModel,
+	err error,
+) {
+	return s.store.MediaStore.CascadeDeleteMany(ctx, query.UserID, query.MediaIDs)
 }
+
+// func (s *Service) DeleteMany(ctx context.Context, query media.DeleteManyCommand) error {
+// 	return s.store.MediaStore.DeleteMany(ctx, query.IDs)
+// }
 
 func (s *Service) GetByUploadRequestID(ctx context.Context, query media.GetByUploadRequestQuery) (storemodels.MediaModel, error) {
 	return s.store.MediaStore.GetByUploadRequestID(ctx, query.UploadRequestID)
@@ -66,10 +75,15 @@ func (s *Service) GetTypeByFileName(ctx context.Context, query media.GetTypeByFi
 	return s.store.MediaStore.GetTypeByFileName(ctx, query.FileName)
 }
 
-func (s *Service) GetByMediaIDs(ctx context.Context, query media.GetByMediaIDsQuery) (result []storemodels.MediaModel, err error) {
+func (s *Service) GetByMediaIDsWithSort(ctx context.Context, query media.GetByMediaIDsWithSortQuery) (result []storemodels.MediaModel, err error) {
 	// todo check before directly refrencing the maps
-	return s.store.MediaStore.GetByMediaIDs(ctx, media.OrderKeywordMapping[query.OrderBy], media.SortKeywordMapping[query.Sort], query.MediaIDs)
+	return s.store.MediaStore.GetByMediaIDsWithSort(ctx, media.OrderKeywordMapping[query.OrderBy], media.SortKeywordMapping[query.Sort], query.MediaIDs)
 }
 func (s *Service) GetByMediaID(ctx context.Context, query media.GetByMediaIDQuery) (storemodels.MediaModel, error) {
 	return s.store.MediaStore.GetByMediaID(ctx, query.MediaID)
+}
+
+func (s *Service) GetByMediaIDs(ctx context.Context, query media.GetByMediaIDsQuery) (result []storemodels.MediaModel, err error) {
+	// todo check before directly refrencing the maps
+	return s.store.MediaStore.GetByMediaIDs(ctx, query.MediaIDs)
 }
