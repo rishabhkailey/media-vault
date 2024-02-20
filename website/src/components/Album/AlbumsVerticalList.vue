@@ -55,6 +55,7 @@ const albumsSubSlice = computed<Array<Album>>(() => {
         }
       "
     >
+      <template #error> failed to load data from server </template>
       <template #empty> No more albums </template>
       <template #default>
         <v-list-item

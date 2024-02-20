@@ -6,11 +6,9 @@ export function download(url: string, fileName: string) {
   return new Promise<boolean>((resolve, reject) => {
     whileRangeDownloadWithDecrypt(url, fileName)
       .then((done) => {
-        console.log("done " + done);
         resolve(true);
       })
       .catch((err) => {
-        console.log("error ", err);
         reject(err);
       });
   });
@@ -81,21 +79,17 @@ const whileRangeDownloadWithDecrypt = async function (
     if (!readableStream) {
       throw new Error("unable to get response stream");
     }
-    console.log(readableStream);
     // let decryptedStream = readableStream;
     // no need to decrypt this twice we are decrypting in service worker
     // const decryptedStream = readableStream.pipeThrough(
     //   newDecryptTransformer(decryptor)
     // );
     // let decryptedStream = decryptStream(readableStream);
-    console.log("got decrypted stream", readableStream);
     // working but using a lot of memory
     await readableStream.pipeTo(fileStream, {
       preventClose: true,
     });
     index += length;
-    console.log(index);
-    // await new Promise(r => setTimeout(r, 5000));
   }
   fileStream.close();
 };

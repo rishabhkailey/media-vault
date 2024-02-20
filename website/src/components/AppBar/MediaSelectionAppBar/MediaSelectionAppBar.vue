@@ -6,12 +6,10 @@ import AlbumMediaActions from "./actions/AlbumMediaActions.vue";
 import { useRoute } from "vue-router";
 
 const route = useRoute();
-console.log("route name", route.name);
 const mediaSelectionStore = useMediaSelectionStore();
 const { reset: resetMediaSelection } = mediaSelectionStore;
 const { count: selectedMediaCount } = storeToRefs(mediaSelectionStore);
 
-console.log(typeof AlbumMediaActions);
 let Actions = MediaActions;
 switch (route.name) {
   case "Album": {

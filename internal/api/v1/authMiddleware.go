@@ -17,7 +17,7 @@ func (server *Server) UserAuthMiddleware(c *gin.Context) {
 			ResponseWriter: c.Writer,
 			Request:        c.Request,
 		},
-	}, []string{}, []string{authservice.UserRole})
+	}, []string{authservice.AccessScope}, []string{authservice.UserRole})
 	if errors.Is(err, authservice.ErrUnauthorized) {
 		c.Abort()
 		c.Error(internalErrors.ErrUnauthorized)
@@ -49,7 +49,7 @@ func (server *Server) RefreshSession(c *gin.Context) {
 	// todo instead of this duplicate code, we can use errors from internalErrors package and no need to check error type here
 	if errors.Is(err, authservice.ErrUnauthorized) {
 		c.Abort()
-		c.Error(internalErrors.ErrUnauthorized)
+		c.Error(internalErrors.NewUnauthorizedError(err))
 		return
 	}
 	if errors.Is(err, authservice.ErrForbidden) {

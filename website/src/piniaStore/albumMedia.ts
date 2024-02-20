@@ -3,6 +3,7 @@ import axios from "axios";
 import { defineStore, storeToRefs } from "pinia";
 import { computed, ref } from "vue";
 import { useAuthStore } from "./auth";
+import { useConfigStore } from "./config";
 
 // we will need lock or something else
 // to prevent duplicates if the same request is called twice
@@ -87,6 +88,7 @@ export const useAlbumMediaStore = defineStore("albumMedia", () => {
     }
     return properties;
   });
+  const { config } = storeToRefs(useConfigStore());
 
   // todo date getter?
   // will return the date according to which the media is sorted?
@@ -136,7 +138,7 @@ export const useAlbumMediaStore = defineStore("albumMedia", () => {
     return new Promise<LoadMoreMediaStatus>((resolve, reject) => {
       const url = new URL(
         `/v1/album/${albumID.value}/media`,
-        import.meta.env.VITE_BASE_URL,
+        window.location.origin,
       );
       url.searchParams.append("per_page", perPage.toString());
       url.searchParams.append(
@@ -158,7 +160,6 @@ export const useAlbumMediaStore = defineStore("albumMedia", () => {
           },
         })
         .then((response) => {
-          console.log(response);
           if (response.status == 200) {
             if (response.data.length > 0) {
               lastMediaId.value = response.data[response.data.length - 1].id;
@@ -176,7 +177,6 @@ export const useAlbumMediaStore = defineStore("albumMedia", () => {
           return;
         })
         .catch((err) => {
-          console.log(err);
           reject(err);
         });
     });

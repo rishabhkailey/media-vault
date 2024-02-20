@@ -31,7 +31,6 @@ const searchQuery = ref("");
 
 onBeforeMount(async () => {
   await router.isReady();
-  console.log("onBeforeMount called");
   // as we are using global store for search results, it can still have results of old media search
   // this will ensure to update search query and results in store
   searchQuery.value = getSearchQuery();

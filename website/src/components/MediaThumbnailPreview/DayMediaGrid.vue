@@ -30,7 +30,6 @@ const emits = defineEmits<{
 function getThumbnailLocation(
   event: MouseEvent,
 ): ThumbnailClickLocation | undefined {
-  console.log(event.target, event.target instanceof HTMLElement);
   let element: HTMLElement;
   if (event.target === null || !(event.target instanceof HTMLElement)) {
     return undefined;
@@ -38,7 +37,6 @@ function getThumbnailLocation(
   element = event.target;
   try {
     let boundingRect = element.getBoundingClientRect();
-    console.log(boundingRect);
     return {
       left: boundingRect.left,
       top: boundingRect.top,
@@ -61,7 +59,6 @@ const justifiedLayout = ref<Array<WidthHeight>>([]);
 watch(
   [() => props.indexMediaList, containerRef],
   ([newIndexMediaList, newContainerRef]) => {
-    console.log("in watch", newContainerRef, containerRef.value);
     if (newContainerRef === undefined) {
       appendError(
         "media layout failed",
@@ -70,20 +67,13 @@ watch(
       );
       return;
     }
-    console.log("justifiedLayout", containerRef.value);
     justifiedLayout.value = justifiedLayout.value.slice(
       0,
       justifiedLayout.value.length - widowsCount,
     );
     // let startIndex = justifiedLayout.value.length - widowsCount;
     let startIndex = justifiedLayout.value.length;
-    console.log(
-      justifiedLayout.value,
-      justifiedLayout.value.length,
-      widowsCount,
-    );
     let aspectRatios: Array<number> = [];
-    console.log(newIndexMediaList);
     for (let i = startIndex; i < newIndexMediaList.length; i++) {
       // for media with no thumbnail
       if (newIndexMediaList[i].media.thumbnail_aspect_ratio == 0) {
@@ -103,13 +93,6 @@ watch(
       height: e.height,
     }));
     justifiedLayout.value = [...justifiedLayout.value, ...boxes];
-    console.log(
-      "justifiedLayout",
-      aspectRatios,
-      justifiedLayout.value,
-      widowsCount,
-      newIndexMediaList.length,
-    );
   },
 );
 

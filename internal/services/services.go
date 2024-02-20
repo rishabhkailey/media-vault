@@ -46,6 +46,7 @@ func NewServices(
 	db *gorm.DB,
 	ms *meilisearch.Client,
 	minio *minio.Client,
+	minioBucket string,
 	redis *redis.Client,
 	oidcClient *auth.OidcClient,
 ) (*Services, error) {
@@ -87,8 +88,7 @@ func NewServices(
 		return nil, err
 	}
 
-	// todo move bucket name to config
-	mediaStorageService, err := mediastorageimpl.NewMinioService(minio, "test", uploadRequestsService)
+	mediaStorageService, err := mediastorageimpl.NewMinioService(minio, minioBucket, uploadRequestsService)
 	if err != nil {
 		return nil, err
 	}

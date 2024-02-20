@@ -61,21 +61,24 @@ const { albums } = storeToRefs(albumStore);
             }
           "
         >
-          <v-checkbox
-            v-for="album in albums"
-            :key="album.id"
-            :value="album.id"
-            v-model="selectedAlbums"
-          >
-            <template #label>
-              <v-list-item
-                :title="album.name"
-                prepend-icon="mdi-image"
-                :value="album.name"
-                color="primary"
-              />
-            </template>
-          </v-checkbox>
+          <template #error> failed to load data from server </template>
+          <template #default>
+            <v-checkbox
+              v-for="album in albums"
+              :key="album.id"
+              :value="album.id"
+              v-model="selectedAlbums"
+            >
+              <template #label>
+                <v-list-item
+                  :title="album.name"
+                  prepend-icon="mdi-image"
+                  :value="album.name"
+                  color="primary"
+                />
+              </template>
+            </v-checkbox>
+          </template>
         </v-infinite-scroll>
       </v-container>
       <v-card-actions>

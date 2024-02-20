@@ -24,7 +24,6 @@ const clickHandler = () => {
 };
 
 function onClickOutside() {
-  console.log("clicked outside");
   clicked.value = false;
 }
 

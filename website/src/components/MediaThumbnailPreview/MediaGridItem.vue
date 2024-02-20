@@ -21,7 +21,6 @@ const contianerSize = computed<{
       width: 150,
     };
   }
-  console.log(containerElement.value);
   return containerElement.value.getBoundingClientRect();
 });
 const getIcon = (mediaType: string) => {

@@ -37,6 +37,6 @@ func Execute() {
 }
 
 func init() {
-	authServerCmd.PersistentFlags().StringVarP(&authServerOptions.config, "config", "", "configs/authservice.yaml", "path of the config file")
+	authServerCmd.PersistentFlags().StringVarP(&authServerOptions.config, "config", "", "configs/mediavault.yaml", "path of the config file")
 	viper.BindPFlag("config", authServerCmd.PersistentFlags().Lookup("config"))
 }

@@ -13,6 +13,7 @@ import (
 	"github.com/gin-gonic/gin"
 	"github.com/rishabhkailey/media-service/internal/api"
 	v1 "github.com/rishabhkailey/media-service/internal/api/v1"
+	"github.com/rishabhkailey/media-service/internal/api/website"
 	"github.com/rishabhkailey/media-service/internal/config"
 	"github.com/rishabhkailey/media-service/internal/services"
 	authserviceimpl "github.com/rishabhkailey/media-service/internal/services/authService/authServiceImpl"
@@ -43,7 +44,7 @@ func NewTestServer() *v1.Server {
 }
 
 func NewTestRouter(v1ApiServer *v1.Server) (*gin.Engine, error) {
-	return api.NewRouter(v1ApiServer, config.Config{
+	return api.NewRouter(v1ApiServer, website.NewWebsiteHandler("/tmp"), config.Config{
 		Session: config.Session{
 			Secret: "test",
 		},

@@ -1,10 +1,10 @@
 package config
 
 import (
-	"fmt"
-	"os"
+	"strings"
 
 	"github.com/meilisearch/meilisearch-go"
+	"github.com/sirupsen/logrus"
 	"github.com/spf13/viper"
 )
 
@@ -44,16 +44,23 @@ type MinioConfig struct {
 	Port     int
 	User     string
 	Password string
+	Bucket   string
 	// todo create struct for tl
 	TLS              bool
 	TLSSkipVerify    bool
 	CustomRootCAPath string
 }
 
-type AuthService struct {
-	ClientID     string
-	ClientSecret string
-	URL          string
+type OIDC struct {
+	MediaVault struct {
+		ClientID     string
+		ClientSecret string
+	}
+	SPA struct {
+		ClientID string
+	}
+	DiscoveryEndpoint string
+	URL               string
 }
 
 type MeiliSearch struct {
@@ -68,7 +75,7 @@ type Config struct {
 	Session     Session
 	WebUIConfig WebUIConfig
 	MinioConfig MinioConfig
-	AuthService AuthService
+	OIDC        OIDC
 	MeiliSearch MeiliSearch
 }
 
@@ -88,9 +95,8 @@ func GetConfig() (*Config, error) {
 			Db:       viper.GetInt("cache.redis.db"),
 		},
 		Server: ServerConfig{
-			Host:    viper.GetString("server.host"),
-			Port:    viper.GetInt("server.port"),
-			BaseURL: viper.GetString("server.baseURL"),
+			Host: viper.GetString("server.host"),
+			Port: viper.GetInt("server.port"),
 		},
 		Database: Database{
 			Host:     viper.GetString("database.postgres.host"),
@@ -106,15 +112,25 @@ func GetConfig() (*Config, error) {
 			Host:             viper.GetString("minio.host"),
 			Port:             viper.GetInt("minio.port"),
 			User:             viper.GetString("minio.user"),
+			Bucket:           viper.GetString("minio.bucket"),
 			Password:         viper.GetString("minio.password"),
 			TLS:              viper.GetBool("minio.tls.enabled"),
 			TLSSkipVerify:    viper.GetBool("minio.tls.skipVerify"),
 			CustomRootCAPath: viper.GetString("minio.tls.customRootCAPath"),
 		},
-		AuthService: AuthService{
-			URL:          viper.GetString("auth-service.url"),
-			ClientSecret: viper.GetString("auth-service.client.secret"),
-			ClientID:     viper.GetString("auth-service.client.ID"),
+		OIDC: OIDC{
+			URL:               viper.GetString("oidc.url"),
+			DiscoveryEndpoint: viper.GetString("oidc.discoveryEndpoint"),
+			MediaVault: struct {
+				ClientID     string
+				ClientSecret string
+			}{
+				ClientID:     viper.GetString("oidc.mediaVault.client.id"),
+				ClientSecret: viper.GetString("oidc.mediaVault.client.secret"),
+			},
+			SPA: struct{ ClientID string }{
+				ClientID: viper.GetString("oidc.spa.client.id"),
+			},
 		},
 		MeiliSearch: MeiliSearch{
 			meilisearch.ClientConfig{
@@ -122,16 +138,22 @@ func GetConfig() (*Config, error) {
 				APIKey: viper.GetString("meiliSearch.APIKey"),
 			},
 		},
+		WebUIConfig: WebUIConfig{
+			// todo: add check for directory so user doesn't accidently expose sensitive files
+			// check for the files only allow .css, .html, .js and other static files
+			// also add a option to disable this check
+			Directory: viper.GetString("webUI.directory"),
+		},
 	}
 	return &config, nil
 }
 
 func configInit() error {
-	wd, _ := os.Getwd()
-	_ = wd
-	viper.SetEnvPrefix("AUTH_SERVICE")
+	viper.AutomaticEnv()
+	viper.SetEnvPrefix("MV")
+	viper.SetEnvKeyReplacer(strings.NewReplacer(".", "_"))
 	// default config file path
-	viper.SetConfigFile("configs/authservice.yaml")
+	viper.SetConfigFile("configs/mediavault.yaml")
 	// from cmd flag or env variable
 	configFilePath := viper.GetString("config")
 	if len(configFilePath) != 0 {
@@ -139,12 +161,11 @@ func configInit() error {
 	}
 
 	if err := viper.ReadInConfig(); err != nil {
-		if _, ok := err.(viper.ConfigFileNotFoundError); ok {
-			return fmt.Errorf("[GetConfig]: Config file not found: %w", err)
+		if _, ok := err.(viper.ConfigFileNotFoundError); !ok {
+			logrus.Warnf("[configInit] unable to read config file: %v, application will try to read config from env variables", err)
 		}
-		return fmt.Errorf("[GetConfig]: Config file found but unable to read: %w", err)
 	}
 	return nil
 }
 
-// validate function??
+// todo validate function

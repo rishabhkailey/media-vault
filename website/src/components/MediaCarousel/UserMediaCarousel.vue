@@ -89,7 +89,7 @@ onBeforeMount(() => {
     initParams();
     initMediaPreviewRefsAndStore();
   } catch (err) {
-    console.log(err);
+    console.error(err);
     router.push(
       errorScreenRoute(
         "UserMediaCarousel component intialization failed",

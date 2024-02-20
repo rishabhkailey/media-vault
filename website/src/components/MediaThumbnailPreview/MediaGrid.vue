@@ -1,6 +1,5 @@
 <script setup lang="ts">
 import { computed, onBeforeUnmount } from "vue";
-import { useAuthStore } from "@/piniaStore/auth";
 import MonthMediaGrid from "./MonthMediaGrid.vue";
 import { getMonthlyMediaIndex } from "@/js/date";
 import { useMediaSelectionStore } from "@/piniaStore/mediaSelection";
@@ -22,8 +21,6 @@ const emits = defineEmits<{
   ): void;
 }>();
 
-const authStore = useAuthStore();
-console.log(authStore);
 const monthlyMediaList = computed<Array<MonthlyMedia>>(() =>
   getMonthlyMediaIndex(props.mediaList, props.mediaDateGetter),
 );
@@ -47,35 +44,37 @@ onBeforeUnmount(() => {
           ({ done }) => {
             loadMoreMedia()
               .then((status) => {
-                console.log(status);
                 done(status);
               })
               .catch((_) => done('error'));
           }
         "
       >
-        <template
-          v-for="(monthlyMedia, index) in monthlyMediaList"
-          :key="index"
-        >
-          <MonthMediaGrid
-            :month="monthlyMedia.month"
-            :year="monthlyMedia.year"
-            :index-media-list="monthlyMedia.media"
-            :index-offset="0"
-            :load-all-media-until="props.loadAllMediaUntil"
-            :media-date-getter="props.mediaDateGetter"
-            @thumbnail-click="
-              (clickedMediaID, clickedIndex, clickLocation) =>
-                emits(
-                  'thumbnailClick',
-                  clickedMediaID,
-                  clickedIndex,
-                  clickLocation,
-                )
-            "
-          />
-          <v-divider />
+        <template #error> failed to load data from server </template>
+        <template #default>
+          <template
+            v-for="(monthlyMedia, index) in monthlyMediaList"
+            :key="index"
+          >
+            <MonthMediaGrid
+              :month="monthlyMedia.month"
+              :year="monthlyMedia.year"
+              :index-media-list="monthlyMedia.media"
+              :index-offset="0"
+              :load-all-media-until="props.loadAllMediaUntil"
+              :media-date-getter="props.mediaDateGetter"
+              @thumbnail-click="
+                (clickedMediaID, clickedIndex, clickLocation) =>
+                  emits(
+                    'thumbnailClick',
+                    clickedMediaID,
+                    clickedIndex,
+                    clickLocation,
+                  )
+              "
+            />
+            <v-divider />
+          </template>
         </template>
       </v-infinite-scroll>
     </div>

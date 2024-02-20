@@ -23,7 +23,6 @@ export function chunkUpload(
     initChunkUpload(file, bearerToken, controller)
       .then((chunkRequestInfo): void => {
         const nonce = getNonceFromFileName(chunkRequestInfo.fileName);
-        console.log("upload nonce", nonce);
         const textEncoder = new TextEncoder();
         const encryptor = new Chacha20(
           textEncoder.encode(encryptionKey),
@@ -38,7 +37,6 @@ export function chunkUpload(
           callback,
         )
           .then((uploadedBytes) => {
-            console.log("uploaded " + uploadedBytes + " bytes of " + file.name);
             uploadThumbnail(
               chunkRequestInfo,
               file,
@@ -169,7 +167,6 @@ function uploadFileChunks(
   if (chunkSize > file.size) {
     chunkSize = file.size;
   }
-  console.log("chunk size", chunkSize);
   const buffer = new Uint8Array(chunkSize);
   let bufferIndex = 0;
   return new Promise((resolve, reject) => {
@@ -192,11 +189,8 @@ function uploadFileChunks(
               reject(err);
               return;
             }
-            console.log("upload buffer", bytesUploaded);
             bytesUploaded += bufferIndex;
           }
-          console.log(`${bytesUploaded} uploaded`);
-          console.log(`${readBytes} read`);
           resolve(bytesUploaded);
           return;
         }
@@ -205,7 +199,6 @@ function uploadFileChunks(
           throw new Error("empty chunk received");
         }
 
-        console.log(`read chunk of length ${value.length}`);
         readBytes += value.length;
         while (bufferIndex + value.length >= chunkSize) {
           buffer.set(value.slice(0, chunkSize - bufferIndex), bufferIndex);
@@ -225,7 +218,6 @@ function uploadFileChunks(
             reject(err);
             return;
           }
-          console.log("upload buffer", bytesUploaded);
           // if buffer upload successful
           bufferIndex = 0;
           // do something here
@@ -265,8 +257,6 @@ async function encryptAndUploadChunk(
   try {
     // todo add encryption again
     const encryptedData = encryptor.encrypt(value);
-    // console.log(new TextDecoder().decode(value));
-    // console.log(new TextDecoder().decode(encryptedData));
     chunkBlob = new Blob([encryptedData]);
   } catch (err) {
     throw new Error("Encryptiong failed " + err);
@@ -290,10 +280,8 @@ async function encryptAndUploadChunk(
       },
     );
   } catch (err) {
-    console.log("Upload chunk failed with error " + err);
     throw new Error("Upload chunk failed with error " + err);
   }
-  console.log(response);
   if (response.status !== 200) {
     throw new Error(
       "upload chunk request failed with status" + response.status,
@@ -353,7 +341,6 @@ function uploadThumbnail(
       preserveAspectRatio: true,
     })
       .then(({ thumbnail, resolution }) => {
-        console.log(resolution);
         // todo try catch
         const encryptedThumbnail = encryptor.encrypt(thumbnail);
         const encryptedThumbnailBlob = new Blob([encryptedThumbnail]);

@@ -46,6 +46,14 @@ export function errorScreenRoute(
     query: query,
   };
 }
+export function enterEncryptionKeyRoute(returnUri: string): RouteLocationRaw {
+  return {
+    name: ENTER_ENCRYPTION_KEY_ROUTE_NAME,
+    query: {
+      return_uri: returnUri,
+    },
+  };
+}
 
 export function homeRoute(): RouteLocationRaw {
   return {

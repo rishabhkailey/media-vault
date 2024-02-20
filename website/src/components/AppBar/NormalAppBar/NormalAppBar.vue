@@ -3,7 +3,7 @@ import { computed, ref } from "vue";
 import FileUploadDialog from "@/components/FileUpload/FileUploadDialog.vue";
 import FloatingWindow from "@/components/Modals/FloatingWindow.vue";
 import { useAuthStore } from "@/piniaStore/auth";
-import { userManager } from "@/js/auth";
+import { getUserManager } from "@/js/auth";
 import { signinUsingUserManager } from "@/js/auth";
 import { useDisplay } from "vuetify";
 import { useRouter } from "vue-router";
@@ -39,7 +39,7 @@ const selectedFiles = ref<Array<File>>([]);
 const FileUploadDialogModel = ref(false);
 
 const logIn = () => {
-  signinUsingUserManager(userManager, false);
+  signinUsingUserManager(getUserManager(), false);
 };
 function onLogOutClick() {
   loading.value = true;
@@ -50,9 +50,7 @@ function onLogOutClick() {
 const uploadFiles = (files: Array<File>) => {
   selectedFiles.value = files;
   FileUploadDialogModel.value = true;
-  console.log(files);
 };
-console.log(display.mobile.value);
 
 const searchSubmit = (query: string) => {
   if (search.value.trim().length === 0) {

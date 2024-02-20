@@ -9,8 +9,8 @@ export class EncryptionKeyChannelClient {
     this._channel = new BroadcastChannel(channelName);
     this._encryptionKey = encryptionKey;
     this._channel.addEventListener("message", (event) => {
-      console.log(
-        `${timestamp()}: client: want encryption key message received`
+      console.debug(
+        `${timestamp()}: client: want encryption key message received`,
       );
       if (event.data.wantEncryptionKey !== true) {
         return;
@@ -43,8 +43,8 @@ export class EncryptionKeyChannelWorker {
         typeof event.data.encryptionKey === "string" &&
         event.data.encryptionKey.length !== 0
       ) {
-        console.log(
-          `${timestamp()}: worker: set encryption key message received`
+        console.debug(
+          `${timestamp()}: worker: set encryption key message received`,
         );
         this._encryptionKey = event.data.encryptionKey;
         return;
@@ -85,7 +85,7 @@ export class EncryptionKeyChannelWorker {
       this._requestEncryptionKeyInProgress = false;
     }
     throw new Error(
-      `${timestamp()}: timedout waiting for encryption key from clients`
+      `${timestamp()}: timedout waiting for encryption key from clients`,
     );
   }
 }

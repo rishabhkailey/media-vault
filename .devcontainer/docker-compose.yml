@@ -6,7 +6,6 @@ volumes:
   minio-data:
   meilisearch-data:
 
-
 services:
   app:
     build:
@@ -24,15 +23,6 @@ services:
     - 8080:8080 # auth service
     - 8081:8081 # keycloak
     - 9090:9090 # minio
-    
-  auth-service:
-    image: ghcr.io/rishabhkailey/authservice:intial-setup
-    restart: unless-stopped
-    env_file:
-      - .env
-    # ports mapping will not work here due to network_mode
-    # add port mapping for this service in app service
-    network_mode: "service:app"
 
   postgres:
     image: postgres:15.1
@@ -102,11 +92,13 @@ services:
     # network_mode: "service:app"
 
   keycloak:
-    image: quay.io/keycloak/keycloak:18.0.0 
+    image: quay.io/keycloak/keycloak:23.0.6
     command: ["start-dev", "--spi-theme-static-max-age=-1", "--spi-theme-cache-themes=false", "--spi-theme-cache-templates=false"]
     env_file:
       - .env
     network_mode: "service:app"
+    volumes:
+      - ../keycloak/themes:/opt/keycloak/themes
 
 
     # hydra-sql-migration:

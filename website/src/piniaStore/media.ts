@@ -129,7 +129,6 @@ export const useMediaStore = defineStore("media", () => {
           },
         })
         .then((response) => {
-          console.log(response);
           if (response.status == 200) {
             appendMedia(response.data);
             nextPageNumber.value += 1;
@@ -145,7 +144,6 @@ export const useMediaStore = defineStore("media", () => {
           return;
         })
         .catch((err) => {
-          console.log(err);
           reject(err);
         });
     });

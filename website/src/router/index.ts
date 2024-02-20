@@ -13,7 +13,12 @@ import EnterEncryptionKey from "@/views/EnterEncryptionKey.vue";
 import UserMediaCarousel from "@/components/MediaCarousel/UserMediaCarousel.vue";
 import SearchMediaCarousel from "@/components/MediaCarousel/SearchMediaCarousel.vue";
 import AlbumMediaCarousel from "@/components/MediaCarousel/AlbumMediaCarousel.vue";
-import { encryptionKeyGaurd, loginGaurd, serviceWrokerGaurd } from "./guards";
+import {
+  configurationGaurd,
+  encryptionKeyGaurd,
+  loginGaurd,
+  serviceWrokerGaurd,
+} from "./guards";
 import {
   ABOUT_ROUTE_NAME,
   ALBUMS_ROUTE_NAME,
@@ -51,7 +56,12 @@ export const router = createRouter({
       // tod rename it to root or app?
       path: "/",
       component: HomeView,
-      beforeEnter: [loginGaurd, encryptionKeyGaurd, serviceWrokerGaurd],
+      beforeEnter: [
+        configurationGaurd,
+        loginGaurd,
+        encryptionKeyGaurd,
+        serviceWrokerGaurd,
+      ],
       children: [
         {
           path: "",
@@ -105,21 +115,24 @@ export const router = createRouter({
       path: "/encryption-key",
       name: ENTER_ENCRYPTION_KEY_ROUTE_NAME,
       component: EnterEncryptionKey,
-      beforeEnter: [loginGaurd],
+      beforeEnter: [configurationGaurd, loginGaurd],
     },
     {
       path: "/about",
       name: ABOUT_ROUTE_NAME,
+      beforeEnter: [configurationGaurd],
       component: AboutPage,
     },
     {
       path: "/initial-setup",
       name: INITIAL_SETUP_ROUTE_NAME,
+      beforeEnter: [configurationGaurd],
       component: InitialSetup,
     },
     {
       path: "/pkce",
       name: PKCE_ROUTE_NAME,
+      beforeEnter: [configurationGaurd],
       component: PKCEVue,
     },
     {

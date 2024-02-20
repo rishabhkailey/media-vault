@@ -91,7 +91,6 @@ function initSingleMediaPreviewRefsAndStore() {
 }
 
 function updateIndex(newIndex: number) {
-  console.log(newIndex);
   index.value = newIndex;
   router.push(
     searchMediaPreviewRoute(
@@ -107,7 +106,7 @@ onBeforeMount(() => {
     initParams();
     initMediaPreviewRefsAndStore();
   } catch (err) {
-    console.log(err);
+    console.error(err);
     router.push(
       errorScreenRoute(
         "AlbumMediaCarousel component intialization failed",

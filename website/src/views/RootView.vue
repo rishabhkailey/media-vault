@@ -8,7 +8,7 @@ import { storeToRefs } from "pinia";
 import { EncryptionKeyChannelClient } from "@/js/channels/encryptionKey";
 import PopUpError from "@/components/Error/PopUpError.vue";
 import { onMounted } from "vue";
-import { userManager } from "@/js/auth";
+import { getUserManager } from "@/js/auth";
 import { useAuthStore } from "@/piniaStore/auth";
 
 const display = useDisplay();
@@ -31,7 +31,7 @@ watch(usableEncryptionKey, () => {
 });
 
 onMounted(() => {
-  userManager.events.addUserLoaded((user) => {
+  getUserManager().events.addUserLoaded((user) => {
     setUserAuthInfo(user);
   });
 });

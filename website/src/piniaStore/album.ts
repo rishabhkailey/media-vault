@@ -5,7 +5,7 @@ import { computed, ref } from "vue";
 import { useAlbumMediaStore } from "./albumMedia";
 import { useMediaStore } from "./media";
 import { useAuthStore } from "./auth";
-// import { URL } from "whatwg-url";
+import { useConfigStore } from "./config";
 // todo we will need lock or something else
 // to prevent duplicates if the same request is called twice
 
@@ -77,7 +77,6 @@ export const useAlbumStore = defineStore("album", () => {
     }
     return properties;
   });
-
   function getAlbumByID(albumID: number): Promise<Album> {
     return new Promise<Album>((resolve, reject) => {
       const album = albums.value.find((album) => album.id === albumID);
@@ -170,7 +169,7 @@ export const useAlbumStore = defineStore("album", () => {
     const perPage = 30;
     return new Promise<LoadMoreAlbumStatus>((resolve, reject) => {
       // todo fix: new URL("/abc", "http://localhost:5173/v1").toString() -> "http://localhost:5173/abc"
-      const url = new URL("/v1/albums", import.meta.env.VITE_BASE_URL);
+      const url = new URL("/v1/albums", window.location.origin);
       url.searchParams.append("per_page", perPage.toString());
       url.searchParams.append(
         "order",
@@ -191,7 +190,6 @@ export const useAlbumStore = defineStore("album", () => {
           },
         })
         .then((response) => {
-          console.log(response);
           if (response.status == 200) {
             addAlbumsInLocalState(response.data);
             if (response.data.length > 0) {
@@ -210,7 +208,6 @@ export const useAlbumStore = defineStore("album", () => {
           return;
         })
         .catch((err) => {
-          console.log(err);
           reject(err);
         });
     });
