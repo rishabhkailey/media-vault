@@ -6,7 +6,7 @@ import (
 	"fmt"
 	"io"
 
-	mediastorage "github.com/rishabhkailey/media-service/internal/services/mediaStorage"
+	mediastorage "github.com/rishabhkailey/media-vault/internal/services/mediaStorage"
 )
 
 type FakeService struct {

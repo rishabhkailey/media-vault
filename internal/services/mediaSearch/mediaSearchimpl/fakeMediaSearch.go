@@ -3,7 +3,7 @@ package mediasearchimpl
 import (
 	"context"
 
-	mediasearch "github.com/rishabhkailey/media-service/internal/services/mediaSearch"
+	mediasearch "github.com/rishabhkailey/media-vault/internal/services/mediaSearch"
 )
 
 type FakeService struct {

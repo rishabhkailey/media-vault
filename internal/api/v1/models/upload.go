@@ -5,7 +5,7 @@ import (
 	"mime/multipart"
 	"time"
 
-	mediametadata "github.com/rishabhkailey/media-service/internal/services/mediaMetadata"
+	mediametadata "github.com/rishabhkailey/media-vault/internal/services/mediaMetadata"
 )
 
 type InitChunkUploadRequest struct {

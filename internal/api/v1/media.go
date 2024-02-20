@@ -6,14 +6,14 @@ import (
 	"strconv"
 
 	"github.com/gin-gonic/gin"
-	v1models "github.com/rishabhkailey/media-service/internal/api/v1/models"
-	internalErrors "github.com/rishabhkailey/media-service/internal/errors"
-	"github.com/rishabhkailey/media-service/internal/services/media"
-	mediametadata "github.com/rishabhkailey/media-service/internal/services/mediaMetadata"
-	mediasearch "github.com/rishabhkailey/media-service/internal/services/mediaSearch"
-	mediastorage "github.com/rishabhkailey/media-service/internal/services/mediaStorage"
-	usermediabindings "github.com/rishabhkailey/media-service/internal/services/userMediaBindings"
-	"github.com/rishabhkailey/media-service/internal/utils"
+	v1models "github.com/rishabhkailey/media-vault/internal/api/v1/models"
+	internalErrors "github.com/rishabhkailey/media-vault/internal/errors"
+	"github.com/rishabhkailey/media-vault/internal/services/media"
+	mediametadata "github.com/rishabhkailey/media-vault/internal/services/mediaMetadata"
+	mediasearch "github.com/rishabhkailey/media-vault/internal/services/mediaSearch"
+	mediastorage "github.com/rishabhkailey/media-vault/internal/services/mediaStorage"
+	usermediabindings "github.com/rishabhkailey/media-vault/internal/services/userMediaBindings"
+	"github.com/rishabhkailey/media-vault/internal/utils"
 	"github.com/sirupsen/logrus"
 )
 

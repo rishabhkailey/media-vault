@@ -11,7 +11,7 @@ import (
 
 	"github.com/minio/minio-go/v7"
 	"github.com/minio/minio-go/v7/pkg/credentials"
-	"github.com/rishabhkailey/media-service/internal/config"
+	"github.com/rishabhkailey/media-vault/internal/config"
 	"github.com/sirupsen/logrus"
 )
 

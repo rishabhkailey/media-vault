@@ -5,7 +5,7 @@ import (
 	"io/fs"
 
 	lru "github.com/hashicorp/golang-lru/v2"
-	mediastorage "github.com/rishabhkailey/media-service/internal/services/mediaStorage"
+	mediastorage "github.com/rishabhkailey/media-vault/internal/services/mediaStorage"
 	"github.com/sirupsen/logrus"
 )
 

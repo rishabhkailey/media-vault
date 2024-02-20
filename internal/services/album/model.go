@@ -3,7 +3,7 @@ package album
 import (
 	"time"
 
-	"github.com/rishabhkailey/media-service/internal/store/album"
+	"github.com/rishabhkailey/media-vault/internal/store/album"
 )
 
 const (

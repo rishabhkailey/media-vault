@@ -6,8 +6,8 @@ import (
 	"time"
 
 	"github.com/minio/minio-go/v7"
-	mediastorage "github.com/rishabhkailey/media-service/internal/services/mediaStorage"
-	"github.com/rishabhkailey/media-service/internal/utils"
+	mediastorage "github.com/rishabhkailey/media-vault/internal/services/mediaStorage"
+	"github.com/rishabhkailey/media-vault/internal/utils"
 )
 
 type minioStore struct {

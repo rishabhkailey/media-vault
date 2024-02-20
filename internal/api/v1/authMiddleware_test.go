@@ -6,8 +6,8 @@ import (
 	"net/http/httptest"
 	"testing"
 
-	authservice "github.com/rishabhkailey/media-service/internal/services/authService"
-	authserviceimpl "github.com/rishabhkailey/media-service/internal/services/authService/authServiceImpl"
+	authservice "github.com/rishabhkailey/media-vault/internal/services/authService"
+	authserviceimpl "github.com/rishabhkailey/media-vault/internal/services/authService/authServiceImpl"
 	"github.com/stretchr/testify/assert"
 )
 

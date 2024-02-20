@@ -6,9 +6,9 @@ import (
 	"time"
 
 	"github.com/go-redis/redis/v8"
-	"github.com/rishabhkailey/media-service/internal/constants"
-	media "github.com/rishabhkailey/media-service/internal/store/media"
-	storemodels "github.com/rishabhkailey/media-service/internal/store/models"
+	"github.com/rishabhkailey/media-vault/internal/constants"
+	media "github.com/rishabhkailey/media-vault/internal/store/media"
+	storemodels "github.com/rishabhkailey/media-vault/internal/store/models"
 	"gorm.io/gorm"
 )
 

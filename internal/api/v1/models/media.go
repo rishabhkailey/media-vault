@@ -4,8 +4,8 @@ import (
 	"fmt"
 	"time"
 
-	"github.com/rishabhkailey/media-service/internal/services/media"
-	storemodels "github.com/rishabhkailey/media-service/internal/store/models"
+	"github.com/rishabhkailey/media-vault/internal/services/media"
+	storemodels "github.com/rishabhkailey/media-vault/internal/store/models"
 	"github.com/sirupsen/logrus"
 )
 

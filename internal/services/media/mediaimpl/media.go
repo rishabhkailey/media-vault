@@ -5,9 +5,9 @@ import (
 	"fmt"
 
 	"github.com/google/uuid"
-	"github.com/rishabhkailey/media-service/internal/services/media"
-	"github.com/rishabhkailey/media-service/internal/store"
-	storemodels "github.com/rishabhkailey/media-service/internal/store/models"
+	"github.com/rishabhkailey/media-vault/internal/services/media"
+	"github.com/rishabhkailey/media-vault/internal/store"
+	storemodels "github.com/rishabhkailey/media-vault/internal/store/models"
 )
 
 type Service struct {

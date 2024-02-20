@@ -3,7 +3,7 @@ package uploadrequests
 import (
 	"context"
 
-	storemodels "github.com/rishabhkailey/media-service/internal/store/models"
+	storemodels "github.com/rishabhkailey/media-vault/internal/store/models"
 	"gorm.io/gorm"
 )
 

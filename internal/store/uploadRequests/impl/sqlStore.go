@@ -3,8 +3,8 @@ package uploadrequestsimpl
 import (
 	"context"
 
-	storemodels "github.com/rishabhkailey/media-service/internal/store/models"
-	uploadrequests "github.com/rishabhkailey/media-service/internal/store/uploadRequests"
+	storemodels "github.com/rishabhkailey/media-vault/internal/store/models"
+	uploadrequests "github.com/rishabhkailey/media-vault/internal/store/uploadRequests"
 	"gorm.io/gorm"
 )
 

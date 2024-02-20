@@ -3,7 +3,7 @@ package media
 import (
 	"time"
 
-	"github.com/rishabhkailey/media-service/internal/store/media"
+	"github.com/rishabhkailey/media-vault/internal/store/media"
 )
 
 const (

@@ -3,7 +3,7 @@ package media
 import (
 	"context"
 
-	storemodels "github.com/rishabhkailey/media-service/internal/store/models"
+	storemodels "github.com/rishabhkailey/media-vault/internal/store/models"
 )
 
 type Service interface {

@@ -5,10 +5,10 @@ import (
 	"errors"
 	"net/http"
 
-	internalErrors "github.com/rishabhkailey/media-service/internal/errors"
-	userinfo "github.com/rishabhkailey/media-service/internal/services/userInfo"
-	"github.com/rishabhkailey/media-service/internal/store"
-	userinfoStore "github.com/rishabhkailey/media-service/internal/store/userInfo"
+	internalErrors "github.com/rishabhkailey/media-vault/internal/errors"
+	userinfo "github.com/rishabhkailey/media-vault/internal/services/userInfo"
+	"github.com/rishabhkailey/media-vault/internal/store"
+	userinfoStore "github.com/rishabhkailey/media-vault/internal/store/userInfo"
 	"gorm.io/gorm"
 )
 

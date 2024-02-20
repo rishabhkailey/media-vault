@@ -13,8 +13,8 @@ import (
 	"time"
 
 	"github.com/coreos/go-oidc/v3/oidc"
-	authservice "github.com/rishabhkailey/media-service/internal/services/authService"
-	"github.com/rishabhkailey/media-service/internal/utils"
+	authservice "github.com/rishabhkailey/media-vault/internal/services/authService"
+	"github.com/rishabhkailey/media-vault/internal/utils"
 	"github.com/sirupsen/logrus"
 	"golang.org/x/oauth2"
 )

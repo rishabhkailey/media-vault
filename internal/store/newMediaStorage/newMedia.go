@@ -3,7 +3,7 @@ package newmediastorage
 import (
 	"context"
 
-	mediastorage "github.com/rishabhkailey/media-service/internal/services/mediaStorage"
+	mediastorage "github.com/rishabhkailey/media-vault/internal/services/mediaStorage"
 )
 
 type Store interface {

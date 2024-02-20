@@ -1,7 +1,7 @@
 package storemodels
 
 import (
-	"github.com/rishabhkailey/media-service/internal/constants"
+	"github.com/rishabhkailey/media-vault/internal/constants"
 	"gorm.io/gorm"
 )
 

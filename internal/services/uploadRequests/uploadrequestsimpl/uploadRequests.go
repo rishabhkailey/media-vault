@@ -4,9 +4,9 @@ import (
 	"context"
 
 	"github.com/google/uuid"
-	uploadrequests "github.com/rishabhkailey/media-service/internal/services/uploadRequests"
-	"github.com/rishabhkailey/media-service/internal/store"
-	storemodels "github.com/rishabhkailey/media-service/internal/store/models"
+	uploadrequests "github.com/rishabhkailey/media-vault/internal/services/uploadRequests"
+	"github.com/rishabhkailey/media-vault/internal/store"
+	storemodels "github.com/rishabhkailey/media-vault/internal/store/models"
 )
 
 type Service struct {

@@ -3,9 +3,9 @@ package usermediabindingsimpl
 import (
 	"context"
 
-	usermediabindings "github.com/rishabhkailey/media-service/internal/services/userMediaBindings"
-	"github.com/rishabhkailey/media-service/internal/store"
-	storemodels "github.com/rishabhkailey/media-service/internal/store/models"
+	usermediabindings "github.com/rishabhkailey/media-vault/internal/services/userMediaBindings"
+	"github.com/rishabhkailey/media-vault/internal/store"
+	storemodels "github.com/rishabhkailey/media-vault/internal/store/models"
 )
 
 type Service struct {

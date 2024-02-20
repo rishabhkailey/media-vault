@@ -4,7 +4,7 @@ import (
 	"net/http"
 
 	"github.com/gin-gonic/gin"
-	internalErrors "github.com/rishabhkailey/media-service/internal/errors"
+	internalErrors "github.com/rishabhkailey/media-vault/internal/errors"
 	"github.com/sirupsen/logrus"
 )
 
