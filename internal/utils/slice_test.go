@@ -3,7 +3,7 @@ package utils_test
 import (
 	"testing"
 
-	"github.com/rishabhkailey/media-service/internal/utils"
+	"github.com/rishabhkailey/media-vault/internal/utils"
 	"github.com/stretchr/testify/assert"
 )
 

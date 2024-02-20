@@ -1,0 +1,47 @@
+[
+  {
+    "url": "/v1/media?file=8379ada2-e309-4d3a-b4b8-18d49211748e",
+    "thumbnail_url": "",
+    "Name": "SampleVideo_1280x720_30mb.flv",
+    "Date": "2023-03-24T03:21:57.408051Z",
+    "Type": "unknown",
+    "Size": 31474678,
+    "Thumbnail": false
+  },
+  {
+    "url": "/v1/media?file=6ad05e28-13e3-488f-8503-06fd367f9106",
+    "thumbnail_url": "",
+    "Name": "SampleVideo_1280x720_30mb.mp4",
+    "Date": "2023-03-24T16:05:23.240111Z",
+    "Type": "video/mp4",
+    "Size": 31491130,
+    "Thumbnail": false
+  },
+  {
+    "url": "/v1/media?file=a1de7e34-11e9-45aa-a2e3-b674084aa887",
+    "thumbnail_url": "",
+    "Name": "SampleVideo_1280x720_30mb.mp4",
+    "Date": "2023-03-24T16:07:31.585387Z",
+    "Type": "video/mp4",
+    "Size": 31491130,
+    "Thumbnail": false
+  },
+  {
+    "url": "/v1/media?file=568dcd72-2341-4b16-9c3c-44caa4fbe903",
+    "thumbnail_url": "",
+    "Name": "SampleVideo_1280x720_30mb.mp4",
+    "Date": "2023-03-24T16:07:31.60391Z",
+    "Type": "video/mp4",
+    "Size": 31491130,
+    "Thumbnail": false
+  },
+  {
+    "url": "/v1/media?file=0c86c94b-a0a5-4fe1-be7f-83b945621a71",
+    "thumbnail_url": "",
+    "Name": "SampleVideo_1280x720_30mb.mp4",
+    "Date": "2023-03-24T16:07:31.623987Z",
+    "Type": "video/mp4",
+    "Size": 31491130,
+    "Thumbnail": false
+  }
+]

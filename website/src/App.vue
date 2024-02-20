@@ -4,17 +4,6 @@ import { RouterView } from "vue-router";
 
 <template>
   <v-app>
-    <v-main>
-      <v-container fluid>
-        <RouterView />
-      </v-container>
-    </v-main>
+    <RouterView />
   </v-app>
 </template>
-
-<style scoped>
-#app {
-  display: flex;
-  font-family: "Google Sans";
-}
-</style>

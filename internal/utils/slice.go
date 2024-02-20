@@ -9,12 +9,23 @@ func Contains[T comparable](elems []T, v T) bool {
 	return false
 }
 
-// note: if subSlice is empty it will return true, this is mostly used for verifying if the scopes requested by user are already assigned to user
 func ContainsSlice[T comparable](slice []T, subSlice []T) bool {
+	var elementsMap map[T]bool = make(map[T]bool)
+	for _, elem := range slice {
+		elementsMap[elem] = true
+	}
 	for _, elem := range subSlice {
-		if !Contains(slice, elem) {
+		if contains, ok := elementsMap[elem]; !contains || !ok {
 			return false
 		}
 	}
 	return true
+}
+
+func SliceMap[T, U any](ts []T, f func(T) U) []U {
+	us := make([]U, len(ts))
+	for i := range ts {
+		us[i] = f(ts[i])
+	}
+	return us
 }

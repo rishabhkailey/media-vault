@@ -1,0 +1,15 @@
+oidc_media_vault_service_client_id: media-vault-service
+oidc_media_vault_service_client_secret: media-vault-service
+oidc_media_vault_spa_client_id: media-vault-spa
+oidc_media_vault_spa_redirect_uris: 
+  - http://localhost:5173/*
+  - http://localhost:8090/*
+oidc_media_vault_spa_web_origins: 
+  - http://localhost:5173/
+  - http://localhost:8090/
+keycloak_server: http://localhost:8081
+keycloak_admin: admin
+keycloak_admin_password: admin
+keycloak_application_realm: media-vault
+keycloak_intial_user_name: test
+keycloak_intial_user_password: password

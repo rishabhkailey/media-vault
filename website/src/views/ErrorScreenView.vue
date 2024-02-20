@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import ErrorScreen from "@/components/ErrorScreen.vue";
+import ErrorScreen from "@/components/Error/ErrorScreen.vue";
 </script>
 
 <template>
