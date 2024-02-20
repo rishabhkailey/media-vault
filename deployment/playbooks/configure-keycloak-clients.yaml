@@ -1,0 +1,339 @@
+- name: Configure Media Vault
+  hosts: localhost
+  connection: local
+  vars:
+    # these variables are not recommended to be changed
+    oidc_media_vault_normal_user_role: media-vault/user
+    oidc_media_vault_normal_user_group: media-vault/user
+    oidc_media_vault_access_scope: media-vault/access
+  tasks:
+  - name: Create media vault realm
+    community.general.keycloak_realm:
+      auth_realm: master
+      auth_username: "{{ keycloak_admin }}"
+      auth_password: "{{ keycloak_admin_password }}"
+      auth_keycloak_url: "{{ keycloak_server }}"
+      realm: "{{ keycloak_application_realm }}"
+      id: "{{ keycloak_application_realm }}"
+      state: present
+      enabled: true
+    register: realm
+
+  - name: Create media vault user realm role
+    community.general.keycloak_role:
+      auth_realm: master
+      auth_username: "{{ keycloak_admin }}"
+      auth_password: "{{ keycloak_admin_password }}"
+      auth_keycloak_url: "{{ keycloak_server }}"
+      realm: "{{ keycloak_application_realm }}"
+      name: "{{ oidc_media_vault_normal_user_role }}"
+      state: present
+    delegate_to: localhost
+    register: user_role
+
+  - name: Create media vault user group
+    community.general.keycloak_group:
+      auth_realm: master
+      auth_username: "{{ keycloak_admin }}"
+      auth_password: "{{ keycloak_admin_password }}"
+      auth_keycloak_url: "{{ keycloak_server }}"
+      realm: "{{ keycloak_application_realm }}"
+      name: "{{ oidc_media_vault_normal_user_group }}"
+      state: present
+    register: media_vault_user_group
+    delegate_to: localhost
+
+  - name: Map media vault user realm role to user group
+    community.general.keycloak_realm_rolemapping:
+      auth_realm: master
+      auth_username: "{{ keycloak_admin }}"
+      auth_password: "{{ keycloak_admin_password }}"
+      auth_keycloak_url: "{{ keycloak_server }}"
+      realm: "{{ keycloak_application_realm }}"
+      state: present
+      gid: "{{ media_vault_user_group.end_state.id }}"
+      roles:
+        - name: "{{ user_role.end_state.name }}"
+          id: "{{ user_role.end_state.id }}"
+    delegate_to: localhost
+
+  - name: Create media vault service client
+    delegate_to: localhost
+    register: media_vault_client_output
+    community.general.keycloak_client:
+      auth_realm: master
+      auth_username: "{{ keycloak_admin }}"
+      auth_password: "{{ keycloak_admin_password }}"
+      auth_keycloak_url: "{{ keycloak_server }}"
+      realm: "{{ keycloak_application_realm }}"
+      state: present
+      public_client: false
+      enabled: true
+      protocol: openid-connect
+      client_id: "{{ oidc_media_vault_service_client_id }}"
+      secret: "{{ oidc_media_vault_service_client_secret }}"
+      protocol_mappers:
+        - name: email
+          protocol: openid-connect
+          protocolMapper: oidc-usermodel-property-mapper
+          consentRequired: false
+          config:
+            userinfo.token.claim: 'true'
+            user.attribute: email
+            id.token.claim: 'true'
+            access.token.claim: 'true'
+            claim.name: email
+            jsonType.label: String
+        - name: username
+          protocol: openid-connect
+          protocolMapper: oidc-usermodel-property-mapper
+          consentRequired: false
+          config:
+            userinfo.token.claim: 'true'
+            user.attribute: username
+            id.token.claim: 'true'
+            access.token.claim: 'true'
+            claim.name: preferred_username
+            jsonType.label: String
+        - name: profile
+          protocol: openid-connect
+          protocolMapper: oidc-usermodel-attribute-mapper
+          consentRequired: false
+          config:
+            userinfo.token.claim: 'true'
+            user.attribute: profile
+            id.token.claim: 'true'
+            access.token.claim: 'true'
+            claim.name: profile
+            jsonType.label: String
+        - name: email verified
+          protocol: openid-connect
+          protocolMapper: oidc-usermodel-property-mapper
+          consentRequired: false
+          config:
+            userinfo.token.claim: 'true'
+            user.attribute: emailVerified
+            id.token.claim: 'true'
+            access.token.claim: 'true'
+            claim.name: email_verified
+            jsonType.label: boolean
+        - name: given name
+          protocol: openid-connect
+          protocolMapper: oidc-usermodel-property-mapper
+          consentRequired: false
+          config:
+            userinfo.token.claim: 'true'
+            user.attribute: firstName
+            id.token.claim: 'true'
+            access.token.claim: 'true'
+            claim.name: given_name
+            jsonType.label: String
+        - name: realm roles
+          protocol: openid-connect
+          protocolMapper: oidc-usermodel-realm-role-mapper
+          consentRequired: false
+          config:
+            user.attribute: foo
+            access.token.claim: 'true'
+            claim.name: realm_access.roles
+            jsonType.label: String
+            multivalued: 'true'
+        - name: client roles
+          protocol: openid-connect
+          protocolMapper: oidc-usermodel-client-role-mapper
+          consentRequired: false
+          config:
+            user.attribute: foo
+            access.token.claim: 'true'
+            claim.name: resource_access.${client_id}.roles
+            jsonType.label: String
+            multivalued: 'true'
+
+  # we are adding audience mapper in this scope to get the aud attribute in token
+  - name: Create media vault access scope
+    community.general.keycloak_clientscope:
+      auth_realm: master
+      auth_username: "{{ keycloak_admin }}"
+      auth_password: "{{ keycloak_admin_password }}"
+      auth_keycloak_url: "{{ keycloak_server }}"
+      realm: "{{ keycloak_application_realm }}"
+      name: "{{ oidc_media_vault_access_scope }}"
+      protocol: "openid-connect"
+      state: present
+      protocol_mappers:
+        - name: audience
+          protocol: openid-connect
+          protocolMapper: oidc-audience-mapper
+          config:
+            included.client.audience: "{{ oidc_media_vault_service_client_id }}"
+            id.token.claim: 'true'
+            access.token.claim: 'true'
+    delegate_to: localhost
+
+  - name: Create media vault spa client
+    delegate_to: localhost
+    register: spa_client
+    community.general.keycloak_client:
+      auth_realm: master
+      auth_username: "{{ keycloak_admin }}"
+      auth_password: "{{ keycloak_admin_password }}"
+      auth_keycloak_url: "{{ keycloak_server }}"
+      realm: "{{ keycloak_application_realm }}"
+      state: present
+      public_client: true
+      enabled: true
+      protocol: openid-connect
+      client_id: "{{ oidc_media_vault_spa_client_id }}"
+      redirect_uris: "{{ oidc_media_vault_spa_redirect_uris }}"
+      web_origins: "{{ oidc_media_vault_spa_web_origins }}"
+      full_scope_allowed: false
+      default_roles:
+        - "{{ oidc_media_vault_normal_user_role }}"
+      default_client_scopes:
+        - web-origins
+        - "{{ oidc_media_vault_access_scope }}"
+        - acr
+        - roles
+        - profile
+        - email
+      protocol_mappers:
+        - name: email
+          protocol: openid-connect
+          protocolMapper: oidc-usermodel-property-mapper
+          consentRequired: false
+          config:
+            userinfo.token.claim: 'true'
+            user.attribute: email
+            id.token.claim: 'true'
+            access.token.claim: 'true'
+            claim.name: email
+            jsonType.label: String
+        - name: username
+          protocol: openid-connect
+          protocolMapper: oidc-usermodel-property-mapper
+          consentRequired: false
+          config:
+            userinfo.token.claim: 'true'
+            user.attribute: username
+            id.token.claim: 'true'
+            access.token.claim: 'true'
+            claim.name: preferred_username
+            jsonType.label: String
+        - name: profile
+          protocol: openid-connect
+          protocolMapper: oidc-usermodel-attribute-mapper
+          consentRequired: false
+          config:
+            userinfo.token.claim: 'true'
+            user.attribute: profile
+            id.token.claim: 'true'
+            access.token.claim: 'true'
+            claim.name: profile
+            jsonType.label: String
+        - name: email verified
+          protocol: openid-connect
+          protocolMapper: oidc-usermodel-property-mapper
+          consentRequired: false
+          config:
+            userinfo.token.claim: 'true'
+            user.attribute: emailVerified
+            id.token.claim: 'true'
+            access.token.claim: 'true'
+            claim.name: email_verified
+            jsonType.label: boolean
+        - name: given name
+          protocol: openid-connect
+          protocolMapper: oidc-usermodel-property-mapper
+          consentRequired: false
+          config:
+            userinfo.token.claim: 'true'
+            user.attribute: firstName
+            id.token.claim: 'true'
+            access.token.claim: 'true'
+            claim.name: given_name
+            jsonType.label: String
+        - name: realm roles
+          protocol: openid-connect
+          protocolMapper: oidc-usermodel-realm-role-mapper
+          consentRequired: false
+          config:
+            user.attribute: foo
+            access.token.claim: 'true'
+            claim.name: realm_access.roles
+            jsonType.label: String
+            multivalued: 'true'
+        - name: client roles
+          protocol: openid-connect
+          protocolMapper: oidc-usermodel-client-role-mapper
+          consentRequired: false
+          config:
+            user.attribute: foo
+            access.token.claim: 'true'
+            claim.name: resource_access.${client_id}.roles
+            jsonType.label: String
+            multivalued: 'true'
+
+  - name: Generate keycloak admin api token
+    ansible.builtin.uri:
+      url: "{{ keycloak_server }}/realms/master/protocol/openid-connect/token"
+      method: POST
+      body_format: form-urlencoded
+      body:
+        grant_type: password
+        client_id: admin-cli
+        username: "{{ keycloak_admin }}"
+        password: "{{ keycloak_admin_password }}"
+    register: keycloak_token_response
+
+  - name: Get media vault spa client's existing scope mappings
+    ansible.builtin.uri:
+      url: "{{ keycloak_server }}/admin/realms/{{ realm.end_state.id }}/clients/{{ spa_client.end_state.id }}/scope-mappings"
+      headers:
+        Authorization: "Bearer {{ keycloak_token_response.json.access_token }}"
+      method: GET
+    register: spa_client_scope_mappings_response
+
+  - name: Extract media vault spa client scope mappings ids
+    ansible.builtin.set_fact:
+      spa_client_scope_mapping_ids: "{{ (spa_client_scope_mappings_response.json.realmMappings | map(attribute='id') | list) if 'realmMappings' in spa_client_scope_mappings_response.json else [] }}"
+
+  - name: Debug
+    ansible.builtin.debug:
+      msg: "{{ spa_client_scope_mapping_ids | to_json }}"
+
+  - name: Create spa client's scope mappings for the media vault realm roles
+    ansible.builtin.uri:
+      url: "{{ keycloak_server }}/admin/realms/{{ realm.end_state.id }}/clients/{{ spa_client.end_state.id }}/scope-mappings/realm"
+      headers:
+        Authorization: "Bearer {{ keycloak_token_response.json.access_token }}"
+      method: POST
+      body_format: json
+      status_code:
+        - 200
+        - 204
+      body:
+        - id: "{{ user_role.end_state.id }}"
+          name: "{{ user_role.end_state.name }}"
+          composite: false
+          clientRole: false
+          containerId: "{{ realm.end_state.id }}"
+    when: user_role.end_state.id not in spa_client_scope_mapping_ids
+
+  - name: Create media vault initial user
+    community.general.keycloak_user:
+      auth_realm: master
+      auth_username: "{{ keycloak_admin }}"
+      auth_password: "{{ keycloak_admin_password }}"
+      auth_keycloak_url: "{{ keycloak_server }}"
+      realm: "{{ keycloak_application_realm }}"
+      username: "{{ keycloak_intial_user_name }}"
+      enabled: true
+      emailVerified: false
+      credentials:
+        - type: password
+          value: "{{ keycloak_intial_user_password }}"
+          temporary: true
+      state: present
+      groups:
+        - name: "{{ media_vault_user_group.end_state.name }}"
+          state: present

@@ -18,10 +18,6 @@ import (
 	"github.com/stretchr/testify/assert"
 )
 
-// copy it from the UI
-const AUTH_TOKEN = "eyJhbGciOiJSUzI1NiIsImtpZCI6IjAiLCJ0eXAiOiJKV1QifQ.eyJhdWQiOiJzcGEtdGVzdCIsImV4cCI6MTY4NjExNDYyMCwic3ViIjoiMSJ9.SFlGyrHZ3TDLCwWji1qs1980eO3yKcW03zAV7BNHtthFzRuOPLmBqxVGS2IxuVloj4a5br0cxdHVTudPIovjVnKfR6f0AL61x4Ei0sYfmzYU0X8ANiaP4eZi187G4kQIuFO9Dbw9w1VQqUgkrR4fAwH1SCAOr9o8eBBqsYZJv6tkHVBRPeZ0pCaWLKhiRO5OW9MnVVi-guGWeMpx7_G6h5gI7PyEcXgNuPuKSojavb9HzRgKWUNrYu0peuBBvWTTSKNrjkqiAH0dw8g3Yz5r3xZZ0dzC5BTJDlZujosv5ekY68LBGXA2QHcmD6QQ7ksBHCwbNIyGcjfpnrMFkgGoQw"
-const BASE_URL = "http://localhost:8090"
-
 type testHttpClient struct {
 	http.Client
 }
