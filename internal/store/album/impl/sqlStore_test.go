@@ -11,8 +11,8 @@ import (
 	"time"
 
 	"github.com/DATA-DOG/go-sqlmock"
-	"github.com/rishabhkailey/media-service/internal/store/album"
-	storemodels "github.com/rishabhkailey/media-service/internal/store/models"
+	"github.com/rishabhkailey/media-vault/internal/store/album"
+	storemodels "github.com/rishabhkailey/media-vault/internal/store/models"
 	"gorm.io/driver/postgres"
 	"gorm.io/gorm"
 	"gorm.io/gorm/logger"

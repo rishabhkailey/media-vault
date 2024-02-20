@@ -11,11 +11,11 @@ import (
 	"testing"
 	"time"
 
-	v1models "github.com/rishabhkailey/media-service/internal/api/v1/models"
-	authservice "github.com/rishabhkailey/media-service/internal/services/authService"
-	authserviceimpl "github.com/rishabhkailey/media-service/internal/services/authService/authServiceImpl"
-	"github.com/rishabhkailey/media-service/internal/services/media/mediaimpl"
-	"github.com/rishabhkailey/media-service/internal/services/mediaStorage/mediastorageimpl"
+	v1models "github.com/rishabhkailey/media-vault/internal/api/v1/models"
+	authservice "github.com/rishabhkailey/media-vault/internal/services/authService"
+	authserviceimpl "github.com/rishabhkailey/media-vault/internal/services/authService/authServiceImpl"
+	"github.com/rishabhkailey/media-vault/internal/services/media/mediaimpl"
+	"github.com/rishabhkailey/media-vault/internal/services/mediaStorage/mediastorageimpl"
 	"github.com/stretchr/testify/assert"
 )
 

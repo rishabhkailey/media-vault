@@ -5,7 +5,7 @@ import (
 	"io/fs"
 	"net/http"
 
-	"github.com/rishabhkailey/media-service/internal/utils"
+	"github.com/rishabhkailey/media-vault/internal/utils"
 )
 
 type GetMediaByFileNameQuery struct {

@@ -3,7 +3,7 @@ package v1models
 import (
 	"fmt"
 
-	mediasearch "github.com/rishabhkailey/media-service/internal/services/mediaSearch"
+	mediasearch "github.com/rishabhkailey/media-vault/internal/services/mediaSearch"
 	"github.com/sirupsen/logrus"
 )
 

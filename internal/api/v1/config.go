@@ -4,7 +4,7 @@ import (
 	"net/http"
 
 	"github.com/gin-gonic/gin"
-	v1models "github.com/rishabhkailey/media-service/internal/api/v1/models"
+	v1models "github.com/rishabhkailey/media-vault/internal/api/v1/models"
 )
 
 func (server *Server) GetSpaConfig(c *gin.Context) {

@@ -3,8 +3,8 @@ package mediaimpl
 import (
 	"context"
 
-	"github.com/rishabhkailey/media-service/internal/services/media"
-	storemodels "github.com/rishabhkailey/media-service/internal/store/models"
+	"github.com/rishabhkailey/media-vault/internal/services/media"
+	storemodels "github.com/rishabhkailey/media-vault/internal/store/models"
 	"gorm.io/gorm"
 )
 

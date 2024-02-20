@@ -9,11 +9,11 @@ import (
 	"strings"
 	"testing"
 
-	authservice "github.com/rishabhkailey/media-service/internal/services/authService"
-	authserviceimpl "github.com/rishabhkailey/media-service/internal/services/authService/authServiceImpl"
-	"github.com/rishabhkailey/media-service/internal/services/media/mediaimpl"
-	mediasearchimpl "github.com/rishabhkailey/media-service/internal/services/mediaSearch/mediaSearchimpl"
-	storemodels "github.com/rishabhkailey/media-service/internal/store/models"
+	authservice "github.com/rishabhkailey/media-vault/internal/services/authService"
+	authserviceimpl "github.com/rishabhkailey/media-vault/internal/services/authService/authServiceImpl"
+	"github.com/rishabhkailey/media-vault/internal/services/media/mediaimpl"
+	mediasearchimpl "github.com/rishabhkailey/media-vault/internal/services/mediaSearch/mediaSearchimpl"
+	storemodels "github.com/rishabhkailey/media-vault/internal/store/models"
 	"github.com/stretchr/testify/assert"
 )
 

@@ -5,10 +5,10 @@ import (
 	"net/http"
 
 	"github.com/gin-gonic/gin"
-	v1models "github.com/rishabhkailey/media-service/internal/api/v1/models"
-	internalErrors "github.com/rishabhkailey/media-service/internal/errors"
-	"github.com/rishabhkailey/media-service/internal/services/media"
-	mediasearch "github.com/rishabhkailey/media-service/internal/services/mediaSearch"
+	v1models "github.com/rishabhkailey/media-vault/internal/api/v1/models"
+	internalErrors "github.com/rishabhkailey/media-vault/internal/errors"
+	"github.com/rishabhkailey/media-vault/internal/services/media"
+	mediasearch "github.com/rishabhkailey/media-vault/internal/services/mediaSearch"
 )
 
 // todo rename to media search. we will also have album search?

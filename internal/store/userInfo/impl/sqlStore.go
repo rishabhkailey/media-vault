@@ -4,7 +4,7 @@ import (
 	"context"
 
 	"github.com/go-redis/redis/v8"
-	userinfo "github.com/rishabhkailey/media-service/internal/store/userInfo"
+	userinfo "github.com/rishabhkailey/media-vault/internal/store/userInfo"
 	"gorm.io/gorm"
 )
 

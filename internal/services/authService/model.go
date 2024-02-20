@@ -37,8 +37,8 @@ var ErrUnauthorized = errors.New("unauthorized")
 var ErrForbidden = errors.New("forbidden")
 
 // todo change scope to unique-id/user and unique-id/admin
-// const UserScope = "media-service/user"
-// const AdminScope = "media-service/admin"
+// const UserScope = "media-vault/user"
+// const AdminScope = "media-vault/admin"
 const UserScope = "user"
 const AdminScope = "admin"
 

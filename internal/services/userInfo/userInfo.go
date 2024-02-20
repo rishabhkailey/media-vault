@@ -3,7 +3,7 @@ package userinfo
 import (
 	"context"
 
-	userinfo "github.com/rishabhkailey/media-service/internal/store/userInfo"
+	userinfo "github.com/rishabhkailey/media-vault/internal/store/userInfo"
 )
 
 type Service interface {

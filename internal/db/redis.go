@@ -8,7 +8,7 @@ import (
 	"github.com/go-session/session/v3"
 
 	"github.com/go-redis/redis/v8"
-	"github.com/rishabhkailey/media-service/internal/config"
+	"github.com/rishabhkailey/media-vault/internal/config"
 )
 
 type RedisStore struct {

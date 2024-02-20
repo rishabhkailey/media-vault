@@ -6,8 +6,8 @@ import (
 	"net/http"
 
 	"github.com/gin-gonic/gin"
-	internalErrors "github.com/rishabhkailey/media-service/internal/errors"
-	authservice "github.com/rishabhkailey/media-service/internal/services/authService"
+	internalErrors "github.com/rishabhkailey/media-vault/internal/errors"
+	authservice "github.com/rishabhkailey/media-vault/internal/services/authService"
 )
 
 func (server *Server) UserAuthMiddleware(c *gin.Context) {

@@ -3,8 +3,8 @@ package mediametadataimpl
 import (
 	"context"
 
-	mediametadata "github.com/rishabhkailey/media-service/internal/store/mediaMetadata"
-	storemodels "github.com/rishabhkailey/media-service/internal/store/models"
+	mediametadata "github.com/rishabhkailey/media-vault/internal/store/mediaMetadata"
+	storemodels "github.com/rishabhkailey/media-vault/internal/store/models"
 	"gorm.io/gorm"
 )
 

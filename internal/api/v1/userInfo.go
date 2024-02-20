@@ -5,9 +5,9 @@ import (
 	"net/http"
 
 	"github.com/gin-gonic/gin"
-	v1models "github.com/rishabhkailey/media-service/internal/api/v1/models"
-	internalErrors "github.com/rishabhkailey/media-service/internal/errors"
-	userinfo "github.com/rishabhkailey/media-service/internal/services/userInfo"
+	v1models "github.com/rishabhkailey/media-vault/internal/api/v1/models"
+	internalErrors "github.com/rishabhkailey/media-vault/internal/errors"
+	userinfo "github.com/rishabhkailey/media-vault/internal/services/userInfo"
 )
 
 func (s *Server) GetUserInfo(c *gin.Context) {

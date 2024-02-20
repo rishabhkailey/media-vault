@@ -6,9 +6,9 @@ import (
 
 	"github.com/gin-gonic/gin"
 
-	v1models "github.com/rishabhkailey/media-service/internal/api/v1/models"
-	internalErrors "github.com/rishabhkailey/media-service/internal/errors"
-	"github.com/rishabhkailey/media-service/internal/services/album"
+	v1models "github.com/rishabhkailey/media-vault/internal/api/v1/models"
+	internalErrors "github.com/rishabhkailey/media-vault/internal/errors"
+	"github.com/rishabhkailey/media-vault/internal/services/album"
 )
 
 func (server *Server) CreateAlbum(c *gin.Context) {

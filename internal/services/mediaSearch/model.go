@@ -3,7 +3,7 @@ package mediasearch
 import (
 	"fmt"
 
-	storemodels "github.com/rishabhkailey/media-service/internal/store/models"
+	storemodels "github.com/rishabhkailey/media-vault/internal/store/models"
 )
 
 const (

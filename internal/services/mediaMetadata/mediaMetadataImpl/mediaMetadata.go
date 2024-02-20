@@ -3,9 +3,9 @@ package mediametadataimpl
 import (
 	"context"
 
-	mediametadata "github.com/rishabhkailey/media-service/internal/services/mediaMetadata"
-	"github.com/rishabhkailey/media-service/internal/store"
-	storemodels "github.com/rishabhkailey/media-service/internal/store/models"
+	mediametadata "github.com/rishabhkailey/media-vault/internal/services/mediaMetadata"
+	"github.com/rishabhkailey/media-vault/internal/store"
+	storemodels "github.com/rishabhkailey/media-vault/internal/store/models"
 )
 
 type Service struct {

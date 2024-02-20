@@ -47,7 +47,7 @@ function updateServiceWorker(
       console.debug(
         "looks like a hard reload. unregistering the existing worker and try to reregister worker",
       );
-      // https://github.com/rishabhkailey/media-service/issues/2
+      // https://github.com/rishabhkailey/media-vault/issues/2
       // https://stackoverflow.com/a/66816077
       return registration
         .unregister()

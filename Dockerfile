@@ -14,7 +14,7 @@ COPY go.* ./
 RUN go mod download
 COPY cmd cmd/
 COPY internal internal/
-RUN CGO_ENABLED=0 GOOS=linux go build -a -installsuffix cgo -o media-vault cmd/media-service/main.go
+RUN CGO_ENABLED=0 GOOS=linux go build -a -installsuffix cgo -o media-vault cmd/media-vault/main.go
 RUN chmod +x media-vault
 
 FROM debian:bookworm-20240211

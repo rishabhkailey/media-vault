@@ -6,7 +6,7 @@ import (
 	"os"
 	"time"
 
-	"github.com/rishabhkailey/media-service/internal/config"
+	"github.com/rishabhkailey/media-vault/internal/config"
 	"gorm.io/driver/postgres"
 	"gorm.io/gorm"
 	"gorm.io/gorm/logger"

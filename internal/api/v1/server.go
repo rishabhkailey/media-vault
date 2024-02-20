@@ -2,10 +2,10 @@ package v1
 
 import (
 	"github.com/go-session/session/v3"
-	"github.com/rishabhkailey/media-service/internal/auth"
-	"github.com/rishabhkailey/media-service/internal/config"
-	"github.com/rishabhkailey/media-service/internal/db"
-	"github.com/rishabhkailey/media-service/internal/services"
+	"github.com/rishabhkailey/media-vault/internal/auth"
+	"github.com/rishabhkailey/media-vault/internal/config"
+	"github.com/rishabhkailey/media-vault/internal/db"
+	"github.com/rishabhkailey/media-vault/internal/services"
 )
 
 // todo interface so we can test it

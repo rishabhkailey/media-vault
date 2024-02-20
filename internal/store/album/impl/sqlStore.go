@@ -9,10 +9,10 @@ import (
 
 	"github.com/go-redis/redis/v8"
 	"github.com/jackc/pgconn"
-	"github.com/rishabhkailey/media-service/internal/constants"
-	"github.com/rishabhkailey/media-service/internal/store/album"
-	storemodels "github.com/rishabhkailey/media-service/internal/store/models"
-	"github.com/rishabhkailey/media-service/internal/utils"
+	"github.com/rishabhkailey/media-vault/internal/constants"
+	"github.com/rishabhkailey/media-vault/internal/store/album"
+	storemodels "github.com/rishabhkailey/media-vault/internal/store/models"
+	"github.com/rishabhkailey/media-vault/internal/utils"
 	"github.com/sirupsen/logrus"
 	"gorm.io/gorm"
 )

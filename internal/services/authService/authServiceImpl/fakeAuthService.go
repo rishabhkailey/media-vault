@@ -1,7 +1,7 @@
 package authserviceimpl
 
 import (
-	authservice "github.com/rishabhkailey/media-service/internal/services/authService"
+	authservice "github.com/rishabhkailey/media-vault/internal/services/authService"
 )
 
 type FakeService struct {

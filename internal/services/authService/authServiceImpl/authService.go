@@ -10,10 +10,10 @@ import (
 	"time"
 
 	"github.com/go-session/session/v3"
-	"github.com/rishabhkailey/media-service/internal/auth"
-	authservice "github.com/rishabhkailey/media-service/internal/services/authService"
-	usermediabindings "github.com/rishabhkailey/media-service/internal/services/userMediaBindings"
-	"github.com/rishabhkailey/media-service/internal/utils"
+	"github.com/rishabhkailey/media-vault/internal/auth"
+	authservice "github.com/rishabhkailey/media-vault/internal/services/authService"
+	usermediabindings "github.com/rishabhkailey/media-vault/internal/services/userMediaBindings"
+	"github.com/rishabhkailey/media-vault/internal/utils"
 	"github.com/sirupsen/logrus"
 )
 

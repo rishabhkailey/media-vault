@@ -1,4 +1,4 @@
-module github.com/rishabhkailey/media-service
+module github.com/rishabhkailey/media-vault
 
 go 1.19
 

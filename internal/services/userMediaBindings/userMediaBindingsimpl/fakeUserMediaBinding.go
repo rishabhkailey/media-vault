@@ -3,8 +3,8 @@ package usermediabindingsimpl
 import (
 	"context"
 
-	usermediabindings "github.com/rishabhkailey/media-service/internal/services/userMediaBindings"
-	storemodels "github.com/rishabhkailey/media-service/internal/store/models"
+	usermediabindings "github.com/rishabhkailey/media-vault/internal/services/userMediaBindings"
+	storemodels "github.com/rishabhkailey/media-vault/internal/store/models"
 	"gorm.io/gorm"
 )
 

@@ -8,8 +8,8 @@ import (
 	"time"
 
 	"github.com/minio/minio-go/v7"
-	mediastorage "github.com/rishabhkailey/media-service/internal/services/mediaStorage"
-	uploadrequests "github.com/rishabhkailey/media-service/internal/services/uploadRequests"
+	mediastorage "github.com/rishabhkailey/media-vault/internal/services/mediaStorage"
+	uploadrequests "github.com/rishabhkailey/media-vault/internal/services/uploadRequests"
 	"github.com/sirupsen/logrus"
 )
 

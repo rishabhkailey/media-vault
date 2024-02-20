@@ -7,9 +7,9 @@ import (
 	"sync"
 
 	"github.com/meilisearch/meilisearch-go"
-	mediasearch "github.com/rishabhkailey/media-service/internal/services/mediaSearch"
-	mediasearchimpl "github.com/rishabhkailey/media-service/internal/services/mediaSearch/mediaSearchimpl"
-	storemodels "github.com/rishabhkailey/media-service/internal/store/models"
+	mediasearch "github.com/rishabhkailey/media-vault/internal/services/mediaSearch"
+	mediasearchimpl "github.com/rishabhkailey/media-vault/internal/services/mediaSearch/mediaSearchimpl"
+	storemodels "github.com/rishabhkailey/media-vault/internal/store/models"
 	"github.com/sirupsen/logrus"
 	"gorm.io/gorm"
 )

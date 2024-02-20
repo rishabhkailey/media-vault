@@ -9,6 +9,8 @@ Self-hosted, end-to-end encrypted user media backups
   <img src="./docs/images/web-mobile-home-page-screenshot.webp" alt="web-mobile-home-page-screenshot" style="margin-left: 1%; width: 16%; height: auto; object-fit: cover; aspect-ratio: 392/845" />
 </div>
 
+> As of now no mobile app exists; the provided screenshot depicts the browser interface.
+
 
 ## Overview
 Media Vault empowers you to take control of your personal media and back it up securely. It provides a self-hosted solution with end-to-end encryption, ensuring your data remains private and accessible only to you.

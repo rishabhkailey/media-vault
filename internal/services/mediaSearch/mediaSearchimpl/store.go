@@ -7,7 +7,7 @@ import (
 	"fmt"
 
 	"github.com/meilisearch/meilisearch-go"
-	mediasearch "github.com/rishabhkailey/media-service/internal/services/mediaSearch"
+	mediasearch "github.com/rishabhkailey/media-vault/internal/services/mediaSearch"
 	"github.com/sirupsen/logrus"
 )
 

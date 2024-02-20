@@ -4,11 +4,11 @@ import (
 	"errors"
 	"fmt"
 
-	internalErrors "github.com/rishabhkailey/media-service/internal/errors"
-	"github.com/rishabhkailey/media-service/internal/services/album"
-	"github.com/rishabhkailey/media-service/internal/store"
-	albumStore "github.com/rishabhkailey/media-service/internal/store/album"
-	storemodels "github.com/rishabhkailey/media-service/internal/store/models"
+	internalErrors "github.com/rishabhkailey/media-vault/internal/errors"
+	"github.com/rishabhkailey/media-vault/internal/services/album"
+	"github.com/rishabhkailey/media-vault/internal/store"
+	albumStore "github.com/rishabhkailey/media-vault/internal/store/album"
+	storemodels "github.com/rishabhkailey/media-vault/internal/store/models"
 	"golang.org/x/net/context"
 	"gorm.io/gorm"
 )

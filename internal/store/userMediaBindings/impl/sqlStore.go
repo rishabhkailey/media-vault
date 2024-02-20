@@ -5,11 +5,11 @@ import (
 	"errors"
 	"fmt"
 
-	// usermediabindings "github.com/rishabhkailey/media-service/internal/services/userMediaBindings"
-	"github.com/rishabhkailey/media-service/internal/constants"
-	storemodels "github.com/rishabhkailey/media-service/internal/store/models"
-	usermediabindings "github.com/rishabhkailey/media-service/internal/store/userMediaBindings"
-	"github.com/rishabhkailey/media-service/internal/utils"
+	// usermediabindings "github.com/rishabhkailey/media-vault/internal/services/userMediaBindings"
+	"github.com/rishabhkailey/media-vault/internal/constants"
+	storemodels "github.com/rishabhkailey/media-vault/internal/store/models"
+	usermediabindings "github.com/rishabhkailey/media-vault/internal/store/userMediaBindings"
+	"github.com/rishabhkailey/media-vault/internal/utils"
 	"gorm.io/gorm"
 )
 

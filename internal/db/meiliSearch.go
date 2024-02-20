@@ -2,7 +2,7 @@ package db
 
 import (
 	"github.com/meilisearch/meilisearch-go"
-	"github.com/rishabhkailey/media-service/internal/config"
+	"github.com/rishabhkailey/media-vault/internal/config"
 )
 
 func NewMeiliSearchClient(config config.MeiliSearch) (*meilisearch.Client, error) {
