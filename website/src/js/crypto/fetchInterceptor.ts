@@ -44,7 +44,7 @@ export async function internalFetch(
       statusText: res.statusText,
     });
   } catch (err) {
-    console.log(err);
+    console.error(err);
     return new Response(undefined, {
       status: 500,
     });

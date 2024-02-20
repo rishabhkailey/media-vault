@@ -36,7 +36,7 @@ type ProviderMetadata struct {
 	Algorithms            []string `json:"id_token_signing_alg_values_supported"`
 }
 
-func NewOidcClient(issuerUrl, clientID, clientSecret, redirectURI string) (*OidcClient, error) {
+func NewOidcClient(issuerUrl, discoveryEndpoint, clientID, clientSecret string) (*OidcClient, error) {
 	var err error
 
 	oidcProvider, err := oidc.NewProvider(context.Background(), issuerUrl)
@@ -47,13 +47,9 @@ func NewOidcClient(issuerUrl, clientID, clientSecret, redirectURI string) (*Oidc
 		}).Error("failed to get oidc provider config")
 		return nil, fmt.Errorf("failed to get oidc provider config")
 	}
-	wellknownUrl, err := url.JoinPath(issuerUrl, "/.well-known/openid-configuration")
+	resp, err := http.Get(discoveryEndpoint)
 	if err != nil {
-		return nil, fmt.Errorf("url joinPath failed")
-	}
-	resp, err := http.Get(wellknownUrl)
-	if err != nil {
-		return nil, fmt.Errorf("http request to %s failed", wellknownUrl)
+		return nil, fmt.Errorf("http request to %s failed", discoveryEndpoint)
 	}
 	defer resp.Body.Close()
 	body, err := io.ReadAll(resp.Body)
@@ -77,7 +73,6 @@ func NewOidcClient(issuerUrl, clientID, clientSecret, redirectURI string) (*Oidc
 		ClientID:     clientID,
 		ClientSecret: clientSecret,
 		Scopes:       []string{oidc.ScopeOpenID, "roles", "email"},
-		RedirectURL:  redirectURI,
 		Endpoint:     oidcProvider.Endpoint(),
 	}
 

@@ -1,6 +1,6 @@
 <script setup lang="ts">
 import { ref, onMounted, computed, reactive } from "vue";
-import { chunkUpload } from "@/js/encryptFileUpload";
+import { chunkUpload } from "@/js/api/upload";
 import { useAuthStore } from "@/piniaStore/auth";
 import { storeToRefs } from "pinia";
 import { useUserInfoStore } from "@/piniaStore/userInfo";
@@ -92,7 +92,6 @@ onMounted(() => {
     props.files.length > 0 &&
     props.files.length === filesUploadStatus.value.length
   ) {
-    console.log("uploading...");
     uploadFiles(props.files);
   }
 });

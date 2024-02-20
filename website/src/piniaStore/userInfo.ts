@@ -55,7 +55,6 @@ export const useUserInfoStore = defineStore("userInfo", () => {
         .catch((err) => {
           if (axios.isAxiosError(err)) {
             if (err.response?.status == 404) {
-              console.log("init required");
               initRequired.value = true;
               storageUsage.value = 0;
               preferedTimezone.value = "";

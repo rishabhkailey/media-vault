@@ -13,7 +13,6 @@ const { loadMoreMedia, getMediaDateAccordingToOrderBy } = mediaStore;
 
 async function loadAllMediaUntil(date: Date): Promise<boolean> {
   let lastMediaDate = mediaList.value[mediaList.value.length - 1].date;
-  console.log(date, lastMediaDate);
   while (
     date.getDate() === lastMediaDate.getDate() &&
     date.getFullYear() === lastMediaDate.getFullYear() &&
@@ -36,7 +35,7 @@ function handleThumbnailClick(
     );
   } catch (err) {
     // todo error page?
-    console.log("error in homepage", err);
+    console.error("error in homepage", err);
   }
 }
 </script>

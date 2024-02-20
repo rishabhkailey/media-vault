@@ -97,8 +97,6 @@ self.onfetch = (event) => {
   // ****custom code start****
   // *************************
   const urlObj = new URL(url);
-  console.log(urlObj.pathname);
-  console.log(new RegExp(`/v1/file/[^/]+(/thumbnail)?$`).test(urlObj.pathname));
   if (
     event.request.method === "GET" &&
     new RegExp(`/v1/file/[^/]+(/thumbnail)?$`).test(urlObj.pathname)

@@ -94,10 +94,9 @@ export const useSearchStore = defineStore("search", () => {
     accessToken: string,
     _query: string,
   ): Promise<LoadMoreMediaStatus> {
-    console.log(query.value, _query, query.value !== _query);
     return new Promise<LoadMoreMediaStatus>((resolve, reject) => {
       if (query.value !== _query) {
-        console.log("query changed resetting media list");
+        console.debug("query changed resetting media list");
         reset();
       }
       query.value = _query;
@@ -111,7 +110,6 @@ export const useSearchStore = defineStore("search", () => {
           },
         )
         .then((response) => {
-          console.log(response);
           if (response.status == 200) {
             appendMedia(response.data);
             nextPageNumber.value += 1;
@@ -126,7 +124,6 @@ export const useSearchStore = defineStore("search", () => {
           return;
         })
         .catch((err) => {
-          console.log(err);
           reject(err);
         });
     });

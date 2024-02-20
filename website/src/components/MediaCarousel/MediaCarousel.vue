@@ -34,7 +34,6 @@ const media = computed<Media>(() => {
 const rootContainer = ref<HTMLElement | null>(null);
 
 function loadMoreMediaIfRequired() {
-  console.log("loadMoreMediaIfRequired");
   if (props.index > props.mediaList.length - 2 && !props.allMediaLoaded) {
     props.loadMoreMedia().catch((err) => {
       appendError(
@@ -87,7 +86,6 @@ function startImageOpenAnimation() {
     // if we change this behavior this might stop working, in that case we can use route hash to get thumbnailRect
     let thumbnailRect = thumbnailElement.getBoundingClientRect();
     let mediaWindowRect = mediaWindowElement.getBoundingClientRect();
-    console.log(thumbnailRect, mediaWindowRect);
     let {
       x: initialX,
       y: initialY,
@@ -156,7 +154,6 @@ function startImageCloseAnimation() {
     // if we change this behavior this might stop working, in that case we can use route hash to get thumbnailRect
     let thumbnailRect = thumbnailElement.getBoundingClientRect();
     let mediaWindowRect = mediaWindowElement.getBoundingClientRect();
-    console.log(thumbnailRect, mediaWindowRect);
     let {
       x: initialX,
       y: initialY,

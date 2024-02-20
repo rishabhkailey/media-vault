@@ -44,7 +44,7 @@ function updateServiceWorker(
       navigator.serviceWorker.controller === null ||
       !navigator.serviceWorker.controller.scriptURL.endsWith(decryptWorker)
     ) {
-      console.log(
+      console.debug(
         "looks like a hard reload. unregistering the existing worker and try to reregister worker",
       );
       // https://github.com/rishabhkailey/media-service/issues/2
@@ -52,11 +52,11 @@ function updateServiceWorker(
       return registration
         .unregister()
         .then((unregister) => {
-          console.log(unregister);
+          console.debug(unregister);
           return registerServiceWorker();
         })
         .catch((err) => {
-          console.log("worker unregisteration failed");
+          console.debug("worker unregisteration failed");
           reject(err);
         });
     }
@@ -64,7 +64,7 @@ function updateServiceWorker(
     registration
       .update()
       .then(() => {
-        console.log("updated");
+        console.debug("updated");
         if (registration.active === null) {
           reject(new Error("got null service worker after update"));
           return;
@@ -82,7 +82,7 @@ function updateServiceWorker(
 // https://github.com/jimmywarting/StreamSaver.js/blob/master/mitm.html#L39
 function registerServiceWorker(): Promise<ServiceWorker> {
   return new Promise<ServiceWorker>((resolve, reject) => {
-    console.log("registering new worker");
+    console.debug("registering new worker");
     if ("serviceWorker" in navigator) {
       // unregister the existing service worker
       navigator.serviceWorker

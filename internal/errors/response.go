@@ -49,6 +49,14 @@ func NewForbiddenError(err error) CustomError {
 	}
 }
 
+func NewUnauthorizedError(err error) CustomError {
+	return CustomError{
+		Err:           err,
+		PublicMessage: "User is not authorized to access the requested resource",
+		Status:        http.StatusUnauthorized,
+	}
+}
+
 func NewNotFoundError(err error) CustomError {
 	return CustomError{
 		Err:           err,

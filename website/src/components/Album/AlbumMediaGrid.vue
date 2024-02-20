@@ -30,7 +30,6 @@ function getAlbumIdFromRoute(): number {
 
 const route = useRoute();
 let albumID = ref<number>(-1);
-console.log("album id in script", albumID.value);
 
 const album = ref<Album>({
   id: 0,
@@ -77,7 +76,6 @@ const loadAlbum = () => {
 
 onMounted(() => {
   albumID.value = getAlbumIdFromRoute();
-  console.log("album id in mounted", albumID.value);
   if (albumID.value === -1) {
     return;
   }

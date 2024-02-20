@@ -3,29 +3,19 @@ package api
 import (
 	"fmt"
 	"net/http/pprof"
-	"path"
 
-	"github.com/gin-contrib/static"
 	"github.com/gin-gonic/gin"
 	v1Api "github.com/rishabhkailey/media-service/internal/api/v1"
+	"github.com/rishabhkailey/media-service/internal/api/website"
 	"github.com/rishabhkailey/media-service/internal/config"
 	"github.com/sirupsen/logrus"
 )
 
-func NewRouter(v1ApiServer *v1Api.Server, config config.Config) (*gin.Engine, error) {
+func NewRouter(v1ApiServer *v1Api.Server, websiteHandler *website.WebsiteHandler, config config.Config) (*gin.Engine, error) {
 	router := gin.Default()
 	router.Use(v1Api.ErrorHandler)
-	// store := cookie.NewStore([]byte(config.Session.Secret))
-	// // session.SetCookieName("media_service")
-	// router.Use(sessions.Sessions("media_service", store))
 
-	// todo - check if there is any security risk of doing this
-	router.Use(
-		static.Serve("/assets", static.LocalFile(path.Join(config.WebUIConfig.Directory, "assets"), false)),
-		static.Serve("/login", static.LocalFile(config.WebUIConfig.Directory, false)),
-		static.Serve("/signup", static.LocalFile(config.WebUIConfig.Directory, false)),
-		static.Serve("/consentscreen", static.LocalFile(config.WebUIConfig.Directory, false)),
-	)
+	router.NoRoute(websiteHandler.ServeWebsite)
 
 	v1 := router.Group("/v1")
 	{
@@ -77,6 +67,10 @@ func NewRouter(v1ApiServer *v1Api.Server, config config.Config) (*gin.Engine, er
 			v1ProtectedBearerOnly.POST("/terminateSession", v1ApiServer.TerminateSession)
 		}
 	}
+	public := v1.Group("/public")
+	{
+		public.GET("/spa-config", v1ApiServer.GetSpaConfig)
+	}
 	debug := router.Group("/debug")
 	{
 		debug.GET("/pprof/:profile", func(c *gin.Context) {
@@ -105,7 +99,9 @@ func Start() error {
 	if err != nil {
 		return fmt.Errorf("[Server.Start] failed to create Server: %w", err)
 	}
-	router, err := NewRouter(v1ApiServer, *config)
+	websiteHandler := website.NewWebsiteHandler(config.WebUIConfig.Directory)
+
+	router, err := NewRouter(v1ApiServer, websiteHandler, *config)
 	if err != nil {
 		return fmt.Errorf("[Server.Start] failed to create router: %w", err)
 	}

@@ -13,7 +13,6 @@ import { aliases, mdi } from "vuetify/iconsets/mdi";
 import axios from "axios";
 import VueAxios from "vue-axios";
 
-import VueVideoPlayer from "@videojs-player/vue";
 import "./assets/main.css";
 import { createPinia } from "pinia";
 
@@ -87,14 +86,7 @@ const vuetify = createVuetify({
   },
 });
 
-const authServiceUrl = import.meta.env.VITE_AUTH_SERVICE_URL;
-const authServiceClientID = import.meta.env.VITE_AUTH_SERVICE_CLIENT_ID;
-if (authServiceUrl === undefined || authServiceClientID === undefined) {
-  throw new Error("VITE_AUTH_SERVICE_URL, VITE_AUTH_SERVICE_CLIENT_ID not set");
-}
-
 app.use(vuetify);
-app.use(VueVideoPlayer);
 app.use(VueAxios, axios);
 
 // router depends on pinia and userMananger

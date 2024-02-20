@@ -1,8 +1,6 @@
 package v1
 
 import (
-	"net/url"
-
 	"github.com/go-session/session/v3"
 	"github.com/rishabhkailey/media-service/internal/auth"
 	"github.com/rishabhkailey/media-service/internal/config"
@@ -16,6 +14,7 @@ import (
 // api ?
 type Server struct {
 	services.Services
+	config *config.Config
 }
 
 func NewServer(config *config.Config) (*Server, error) {
@@ -47,22 +46,18 @@ func NewServer(config *config.Config) (*Server, error) {
 		return nil, err
 	}
 
-	redirectURI, err := url.JoinPath(config.Server.BaseURL, "/v1/authorize")
+	oidcClient, err := auth.NewOidcClient(config.OIDC.URL, config.OIDC.DiscoveryEndpoint, config.OIDC.MediaVault.ClientID, config.OIDC.MediaVault.ClientSecret)
 	if err != nil {
 		return nil, err
 	}
 
-	oidcClient, err := auth.NewOidcClient(config.AuthService.URL, config.AuthService.ClientID, config.AuthService.ClientSecret, redirectURI)
-	if err != nil {
-		return nil, err
-	}
-
-	services, err := services.NewServices(DbConn, meiliSearchClient, minioClient, redisClient, oidcClient)
+	services, err := services.NewServices(DbConn, meiliSearchClient, minioClient, config.MinioConfig.Bucket, redisClient, oidcClient)
 	if err != nil {
 		return nil, err
 	}
 
 	return &Server{
 		Services: *services,
+		config:   config,
 	}, nil
 }

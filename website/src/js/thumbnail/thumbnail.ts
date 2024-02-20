@@ -171,9 +171,9 @@ function getnerateVideoThumbnail(
       reject(e);
     };
     video.onloadedmetadata = (event) => {
-      console.log("metadata", event);
-      console.log(video.duration);
-      // console.log(video.fastSeek);
+      console.debug("metadata", event);
+      console.debug("video duration", video.duration);
+      // console.debug(video.fastSeek);
     };
     let requestVideoFrameCallbackCalled = false;
     video.oncanplay = async (event) => {
@@ -181,7 +181,7 @@ function getnerateVideoThumbnail(
         return;
       }
       requestVideoFrameCallbackCalled = true;
-      console.log("canplay", event);
+      console.debug("canplay", event);
       // we want the thumbnail to be in the first minute
       // for video longer than 1 minute = 30, for video less than 1 minute = duration/2
       const thumbnailTime = Math.min(30, Math.floor(video.duration / 2));
@@ -192,7 +192,7 @@ function getnerateVideoThumbnail(
       await video.pause();
     };
     video.requestVideoFrameCallback(async (now, metadata) => {
-      console.log(now, metadata);
+      console.debug(now, metadata);
       requestVideoFrameCallbackCalled = true;
       let thumbnail: Blob | undefined;
       let resolution: WidthHeight | undefined;

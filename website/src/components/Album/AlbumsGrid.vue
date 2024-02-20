@@ -78,45 +78,49 @@ function onDeleteConfirm(albumID: number) {
           }
         "
       >
-        <v-col
-          :xxl="2"
-          :xl="2"
-          :lg="2"
-          :md="3"
-          :sm="6"
-          :xs="12"
-          :cols="12"
-          :key="`${index}+${album.id}`"
-          v-for="(album, index) in albums"
-        >
-          <KebabMenuWrapper
-            :show-select-button-on-hover="true"
-            :select-on-content-click="false"
-            :always-show-select-button="false"
-            :always-show-select-on-mobile="true"
-            selectIconSize="large"
+        <template #error> failed to load data from server </template>
+        <template #empty> No more albums </template>
+        <template #default>
+          <v-col
+            :xxl="2"
+            :xl="2"
+            :lg="2"
+            :md="3"
+            :sm="6"
+            :xs="12"
+            :cols="12"
+            :key="`${index}+${album.id}`"
+            v-for="(album, index) in albums"
           >
-            <AlbumCard
-              :padding="0"
-              :aspect-ratio="1"
-              :album="album"
-              @click="
-                () => {
-                  router.push(albumRoute(album.id));
-                }
-              "
-            />
-            <template #options>
-              <v-list>
-                <v-list-item>
-                  <v-btn @click.stop="() => onDeleteButtonClick(album.id)">
-                    Delete Album
-                  </v-btn>
-                </v-list-item>
-              </v-list>
-            </template>
-          </KebabMenuWrapper>
-        </v-col>
+            <KebabMenuWrapper
+              :show-select-button-on-hover="true"
+              :select-on-content-click="false"
+              :always-show-select-button="false"
+              :always-show-select-on-mobile="true"
+              selectIconSize="large"
+            >
+              <AlbumCard
+                :padding="0"
+                :aspect-ratio="1"
+                :album="album"
+                @click="
+                  () => {
+                    router.push(albumRoute(album.id));
+                  }
+                "
+              />
+              <template #options>
+                <v-list>
+                  <v-list-item>
+                    <v-btn @click.stop="() => onDeleteButtonClick(album.id)">
+                      Delete Album
+                    </v-btn>
+                  </v-list-item>
+                </v-list>
+              </template>
+            </KebabMenuWrapper>
+          </v-col>
+        </template>
       </v-infinite-scroll>
       <ConfirmationPopupVue
         title="Delete album?"

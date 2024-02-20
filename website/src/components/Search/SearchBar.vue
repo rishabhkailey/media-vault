@@ -22,7 +22,6 @@ watch(searchElement, (newValue) => {
   }
   // https://github.com/vuetifyjs/vuetify/issues/10659#issuecomment-594329553
   setTimeout(() => {
-    console.log("focused ", searchElement.value?.focus);
     searchElement.value?.focus();
   }, 100);
 });
@@ -35,7 +34,6 @@ watch(searchElement, (newValue) => {
     class="d-flex flex-grow-1"
     @submit.prevent="
       (e) => {
-        console.log('form submit');
         emits('submit', props.modelValue);
       }
     "
@@ -58,7 +56,6 @@ watch(searchElement, (newValue) => {
           icon="mdi-magnify"
           @click="
             () => {
-              console.log('icon submit');
               emits('submit', props.modelValue);
             }
           "
@@ -83,7 +80,6 @@ watch(searchElement, (newValue) => {
               class="d-flex flex-grow-1"
               @submit.prevent="
                 (e) => {
-                  console.log('form submit');
                   emits('submit', props.modelValue);
                   searchDialog = false;
                 }
@@ -109,7 +105,6 @@ watch(searchElement, (newValue) => {
                     icon="mdi-magnify"
                     @click="
                       (e) => {
-                        console.log('collapsed icon submit');
                         emits('submit', props.modelValue);
                         searchDialog = false;
                       }

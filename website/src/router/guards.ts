@@ -1,16 +1,34 @@
 import { signinUsingUserManager } from "@/js/auth";
 import { useAuthStore } from "@/piniaStore/auth";
 import { useUserInfoStore } from "@/piniaStore/userInfo";
+import { useConfigStore } from "@/piniaStore/config";
 import { storeToRefs } from "pinia";
-import { userManager } from "@/js/auth";
+import { getUserManager } from "@/js/auth";
 import type { NavigationGuard } from "vue-router";
 import { updateOrRegisterServiceWorker } from "@/js/serviceWorker/src/registeration";
 import { promiseTimeout } from "@/js/utils";
-import { aboutRoute, errorScreenRoute } from "./routesConstants";
+import {
+  aboutRoute,
+  enterEncryptionKeyRoute,
+  errorScreenRoute,
+} from "./routesConstants";
+
+// todo: configure global loading
+export const configurationGaurd: NavigationGuard = async () => {  
+  const configStore = useConfigStore();
+  if (configStore.loaded) {
+    return true;
+  }
+  try {
+    await configStore.loadConfig();
+  } catch (err) {
+    return errorScreenRoute("Failed to load config", err);
+  }
+  return true;
+};
 
 // ensure user is logged in and user onboarding is also done
 export const loginGaurd: NavigationGuard = async (to) => {
-  console.debug(`login gaurd, ${to.fullPath}`);
   // we can not define stores globally in this file, as it will not work outside component setup
   // https://router.vuejs.org/guide/advanced/navigation-guards.html
   const userInfoStore = useUserInfoStore();
@@ -21,8 +39,7 @@ export const loginGaurd: NavigationGuard = async (to) => {
 
   // load user from local storage
   try {
-    const user = await userManager.getUser();
-    console.log(user);
+    const user = await getUserManager().getUser();
     // todo check user access, because on auth server restart even if the token is not expired access token doesn't work but as we have user info from local storage it doesn't ask for login
     if (
       user !== null &&
@@ -41,7 +58,7 @@ export const loginGaurd: NavigationGuard = async (to) => {
     if (to.name === "Home") {
       return aboutRoute();
     }
-    signinUsingUserManager(userManager, false);
+    signinUsingUserManager(getUserManager(), false);
     return false;
   }
 
@@ -72,12 +89,7 @@ export const encryptionKeyGaurd: NavigationGuard = async (to) => {
     `encryptionKeyValidated = ${encryptionKeyValidated.value}`,
   );
   if (encryptionKeyValidated.value == false) {
-    return {
-      name: "encryptionKey",
-      query: {
-        return_uri: to.fullPath,
-      },
-    };
+    return enterEncryptionKeyRoute(to.fullPath);
   }
   return true;
 };

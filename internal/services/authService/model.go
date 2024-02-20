@@ -44,3 +44,5 @@ const AdminScope = "admin"
 
 const UserRole = "media-vault/user"
 const AdminRole = "media-vault/admin"
+
+const AccessScope = "media-vault/access"

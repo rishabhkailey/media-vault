@@ -1,0 +1,51 @@
+server:
+  port: 8090
+  host: localhost
+
+database:
+  postgres:
+    host: postgres
+    port: 5432
+    user: "postgres"
+    password: "postgres"
+    dbname: "postgres"
+
+cache:
+  redis:
+    host: redis
+    port: 6379
+    user: ""
+    password: "redis"
+    db: 0
+
+jwt:
+  privateKey: <jwt-private-key-rsa-base64-encoded>
+  secret: <jwt-secret>
+
+webUI:
+  directory: "website/dist/"
+
+minio:
+  host: localhost
+  port: 9000
+  user: minio-root-user
+  password: minio-root-password
+  tls: 
+    enabled: true
+    customRootCAPath: "./.devcontainer/certs/public.crt"
+    skipVerify: false
+
+oidc:
+  url: http://localhost:5173/accounts/realms/media-vault
+  discoveryEndpoint: http://localhost:5173/accounts/realms/media-vault/.well-known/openid-configuration
+  mediaVault:
+    client:
+      id: media-vault-service
+      secret: media-vault-service
+  spa:
+    client:
+      id: media-vault-spa
+
+meiliSearch:
+  host: http://meilisearch:7700
+  APIKey: meilisearchmeilisearch

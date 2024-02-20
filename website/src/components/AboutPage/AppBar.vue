@@ -1,7 +1,7 @@
 <script setup lang="ts">
 import AppLogoButton from "@/components/Logo/AppLogoButton.vue";
 import AccountButton from "../AppBar/NormalAppBar/AccountButton.vue";
-import { userManager } from "@/js/auth";
+import { getUserManager } from "@/js/auth";
 import { signinUsingUserManager } from "@/js/auth";
 import { storeToRefs } from "pinia";
 import { useAuthStore } from "@/piniaStore/auth";
@@ -12,7 +12,7 @@ const authStore = useAuthStore();
 const { authenticated, userName, email } = storeToRefs(authStore);
 
 function logIn() {
-  signinUsingUserManager(userManager, true);
+  signinUsingUserManager(getUserManager(), true);
 }
 
 const loading = ref(false);

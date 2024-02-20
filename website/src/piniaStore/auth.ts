@@ -15,15 +15,16 @@ export const useAuthStore = defineStore("auth", () => {
   const idToken = ref("");
   const expireAt = ref(Date.now() / 1000);
   const expired = computed(() => Date.now() / 1000 > expireAt.value);
-  // todo: if about to expire refresh the token?
 
   function setUserAuthInfo(user: User) {
-    console.log(user);
-    if (user.profile.email === undefined) {
-      throw new Error("Invalid user details. email missing.");
+    if (user.profile.email !== undefined) {
+      email.value = user.profile.email;
+    } else {
+      email.value = user.profile.sub;
     }
-    userName.value = user.profile.email;
-    email.value = user.profile.email;
+    if (user.profile.name !== undefined) {
+      userName.value = user.profile.name;
+    }
     accessToken.value = user.access_token;
     if (user.id_token) {
       idToken.value = user.id_token;

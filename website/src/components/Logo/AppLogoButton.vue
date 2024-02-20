@@ -4,7 +4,7 @@ import { useRouter } from "vue-router";
 
 const props = withDefaults(
   defineProps<{
-    redirect: boolean;
+    redirect?: boolean;
     redirectComponentName?: string;
   }>(),
   {
