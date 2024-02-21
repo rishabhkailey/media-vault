@@ -1,135 +1,38 @@
-version: '3.8'
-
-volumes:
-  postgres-data:
-  redis-data:
-  minio-data:
-  meilisearch-data:
+name: local-setup
 
 services:
-  app:
-    build:
-      context: .
+  media-vault:
+    build: 
+      context: ../../.devcontainer/backend
       dockerfile: Dockerfile
-    env_file:
-      - .env
     volumes:
-      - ../..:/workspaces:cached
-    container_name: media-service_devcontainer-app-1
+      - ../../:/workspaces/media-vault:cached
     command: sleep infinity
-    # network_mode: host
-    # all containers port in network service:app will be handeled here
-    ports:
-    - 8080:8080 # auth service
-    - 8081:8081 # keycloak
-    - 9090:9090 # minio
+    network_mode: "service:nginx"
 
-  postgres:
-    image: postgres:15.1
-    restart: unless-stopped
+  media-vault-ui:
+    build: 
+      context: ../../.devcontainer/website
+      dockerfile: Dockerfile
     volumes:
-      - postgres-data:/var/lib/postgresql/data
-    env_file:
-      - .env
-    # network_mode: host
-    # network_mode: "service:app"
+      - ../../website:/workspaces/website:cached
+    command: sleep infinity
+
+  nginx:
+    image: nginx:alpine3.18
+    volumes:
+      - ../../.devcontainer/nginx/templates:/etc/nginx/templates
     healthcheck:
-      test: [ "CMD-SHELL", "pg_isready", "-d", "db_prod" ]
+      test: ["CMD", "curl", "-f", "http://localhost:${PROXY_PORT}/health"]
       interval: 30s
-      timeout: 60s
-      retries: 5
-      start_period: 80s
-
-  redis:
-    image: bitnami/redis:7.0.5
-    restart: unless-stopped
-    env_file:
-      - .env
-    volumes:
-      - redis-data:/bitnami'
-    # network_mode: host
-    # network_mode: "service:app"
-
-  # bitnami minio issues with TLS
-  # minio:
-  #   image: bitnami/minio:2022.12.12-debian-11-r7
-  #   restart: unless-stopped
-  #   env_file:
-  #     - .env
-  #   volumes:
-  #     - minio-data:/data'
-  #   network_mode: host
-
-  minio:
-    # image: quay.io/minio/minio:RELEASE.2023-01-06T18-11-18Z
-    image: minio/minio:RELEASE.2023-01-20T02-05-44Z.hotfix.cca349fb9
-    restart: unless-stopped
-    command:
-      - server
-      - /data
-      - --console-address
-      - ":9090"
-    env_file:
-      - .env
-    volumes:
-      - minio-data:/data
-      - ./certs:/root/.minio/certs
-    # ports:
-    #   - 9090:9090
-    # network_mode: host
-    network_mode: "service:app"
-
-  meilisearch:
-    image: getmeili/meilisearch:v1.1
-    restart: unless-stopped
-    env_file:
-      - .env
+      timeout: 10s
+      retries: 10
+    environment:
+      PROXY_HOST: localhost
+      PROXY_PORT: 8181
+      MAX_FILE_UPLOAD_SIZE: 5G
+    depends_on:
+      keycloak:
+        condition: service_healthy
     ports:
-      - 7700:7700
-    volumes:
-      - meilisearch-data:/meili_data
-    # network_mode: host
-    # network_mode: "service:app"
-
-  keycloak:
-    image: quay.io/keycloak/keycloak:23.0.6
-    command: ["start-dev", "--spi-theme-static-max-age=-1", "--spi-theme-cache-themes=false", "--spi-theme-cache-templates=false"]
-    env_file:
-      - .env
-    network_mode: "service:app"
-    volumes:
-      - ../keycloak/themes:/opt/keycloak/themes
-
-
-    # hydra-sql-migration:
-    #   image: oryd/hydra:v1.10.6
-    #   env_file:
-    #     - .env.hydra
-    #   # todo get dsn from env
-    #   # command: migrate sql --yes $$DSN
-    #   command: migrate sql --yes 'postgres://postgres:postgres@localhost:5432/postgres?sslmode=disable'
-    #   network_mode: host
-    #   depends_on:
-    #     postgres:
-    #       condition: service_healthy
-
-    # hydra:
-    #   image: oryd/hydra:v1.10.6
-    #   network_mode: host
-    #   command: serve all
-    #   env_file:
-    #     - .env.hydra
-    #   depends_on:
-    #     hydra-sql-migration:
-    #       condition: service_completed_successfully
-    #   # ports 4444, 4445
-
-    # hydra-login-consent:
-    #   image: oryd/hydra-login-consent-node:v1.10.6
-    #   network_mode: host
-    #   env_file:
-    #     - .env.hydra
-    #   # ports 3000
-
-# todo
-# https://grafana.com/blog/2023/08/29/grafana-pyroscope-1.0-release-continuous-profiling/
+      - 8181:8181

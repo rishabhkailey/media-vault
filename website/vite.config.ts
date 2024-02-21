@@ -13,6 +13,7 @@ export default defineConfig({
     },
   },
   server: {
+    host: "0.0.0.0",
     proxy: {
       "/ui": {
         target: "http://localhost:8082",

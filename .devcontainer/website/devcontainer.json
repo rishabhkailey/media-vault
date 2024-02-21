@@ -1,12 +1,16 @@
 // For format details, see https://aka.ms/devcontainer.json. For config options, see the
 // README at: https://github.com/devcontainers/templates/tree/main/src/typescript-node
 {
-	"name": "Node.js & TypeScript",
+	"name": "Vue UI",
 	// Or use a Dockerfile or Docker Compose file. More info: https://containers.dev/guide/dockerfile
 	// "image": "mcr.microsoft.com/devcontainers/typescript-node:0-18",
-	"dockerComposeFile": "docker-compose.yml",
+	"dockerComposeFile": [
+		"../../deployment/development/docker-compose.yml",
+		"../docker-compose.yml"
+		// , "debug/docker-compose.yml"
+	],
 	"service": "media-vault-ui",
-	"workspaceFolder": "/workspaces/${localWorkspaceFolderBasename}",
+	"workspaceFolder": "/workspaces/website",
 	"customizations": {
 		"vscode": {
 			"extensions": [

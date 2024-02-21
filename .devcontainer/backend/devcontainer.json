@@ -1,8 +1,12 @@
 {	
-	"name": "Go & PostgreSQL",
-	"dockerComposeFile": "docker-compose.yml",
-	"service": "app",
-	"workspaceFolder": "/workspaces/${localWorkspaceFolderBasename}",
+	"name": "Go Backend Service",
+	"dockerComposeFile": [
+		"../../deployment/development/docker-compose.yml",
+		"../docker-compose.yml"
+		// , "debug/docker-compose.yml"
+	],
+	"service": "media-vault",
+	"workspaceFolder": "/workspaces/media-vault",
 
 	// Features to add to the dev container. More info: https://containers.dev/features.
 	// "features": {},
@@ -25,13 +29,15 @@
 			"extensions": [
 				"golang.Go",
 				"rangav.vscode-thunder-client",
-				"GitHub.copilot"
+				"GitHub.copilot",
+				"ms-azuretools.vscode-docker",
+				"mtxr.sqltools",
+				"mtxr.sqltools-driver-pg"
 			]
 		}
 	}
-
-	// Use 'forwardPorts' to make a list of ports inside the container available locally.
-	// "forwardPorts": [5432],
+	// 8080 for auth service which runs in the same network (host)
+	// "forwardPorts": [8080, 8090]
 
 	// Use 'postCreateCommand' to run commands after the container is created.
 	// "postCreateCommand": "go version",
