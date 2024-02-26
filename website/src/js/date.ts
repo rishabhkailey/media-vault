@@ -47,10 +47,10 @@ export const monthShort = [
   "Dec",
 ];
 
-export function getMonthlyMediaIndex(
+export function getMonthlyMedia(
   mediaList: Array<Media>,
   mediaDateGetter: (media: Media) => Date,
-) {
+): Array<MonthlyMedia> {
   const monthlyMediaList: Array<MonthlyMedia> = [];
   const getKey = (month: number, year: number) => {
     return `${month} ${year}`;
@@ -59,8 +59,8 @@ export function getMonthlyMediaIndex(
     const [month, year] = key.split(" ");
     return { month: Number(month), year: Number(year) };
   };
-  const monthlyMediaMap = new Map<string, Array<IndexMedia>>();
-  mediaList.forEach((media, index) => {
+  const monthlyMediaMap = new Map<string, Array<Media>>();
+  mediaList.forEach((media) => {
     let key: string;
     const date = mediaDateGetter(media);
     try {
@@ -71,7 +71,7 @@ export function getMonthlyMediaIndex(
     if (monthlyMediaMap.get(key) === undefined) {
       monthlyMediaMap.set(key, []);
     }
-    monthlyMediaMap.get(key)?.push({ media, index });
+    monthlyMediaMap.get(key)?.push(media);
   });
   monthlyMediaMap.forEach((mediaList, key) => {
     const { month, year } = parseKey(key);
@@ -79,7 +79,6 @@ export function getMonthlyMediaIndex(
       year,
       month,
       media: mediaList,
-      indexOffset: 0,
     });
   });
   monthlyMediaList.sort((a, b) => {
@@ -94,8 +93,8 @@ export function getMonthlyMediaIndex(
   return monthlyMediaList;
 }
 
-export function getDailyMediaIndex(
-  mediaList: Array<IndexMedia>,
+export function getDailyMedia(
+  mediaList: Array<Media>,
   mediaDateGetter: (media: Media) => Date,
 ) {
   const dailyMediaList: Array<DailyMedia> = [];
@@ -111,10 +110,10 @@ export function getDailyMediaIndex(
       year: Number(year),
     };
   };
-  const dailyMediaMap = new Map<string, Array<IndexMedia>>();
-  mediaList.forEach((indexMedia) => {
+  const dailyMediaMap = new Map<string, Array<Media>>();
+  mediaList.forEach((media) => {
     let key: string;
-    const date = mediaDateGetter(indexMedia.media);
+    const date = mediaDateGetter(media);
     try {
       key = getKey(
         date.getDay(),
@@ -133,7 +132,7 @@ export function getDailyMediaIndex(
     if (dailyMediaMap.get(key) === undefined) {
       dailyMediaMap.set(key, []);
     }
-    dailyMediaMap.get(key)?.push(indexMedia);
+    dailyMediaMap.get(key)?.push(media);
   });
   dailyMediaMap.forEach((mediaList, key) => {
     const { day, date, month, year } = parseKey(key);

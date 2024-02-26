@@ -122,7 +122,6 @@ export function searchMediaPreviewRoute(
 export function mediaPreviewRoute(
   index: number,
   mediaId: number,
-  thumbnailClickLocation?: ThumbnailClickLocation,
 ): RouteLocationRaw {
   return {
     name: MEDIA_PREVIEW_ROUTE_NAME,
@@ -130,6 +129,5 @@ export function mediaPreviewRoute(
       index: index,
       media_id: mediaId,
     },
-    hash: `#${base64UrlEncode(thumbnailClickLocation)}`,
   };
 }

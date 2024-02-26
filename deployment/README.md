@@ -73,7 +73,7 @@
     * open repository directory in VSCode
     * press F1 key and type "reopen in container" and select "Dev containers: Reopen in Container" option
     ![vscode-reopen-in-container](docs/images/vscode-reopen-in-container.webp)
-    * select "Go Backedn Service"
+    * select "Go Backend Service"
     ![vscode-reopen-in-container-go-backend](docs/images/vscode-reopen-in-container-go-backend.webp)
     * wait for VSCode to start and configure required containers
 
@@ -102,15 +102,15 @@
 * **Run UI**
     * go to "Vue UI" VSCode window
     * in "TERMINAL" run following commands
-    ```bash
-    cd src/js/serviceWorker
-    npx webpack --mode development --config webpack.config.cjs
-    cd ../../..
+        ```bash
+        cd src/js/serviceWorker
+        npx webpack --mode development --config webpack.config.cjs
+        cd ../../..
 
-    yarn install
-    yarn run dev
-    ```
-    ![vscode-run-vue-ui](docs/images/vscode-run-vue-ui.webp)
+        yarn install
+        yarn run dev
+        ```
+        ![vscode-run-vue-ui](docs/images/vscode-run-vue-ui.webp)
 
 
 * **Access the Media Vault Application**

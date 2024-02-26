@@ -12,7 +12,9 @@ const { mediaList, allMediaLoaded } = storeToRefs(mediaStore);
 const { loadMoreMedia, getMediaDateAccordingToOrderBy } = mediaStore;
 
 async function loadAllMediaUntil(date: Date): Promise<boolean> {
-  let lastMediaDate = mediaList.value[mediaList.value.length - 1].date;
+  let lastMediaDate = getMediaDateAccordingToOrderBy(
+    mediaList.value[mediaList.value.length - 1],
+  );
   while (
     date.getDate() === lastMediaDate.getDate() &&
     date.getFullYear() === lastMediaDate.getFullYear() &&
@@ -24,15 +26,13 @@ async function loadAllMediaUntil(date: Date): Promise<boolean> {
   }
   return true;
 }
-function handleThumbnailClick(
-  clickedMediaID: number,
-  clickedIndex: number,
-  thumbnailClickLocation: ThumbnailClickLocation | undefined,
-) {
+
+function handleThumbnailClick(clickedMediaID: number) {
   try {
-    router.push(
-      mediaPreviewRoute(clickedIndex, clickedMediaID, thumbnailClickLocation),
+    const clickedIndex = mediaList.value.findIndex(
+      (m) => m.id === clickedMediaID,
     );
+    router.push(mediaPreviewRoute(clickedIndex, clickedMediaID));
   } catch (err) {
     // todo error page?
     console.error("error in homepage", err);
