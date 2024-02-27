@@ -13,7 +13,7 @@ import { errorScreenRoute } from "@/router/routesConstants";
 
 const mediaSelectionStore = useMediaSelectionStore();
 const { reset: resetMediaSelection, updateSelection } = mediaSelectionStore;
-const { selectedMediaIDs } = storeToRefs(mediaSelectionStore);
+const { selectedMediaMap } = storeToRefs(mediaSelectionStore);
 const { deleteMultipleMedia } = useMediaStore();
 const { setGlobalLoading } = useLoadingStore();
 const { appendError } = useErrorsStore();
@@ -38,7 +38,7 @@ function getAlbumIdFromRoute(): number {
 // if we have a lot of media selected deleting 1 by 1 cause rerender for every delete, and it causes high cpu usage in browser
 async function deleteSelectedMedia() {
   // we don't want this to be reactive
-  let mediaIDs = [...selectedMediaIDs.value];
+  let mediaIDs = [...selectedMediaMap.value.keys()];
   resetMediaSelection();
   setGlobalLoading(true, false, 0);
   try {
@@ -63,7 +63,7 @@ const { removeMediaFromAlbum } = useAlbumStore();
 
 function removeSelectedMedia() {
   removeSelectedMediaInProgress.value = true;
-  removeMediaFromAlbum(Number(albumID), [...selectedMediaIDs.value])
+  removeMediaFromAlbum(Number(albumID), [...selectedMediaMap.value.keys()])
     .then(() => {
       removeSelectedMediaInProgress.value = false;
       removedMediaFromAlbumPopUp.value = false;

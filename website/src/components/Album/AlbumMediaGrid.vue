@@ -74,6 +74,20 @@ const loadAlbum = () => {
     });
 };
 
+function handleThumbnailClick(clickedMediaID: number) {
+  try {
+    const clickedIndex = mediaList.value.findIndex(
+      (m) => m.id === clickedMediaID,
+    );
+    router.push(
+      albumMediaPreviewRoute(clickedIndex, clickedMediaID, album.value.id),
+    );
+  } catch (err) {
+    // todo error page?
+    console.error("error in homepage", err);
+  }
+}
+
 onMounted(() => {
   albumID.value = getAlbumIdFromRoute();
   if (albumID.value === -1) {
@@ -135,18 +149,7 @@ onMounted(() => {
         :load-more-media="() => loadMoreMedia()"
         :load-all-media-until="loadAllMediaUntil"
         :media-date-getter="(media: Media) => media.uploaded_at"
-        @thumbnail-click="
-          (clickedMediaID, clickedIndex, thumbnailClickLocation) => {
-            router.push(
-              albumMediaPreviewRoute(
-                clickedIndex,
-                clickedMediaID,
-                albumID,
-                thumbnailClickLocation,
-              ),
-            );
-          }
-        "
+        @thumbnail-click="handleThumbnailClick"
       />
     </v-row>
   </v-col>

@@ -54,6 +54,20 @@ function loadAllMediaUntil(date: Date): Promise<boolean> {
     return;
   });
 }
+
+function handleThumbnailClick(clickedMediaID: number) {
+  try {
+    const clickedIndex = mediaList.value.findIndex(
+      (m) => m.id === clickedMediaID,
+    );
+    router.push(
+      searchMediaPreviewRoute(clickedIndex, clickedMediaID, searchQuery.value),
+    );
+  } catch (err) {
+    // todo error page?
+    console.error("error in homepage", err);
+  }
+}
 </script>
 
 <template>
@@ -70,18 +84,7 @@ function loadAllMediaUntil(date: Date): Promise<boolean> {
     :load-more-media="() => loadMoreSearchResults(accessToken, searchQuery)"
     :load-all-media-until="loadAllMediaUntil"
     :media-date-getter="getMediaDateAccordingToOrderBy"
-    @thumbnail-click="
-      (clickedMediaID, clickedIndex, thumbnailClickLocation) => {
-        router.push(
-          searchMediaPreviewRoute(
-            clickedIndex,
-            clickedMediaID,
-            searchQuery,
-            thumbnailClickLocation,
-          ),
-        );
-      }
-    "
+    @thumbnail-click="handleThumbnailClick"
   />
   <Teleport to="body">
     <div class="media-preview-container">
