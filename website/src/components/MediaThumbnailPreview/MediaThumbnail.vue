@@ -22,6 +22,7 @@ const props = defineProps<{
   <div
     v-else
     :style="`height: ${height}px; width: ${width}px;`"
+    :id="`thumbnail_${media.id}`"
     :class="props.class"
   >
     <v-icon

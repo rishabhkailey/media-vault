@@ -5,7 +5,6 @@ import { computed, ref } from "vue";
 import { useAlbumMediaStore } from "./albumMedia";
 import { useMediaStore } from "./media";
 import { useAuthStore } from "./auth";
-import { useConfigStore } from "./config";
 // todo we will need lock or something else
 // to prevent duplicates if the same request is called twice
 
@@ -64,8 +63,12 @@ export const useAlbumStore = defineStore("album", () => {
   const { mediaList } = storeToRefs(useMediaStore());
   const { accessToken } = storeToRefs(useAuthStore());
   const nextPageNumber = ref(1);
-  const lastAlbumId = ref<null | number>(null);
   const albums = ref<Array<Album>>([]);
+  const lastAlbumId = computed<undefined | number>(() =>
+    albums.value.length === 0
+      ? undefined
+      : albums.value[albums.value.length - 1].id,
+  );
   const allAlbumsLoaded = ref(false);
   const orderBy = ref<UserFriendlyOrderBy>("Newest updated first");
   const orderByProperties = computed<IOrderByProperties>(() => {
@@ -180,7 +183,7 @@ export const useAlbumStore = defineStore("album", () => {
         orderByProperties.value.sortBySearchParam,
       );
 
-      if (lastAlbumId.value !== null) {
+      if (lastAlbumId.value !== undefined) {
         url.searchParams.append("last_album_id", lastAlbumId.value.toString());
       }
       axios
@@ -192,9 +195,6 @@ export const useAlbumStore = defineStore("album", () => {
         .then((response) => {
           if (response.status == 200) {
             addAlbumsInLocalState(response.data);
-            if (response.data.length > 0) {
-              lastAlbumId.value = response.data[response.data.length - 1].id;
-            }
             nextPageNumber.value += 1;
             if (response.data.length == 0 || response.data.length < perPage) {
               allAlbumsLoaded.value = true;

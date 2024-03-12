@@ -37,8 +37,8 @@ const dailyMediaList = computed<Array<DailyMedia>>(() =>
     <v-divider class="mb-2" :thickness="2" />
     <div class="d-flex flex-row flex-wrap">
       <DayMediaGrid
-        v-for="(dailyMedia, index) in dailyMediaList"
-        :key="`${dailyMedia.date}_${dailyMedia.month}_${dailyMedia.year}_${dailyMedia.media.length}_${index}`"
+        v-for="dailyMedia in dailyMediaList"
+        :key="`${dailyMedia.date}_${dailyMedia.month}_${dailyMedia.year}`"
         :selected-media-map="props.selectedMediaMap"
         :month="dailyMedia.month"
         :day="dailyMedia.day"

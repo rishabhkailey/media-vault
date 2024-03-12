@@ -1,7 +1,7 @@
 import { UNKNOWN_DATE } from "@/js/date";
 import axios from "axios";
 import { defineStore, storeToRefs } from "pinia";
-import { ref } from "vue";
+import { computed, ref } from "vue";
 import { useAuthStore } from "./auth";
 
 // todo we will need lock or something else
@@ -10,11 +10,17 @@ import { useAuthStore } from "./auth";
 export const useMediaStore = defineStore("media", () => {
   const nextPageNumber = ref(1);
   const mediaList = ref<Array<Media>>([]);
+  const lastMedia = computed<undefined | Media>(() =>
+    mediaList.value.length === 0
+      ? undefined
+      : mediaList.value[mediaList.value.length - 1],
+  );
   const allMediaLoaded = ref(false);
   // todo move this to different store
   // config store?
   const orderByUploadDateKey = "uploaded_at";
   const orderByDateKey = "date";
+  const sort = "desc";
   const orderBy = ref(orderByUploadDateKey);
   const { accessToken } = storeToRefs(useAuthStore());
 
@@ -81,13 +87,13 @@ export const useMediaStore = defineStore("media", () => {
     switch (orderBy.value) {
       case "uploaded_at": {
         compare = (m1: Media, m2: Media) => {
-          return m1.uploaded_at > m2.uploaded_at ? -1 : 1;
+          return m2.uploaded_at.getTime() - m1.uploaded_at.getTime();
         };
         break;
       }
       default: {
         compare = (m1: Media, m2: Media) => {
-          return m1.date > m2.date ? -1 : 1;
+          return m2.date.getTime() - m1.date.getTime();
         };
         break;
       }
@@ -115,11 +121,11 @@ export const useMediaStore = defineStore("media", () => {
    */
   function loadMoreMedia(): Promise<LoadMoreMediaStatus> {
     return new Promise<LoadMoreMediaStatus>((resolve, reject) => {
-      let url = `/v1/mediaList?order=${orderBy.value}&sort=desc&per_page=30`;
-      if (mediaList.value.length !== 0) {
-        const lastMedia = mediaList.value[mediaList.value.length - 1];
-        const lastDate =
-          getMediaDateAccordingToOrderBy(lastMedia).toISOString();
+      let url = `/v1/media-list?order=${orderBy.value}&sort=${sort}&per_page=30`;
+      if (lastMedia.value !== undefined) {
+        const lastDate = getMediaDateAccordingToOrderBy(
+          lastMedia.value,
+        ).toISOString();
         url = `/v1/mediaList?order=${orderBy.value}&sort=desc&per_page=30&last_media_id=${lastMedia.id}&last_date=${lastDate}`;
       }
       axios
@@ -149,59 +155,10 @@ export const useMediaStore = defineStore("media", () => {
     });
   }
 
-  function loadAllMediaForDate(date: Date): Promise<boolean> {
-    return new Promise((resolve, reject) => {
-      let lastMedia = mediaList.value[mediaList.value.length - 1];
-      if (lastMedia.date > date) {
-        resolve(true);
-        return;
-      }
-      while (lastMedia.date > date && !allMediaLoaded.value) {
-        loadMoreMedia()
-          .then(() => {
-            lastMedia = mediaList.value[mediaList.value.length - 1];
-          })
-          .catch((err) => {
-            reject(err);
-            return;
-          });
-      }
-      resolve(true);
-      return;
-    });
-  }
-
-  function removeMediaByID(mediaID: number) {
-    mediaList.value = mediaList.value.filter((media) => media.id !== mediaID);
-  }
-
   function removeMediaByIDs(mediaIDs: Array<number>) {
     mediaList.value = mediaList.value.filter(
       (media) => !mediaIDs.includes(media.id),
     );
-  }
-
-  function deleteMedia(mediaID: number): Promise<boolean> {
-    return new Promise<boolean>((resolve, reject) => {
-      axios
-        .delete(`/v1/media/${mediaID}`, {
-          headers: {
-            Authorization: `Bearer ${accessToken.value}`,
-          },
-        })
-        .then((resp) => {
-          if (resp.status === 200) {
-            removeMediaByID(mediaID);
-            resolve(true);
-            return;
-          }
-          resolve(false);
-          return;
-        })
-        .catch((err) => {
-          reject(err);
-        });
-    });
   }
 
   // returns failed media ids
@@ -210,7 +167,7 @@ export const useMediaStore = defineStore("media", () => {
     mediaIDs: Array<number>,
   ): Promise<Array<number>> {
     try {
-      const resp = await axios.delete(`/v1/media/`, {
+      const resp = await axios.delete(`/v1/media`, {
         headers: {
           Authorization: `Bearer ${accessToken.value}`,
         },
@@ -236,8 +193,6 @@ export const useMediaStore = defineStore("media", () => {
     mediaList,
     allMediaLoaded,
     loadMoreMedia,
-    loadAllMediaForDate,
-    deleteMedia,
     deleteMultipleMedia,
     appendMedia,
     orderByMediaDate,

@@ -82,13 +82,10 @@ export function getMonthlyMedia(
     });
   });
   monthlyMediaList.sort((a, b) => {
-    if (a.year !== b.year) {
-      return (b.year - a.year) * 12;
-    }
-    if (a.month !== b.month) {
-      return a.month - b.month;
-    }
-    return 0;
+    return (
+      new Date(b.year, b.month, 1).getTime() -
+      new Date(a.year, a.month, 1).getTime()
+    );
   });
   return monthlyMediaList;
 }
@@ -144,6 +141,6 @@ export function getDailyMedia(
       media: mediaList,
     });
   });
-  dailyMediaList.sort((a, b) => (a.date > b.date ? -1 : 1));
+  dailyMediaList.sort((a, b) => b.date - a.date);
   return dailyMediaList;
 }

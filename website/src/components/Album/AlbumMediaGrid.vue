@@ -7,9 +7,14 @@ import { useAlbumMediaStore } from "@/piniaStore/albumMedia";
 import MediaGrid from "../MediaThumbnailPreview/MediaGrid.vue";
 import ConfirmationModal from "@/components/Modals/ConfirmationModal.vue";
 import { getQueryParamNumberValue } from "@/js/utils";
-import { albumsRoute, albumMediaPreviewRoute } from "@/router/routesConstants";
+import {
+  albumsRoute,
+  albumMediaPreviewRoute,
+  ALBUM_MEDIA_PREVIEW_ROUTE_NAME,
+} from "@/router/routesConstants";
 import { MEDIA_PREVIEW_CONTAINER_Z_INDEX } from "@/js/constants/z-index";
 import ErrorMessage from "../Error/ErrorMessage.vue";
+import AlbumMediaCarousel from "../MediaCarousel/AlbumMediaCarousel.vue";
 
 const errorMessage = ref("");
 const albumStore = useAlbumStore();
@@ -48,7 +53,7 @@ const deleteErrorMessage = ref("");
 function onDeleteConfirm() {
   deleteInProgress.value = true;
   deleteErrorMessage.value = "";
-  deleteAlbum(Number(albumID))
+  deleteAlbum(albumID.value)
     .then(() => {
       deleteInProgress.value = false;
       deleteConfirmationOverlay.value = false;
@@ -153,9 +158,10 @@ onMounted(() => {
       />
     </v-row>
   </v-col>
-  <Teleport to="body">
+  <!-- todo move these to view instead of components -->
+  <Teleport v-if="useRoute().name === ALBUM_MEDIA_PREVIEW_ROUTE_NAME" to="body">
     <div class="media-preview-container">
-      <RouterView />
+      <AlbumMediaCarousel />
     </div>
   </Teleport>
 </template>

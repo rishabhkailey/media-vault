@@ -6,9 +6,13 @@ import { useSearchStore } from "@/piniaStore/search";
 import { useAuthStore } from "@/piniaStore/auth";
 import { storeToRefs } from "pinia";
 import { getQueryParamStringValue } from "@/js/utils";
-import { searchMediaPreviewRoute } from "@/router/routesConstants";
+import {
+  SEARCH_MEDIA_PREVIEW_ROUTE_NAME,
+  searchMediaPreviewRoute,
+} from "@/router/routesConstants";
 import { MEDIA_PREVIEW_CONTAINER_Z_INDEX } from "@/js/constants/z-index";
 import ErrorMessage from "../Error/ErrorMessage.vue";
+import SearchMediaCarousel from "../MediaCarousel/SearchMediaCarousel.vue";
 const errorMessage = ref("");
 const router = useRouter();
 
@@ -86,9 +90,13 @@ function handleThumbnailClick(clickedMediaID: number) {
     :media-date-getter="getMediaDateAccordingToOrderBy"
     @thumbnail-click="handleThumbnailClick"
   />
-  <Teleport to="body">
+
+  <Teleport
+    v-if="useRoute().name === SEARCH_MEDIA_PREVIEW_ROUTE_NAME"
+    to="body"
+  >
     <div class="media-preview-container">
-      <RouterView />
+      <SearchMediaCarousel />
     </div>
   </Teleport>
 </template>

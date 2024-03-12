@@ -77,7 +77,11 @@ export const useAlbumMediaStore = defineStore("albumMedia", () => {
   const allMediaLoaded = ref(false);
   const albumID = ref(0);
   const { accessToken } = storeToRefs(useAuthStore());
-  const lastMediaId = ref<null | number>(null);
+  const lastMedia = computed<undefined | Media>(() =>
+    mediaList.value.length === 0
+      ? undefined
+      : mediaList.value[mediaList.value.length - 1],
+  );
   const orderBy = ref<UserFriendlyOrderBy>("Newest Added first");
   const orderByProperties = computed<IOrderByProperties>(() => {
     const properties = userFriendlyOrderByToProperties.get(orderBy.value);
@@ -88,7 +92,6 @@ export const useAlbumMediaStore = defineStore("albumMedia", () => {
     }
     return properties;
   });
-  const { config } = storeToRefs(useConfigStore());
 
   // todo date getter?
   // will return the date according to which the media is sorted?
@@ -98,7 +101,6 @@ export const useAlbumMediaStore = defineStore("albumMedia", () => {
     mediaList.value = [];
     allMediaLoaded.value = false;
     albumID.value = 0;
-    lastMediaId.value = null;
   }
   function setAlbumID(_albumID: number) {
     if (albumID.value != _albumID) {
@@ -150,8 +152,8 @@ export const useAlbumMediaStore = defineStore("albumMedia", () => {
         orderByProperties.value.sortBySearchParam,
       );
 
-      if (lastMediaId.value !== null) {
-        url.searchParams.append("last_media_id", lastMediaId.value.toString());
+      if (lastMedia.value !== undefined) {
+        url.searchParams.append("last_media_id", lastMedia.value.id.toString());
       }
       axios
         .get<Array<AlbumMedia>>(url.toString(), {
@@ -162,7 +164,6 @@ export const useAlbumMediaStore = defineStore("albumMedia", () => {
         .then((response) => {
           if (response.status == 200) {
             if (response.data.length > 0) {
-              lastMediaId.value = response.data[response.data.length - 1].id;
               appendMedia(response.data);
             }
             if (response.data.length == 0 || response.data.length < perPage) {
