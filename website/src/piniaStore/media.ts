@@ -126,7 +126,7 @@ export const useMediaStore = defineStore("media", () => {
         const lastDate = getMediaDateAccordingToOrderBy(
           lastMedia.value,
         ).toISOString();
-        url = `/v1/mediaList?order=${orderBy.value}&sort=desc&per_page=30&last_media_id=${lastMedia.id}&last_date=${lastDate}`;
+        url = `/v1/media-list?order=${orderBy.value}&sort=${sort}&per_page=30&last_media_id=${lastMedia.value.id}&last_date=${lastDate}`;
       }
       axios
         .get<Array<Media>>(url, {

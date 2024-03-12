@@ -73,7 +73,7 @@ func (server *Server) RefreshSession(c *gin.Context) {
 // on app open we will check if the token is expiring in less than 24 hours we will request new token and referesh user session to avoid interupption
 // as session can expire while user is mid download/playback
 func (server *Server) SessionBasedMediaFileAuthMiddleware(c *gin.Context) {
-	fileName := c.Param("fileName")
+	fileName := c.Param("file_name")
 	// do we need to check this?
 	if len(fileName) == 0 {
 		c.Abort()

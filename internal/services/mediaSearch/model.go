@@ -54,7 +54,7 @@ type MediaSearchQuery struct {
 	OrderBy string `form:"order" json:"order,omitempty" binding:"required"`
 	Sort    string `form:"sort" json:"sort,omitempty" binding:"required"`
 	Page    int64  `form:"page" json:"page,omitempty" binding:"required"`
-	PerPage int64  `form:"perPage" json:"perPage,omitempty" binding:"required"`
+	PerPage int64  `form:"per_page" json:"per_page,omitempty" binding:"required"`
 	Query   string `form:"query" json:"query" binding:"required"`
 }
 

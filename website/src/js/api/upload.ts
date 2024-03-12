@@ -98,11 +98,11 @@ function initChunkUpload(
   return new Promise((resolve, reject) => {
     axios
       .post(
-        "/v1/initChunkUpload",
+        "/v1/upload",
         {
-          fileName: file.name,
+          file_name: file.name,
           size: file.size,
-          mediaType: getFileType(file),
+          media_type: getFileType(file),
           date: file.lastModified,
         },
         {
@@ -119,8 +119,8 @@ function initChunkUpload(
         }
         // todo use interface and validator method
         if (
-          !response.data?.requestID ||
-          typeof response.data.requestID !== "string"
+          !response.data?.request_id ||
+          typeof response.data.request_id !== "string"
         ) {
           throw new Error("invalid response for init request " + response);
         }
@@ -131,7 +131,7 @@ function initChunkUpload(
           throw new Error("invalid response for init request " + response);
         }
         resolve({
-          requestID: response.data.requestID,
+          requestID: response.data.request_id,
           fileName: response.data.file_name,
         });
         return;
@@ -158,8 +158,6 @@ function uploadFileChunks(
 ): Promise<number> {
   const stream = file.stream();
   const reader = stream.getReader();
-  // change this to uploaded bytes
-  let readBytes = 0;
   let bytesUploaded = 0;
   const requestID = chunkRequestInfo.requestID;
   // init upload
@@ -199,7 +197,6 @@ function uploadFileChunks(
           throw new Error("empty chunk received");
         }
 
-        readBytes += value.length;
         while (bufferIndex + value.length >= chunkSize) {
           buffer.set(value.slice(0, chunkSize - bufferIndex), bufferIndex);
           value = value.slice(chunkSize - bufferIndex);
@@ -252,7 +249,7 @@ async function encryptAndUploadChunk(
   value: Uint8Array,
   encryptor: Chacha20,
   controller: AbortController,
-) {
+): Promise<void> {
   let chunkBlob: Blob;
   try {
     // todo add encryption again
@@ -264,9 +261,8 @@ async function encryptAndUploadChunk(
   let response: AxiosResponse<any>;
   try {
     response = await axios.post(
-      "/v1/uploadChunk",
+      `/v1/upload/${requestID}/chunk`,
       {
-        requestID: requestID,
         index: index,
         chunkSize: value.length,
         chunkData: chunkBlob,
@@ -298,9 +294,9 @@ function finishChunkUpload(
     // finish upload
     axios
       .post(
-        "/v1/finishChunkUpload",
+        `/v1/upload/${chunkRequestInfo.requestID}/finish`,
         {
-          requestID: chunkRequestInfo.requestID,
+          // todo implement checksum
           checksum: "file.size",
         },
         {
@@ -346,9 +342,8 @@ function uploadThumbnail(
         const encryptedThumbnailBlob = new Blob([encryptedThumbnail]);
         axios
           .post(
-            "/v1/uploadThumbnail",
+            `/v1/upload/${chunkRequestInfo.requestID}/thumbnail`,
             {
-              requestID: chunkRequestInfo.requestID,
               size: encryptedThumbnail.length,
               thumbnail: encryptedThumbnailBlob,
               thumbnail_aspect_ratio: resolution.width / resolution.height,

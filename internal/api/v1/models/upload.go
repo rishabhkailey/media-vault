@@ -9,9 +9,9 @@ import (
 )
 
 type InitChunkUploadRequest struct {
-	FileName  string `json:"fileName" binding:"required"`
+	FileName  string `json:"file_name" binding:"required"`
 	Size      int64  `json:"size" binding:"required"`
-	MediaType string `json:"mediaType"`
+	MediaType string `json:"media_type"`
 	Date      int64  `json:"date,omitempty" binding:"required"`
 }
 
@@ -29,39 +29,36 @@ func ValidateInitChunkUploadRequest(body InitChunkUploadRequest) (InitChunkUploa
 }
 
 type InitChunkUploadResponse struct {
-	RequestID string `json:"requestID"`
+	RequestID string `json:"request_id"`
 	FileName  string `json:"file_name"`
 }
 
 // *int for binding to not fail for 0 value https://github.com/go-playground/validator/issues/692#issuecomment-737039536
 // todo do memory usage test using big chunks
 type UploadChunkRequest struct {
-	RequestID string                `form:"requestID" binding:"required"`
 	Index     *int64                `form:"index" binding:"required,number,gte=0"`
 	ChunkSize int64                 `form:"chunkSize" binding:"required"`
 	ChunkData *multipart.FileHeader `form:"chunkData" binding:"required"`
 }
 
 type UploadChunkResponse struct {
-	RequestID string `json:"requestID" binding:"required"`
+	RequestID string `json:"request_id" binding:"required"`
 	Uploaded  int64  `json:"uploaded" binding:"required"`
 }
 
 type UploadThumbnailRequest struct {
-	RequestID            string                `form:"requestID" binding:"required"`
 	Size                 int64                 `form:"size" binding:"required"`
 	Thumbnail            *multipart.FileHeader `form:"thumbnail" binding:"required"` //change to thumbnailData
 	ThumbnailAspectRatio float32               `form:"thumbnail_aspect_ratio"`
 }
 
 type UploadThumbnailResponse struct {
-	RequestID string `json:"requestID" binding:"required"`
+	RequestID string `json:"request_id" binding:"required"`
 	Uploaded  int64  `json:"uploaded" binding:"required"`
 }
 
 type FinishUploadRequest struct {
-	RequestID string `json:"requestID" binding:"required"`
-	Checksum  string `json:"checksum"`
+	Checksum string `json:"checksum"`
 }
 
 type FinishUploadResponse struct {

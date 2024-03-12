@@ -137,7 +137,7 @@ func (server *Server) MediaList(c *gin.Context) {
 }
 
 func (server *Server) GetMediaFile(c *gin.Context) {
-	fileName := c.Param("fileName")
+	fileName := c.Param("file_name")
 	if len(fileName) == 0 {
 		c.Error(
 			internalErrors.NewBadRequestError(
@@ -224,7 +224,7 @@ func (server *Server) GetMediaFileRange(c *gin.Context, r utils.Range, fileName 
 }
 
 func (server *Server) GetThumbnailFile(c *gin.Context) {
-	fileName := c.Param("fileName")
+	fileName := c.Param("file_name")
 	if len(fileName) == 0 {
 		c.AbortWithStatus(http.StatusBadRequest)
 		return

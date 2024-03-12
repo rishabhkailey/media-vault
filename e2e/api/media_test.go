@@ -51,10 +51,10 @@ func TestMediaList(t *testing.T) {
 		{
 			name: "media list: desc: single file",
 			requestQuery: url.Values{
-				"page":    {"1"},
-				"perPage": {"1"},
-				"order":   {"date"},
-				"sort":    {"desc"},
+				"page":     {"1"},
+				"per_page": {"1"},
+				"order":    {"date"},
+				"sort":     {"desc"},
 			},
 			exptectedStatusCode: 200,
 			expectedResponse:    sortedFilesDesc[0:1],
@@ -62,10 +62,10 @@ func TestMediaList(t *testing.T) {
 		{
 			name: "media list: desc: 3 files",
 			requestQuery: url.Values{
-				"page":    {"1"},
-				"perPage": {"3"},
-				"order":   {"date"},
-				"sort":    {"desc"},
+				"page":     {"1"},
+				"per_page": {"3"},
+				"order":    {"date"},
+				"sort":     {"desc"},
 			},
 			exptectedStatusCode: 200,
 			expectedResponse:    sortedFilesDesc[0:3],
@@ -73,10 +73,10 @@ func TestMediaList(t *testing.T) {
 		{
 			name: "media list: desc: all files",
 			requestQuery: url.Values{
-				"page":    {"1"},
-				"perPage": {"6"},
-				"order":   {"date"},
-				"sort":    {"desc"},
+				"page":     {"1"},
+				"per_page": {"6"},
+				"order":    {"date"},
+				"sort":     {"desc"},
 			},
 			exptectedStatusCode: 200,
 			expectedResponse:    sortedFilesDesc,
@@ -85,10 +85,10 @@ func TestMediaList(t *testing.T) {
 		{
 			name: "media list: desc: page=2: perpage=2",
 			requestQuery: url.Values{
-				"page":    {"1"},
-				"perPage": {"2"},
-				"order":   {"date"},
-				"sort":    {"desc"},
+				"page":     {"1"},
+				"per_page": {"2"},
+				"order":    {"date"},
+				"sort":     {"desc"},
 			},
 			exptectedStatusCode: 200,
 			expectedResponse:    sortedFilesDesc[0:2],
@@ -96,10 +96,10 @@ func TestMediaList(t *testing.T) {
 		{
 			name: "media list: desc: page=2: perpage=2",
 			requestQuery: url.Values{
-				"page":    {"2"},
-				"perPage": {"2"},
-				"order":   {"date"},
-				"sort":    {"desc"},
+				"page":     {"2"},
+				"per_page": {"2"},
+				"order":    {"date"},
+				"sort":     {"desc"},
 			},
 			exptectedStatusCode: 200,
 			expectedResponse:    sortedFilesDesc[2:4],
@@ -107,10 +107,10 @@ func TestMediaList(t *testing.T) {
 		{
 			name: "media list: desc: page=3: perpage=1",
 			requestQuery: url.Values{
-				"page":    {"3"},
-				"perPage": {"2"},
-				"order":   {"date"},
-				"sort":    {"desc"},
+				"page":     {"3"},
+				"per_page": {"2"},
+				"order":    {"date"},
+				"sort":     {"desc"},
 			},
 			exptectedStatusCode: 200,
 			expectedResponse:    sortedFilesDesc[4:6],
@@ -129,7 +129,7 @@ func TestMediaList(t *testing.T) {
 			resp, err := testClient.sendHttpRequest(httpRequest{
 				method:      "GET",
 				query:       test.requestQuery,
-				url:         "/v1/mediaList",
+				url:         "/v1/media-list",
 				bearerToken: AUTH_TOKEN,
 			}, false)
 			if !assert.NoError(t, err, "search request") {
