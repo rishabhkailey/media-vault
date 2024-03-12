@@ -38,7 +38,7 @@ const imageElement = ref<HTMLElement | undefined>(undefined);
         "
         :style="`padding: ${props.padding}px`"
         v-bind="hoverProps"
-        :elevation="isHovering ? 6 : 0"
+        :elevation="isHovering ? 12 : 6"
       >
         <v-img
           v-if="props.album.thumbnail_url.length > 0"
@@ -53,18 +53,22 @@ const imageElement = ref<HTMLElement | undefined>(undefined);
             <div class="d-flex align-center justify-center fill-height">
               <v-icon
                 icon="mdi-image-broken-variant"
-                :style="`aspect-ratio: 1; font-size: ${contianerSize.height}px`"
+                :style="`aspect-ratio: 1; font-size: ${contianerSize.width}px`"
               />
             </div>
           </template>
         </v-img>
-        <div v-else>
-          <div class="d-flex align-center justify-center fill-height">
-            <v-icon
-              icon="mdi-image-album"
-              :style="`aspect-ratio: 1; font-size: ${contianerSize.height}px`"
-            />
-          </div>
+        <div
+          v-else
+          class="d-flex align-center justify-center fill-height w-100"
+          :style="`aspect-ratio: ${props.aspectRatio}; overflow: hidden;`"
+        >
+          <v-icon
+            icon="mdi-image-album"
+            :style="{
+              fontSize: `${contianerSize.height}px`,
+            }"
+          />
         </div>
         <v-card-subtitle>
           <div class="d-flex flex-column align-start">
