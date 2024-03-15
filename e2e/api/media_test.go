@@ -2,6 +2,7 @@ package api_test
 
 import (
 	"bytes"
+	"fmt"
 	"net/http"
 	"net/url"
 	"sort"
@@ -51,7 +52,6 @@ func TestMediaList(t *testing.T) {
 		{
 			name: "media list: desc: single file",
 			requestQuery: url.Values{
-				"page":     {"1"},
 				"per_page": {"1"},
 				"order":    {"date"},
 				"sort":     {"desc"},
@@ -62,7 +62,6 @@ func TestMediaList(t *testing.T) {
 		{
 			name: "media list: desc: 3 files",
 			requestQuery: url.Values{
-				"page":     {"1"},
 				"per_page": {"3"},
 				"order":    {"date"},
 				"sort":     {"desc"},
@@ -73,7 +72,6 @@ func TestMediaList(t *testing.T) {
 		{
 			name: "media list: desc: all files",
 			requestQuery: url.Values{
-				"page":     {"1"},
 				"per_page": {"6"},
 				"order":    {"date"},
 				"sort":     {"desc"},
@@ -83,9 +81,8 @@ func TestMediaList(t *testing.T) {
 		},
 		// pagination
 		{
-			name: "media list: desc: page=2: perpage=2",
+			name: "media list: desc: no last media, perpage=2",
 			requestQuery: url.Values{
-				"page":     {"1"},
 				"per_page": {"2"},
 				"order":    {"date"},
 				"sort":     {"desc"},
@@ -94,26 +91,31 @@ func TestMediaList(t *testing.T) {
 			expectedResponse:    sortedFilesDesc[0:2],
 		},
 		{
-			name: "media list: desc: page=2: perpage=2",
+			name: "media list: desc: last media index = 2, perpage=2",
 			requestQuery: url.Values{
-				"page":     {"2"},
-				"per_page": {"2"},
-				"order":    {"date"},
-				"sort":     {"desc"},
+				"last_media_id": {fmt.Sprintf("%d", sortedFilesDesc[2].id)},
+				"last_date":     {time.UnixMilli(sortedFilesDesc[2].date).Format(time.RFC3339Nano)},
+				"per_page":      {"2"},
+				"order":         {"date"},
+				"sort":          {"desc"},
 			},
 			exptectedStatusCode: 200,
-			expectedResponse:    sortedFilesDesc[2:4],
+			// [index + 1, (index + 1 + per_page)]
+			expectedResponse: sortedFilesDesc[2+1 : (2 + 1 + 2)],
 		},
 		{
-			name: "media list: desc: page=3: perpage=1",
+			name: "media list: desc: last media index = 1, perpage=3",
 			requestQuery: url.Values{
-				"page":     {"3"},
-				"per_page": {"2"},
-				"order":    {"date"},
-				"sort":     {"desc"},
+				"last_media_id": {fmt.Sprintf("%d", sortedFilesDesc[1].id)},
+				// "last_date":     {fmt.Sprintf("%d", sortedFilesDesc[1].date)},
+				"last_date": {time.UnixMilli(sortedFilesDesc[1].date).Format(time.RFC3339Nano)},
+				"per_page":  {"3"},
+				"order":     {"date"},
+				"sort":      {"desc"},
 			},
 			exptectedStatusCode: 200,
-			expectedResponse:    sortedFilesDesc[4:6],
+			// [index + 1, (index + 1 + per_page)]
+			expectedResponse: sortedFilesDesc[1+1 : (1 + 1 + 3)],
 		},
 	}
 	for _, test := range testCases {

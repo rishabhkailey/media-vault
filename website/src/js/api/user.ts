@@ -13,7 +13,7 @@ export async function refreshSessionWithResourceServer(
   accessToken: string,
 ): Promise<boolean> {
   const response = await axios.post(
-    "/v1/refreshSession",
+    "/v1/refresh-session",
     {},
     {
       headers: {

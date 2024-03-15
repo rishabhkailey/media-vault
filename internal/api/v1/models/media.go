@@ -10,11 +10,13 @@ import (
 )
 
 type GetMediaListRequest struct {
-	OrderBy     string     `form:"order" json:"order" binding:"required"`
-	Sort        string     `form:"sort" json:"sort" binding:"required"`
-	PerPage     int64      `form:"per_page" json:"per_page" binding:"required"`
-	LastMediaID *uint      `form:"last_media_id" json:"last_media_id"`
-	LastDate    *time.Time `form:"last_date" json:"last_date"`
+	OrderBy string `form:"order" json:"order" binding:"required"`
+	Sort    string `form:"sort" json:"sort" binding:"required"`
+	// todo change PerPage to limit or something
+	PerPage     int64 `form:"per_page" json:"per_page" binding:"required"`
+	LastMediaID *uint `form:"last_media_id" json:"last_media_id"`
+	// todo change last_date to last_media_date?
+	LastDate *time.Time `form:"last_date" json:"last_date"`
 }
 
 func (request *GetMediaListRequest) Validate() error {

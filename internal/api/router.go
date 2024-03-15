@@ -20,7 +20,7 @@ func NewRouter(v1ApiServer *v1Api.Server, websiteHandler *website.WebsiteHandler
 	v1 := router.Group("/v1")
 	{
 		// refresh session has its own auth validation
-		v1.POST("/refreshSession", v1ApiServer.RefreshSession)
+		v1.POST("/refresh-session", v1ApiServer.RefreshSession)
 
 		// session based and fallback to bearer token
 		v1UserProtected := v1.Group("/")

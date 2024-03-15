@@ -37,8 +37,8 @@ type InitChunkUploadResponse struct {
 // todo do memory usage test using big chunks
 type UploadChunkRequest struct {
 	Index     *int64                `form:"index" binding:"required,number,gte=0"`
-	ChunkSize int64                 `form:"chunkSize" binding:"required"`
-	ChunkData *multipart.FileHeader `form:"chunkData" binding:"required"`
+	ChunkSize int64                 `form:"chunk_size" binding:"required"`
+	ChunkData *multipart.FileHeader `form:"chunk_data" binding:"required"`
 }
 
 type UploadChunkResponse struct {

@@ -264,8 +264,8 @@ async function encryptAndUploadChunk(
       `/v1/upload/${requestID}/chunk`,
       {
         index: index,
-        chunkSize: value.length,
-        chunkData: chunkBlob,
+        chunk_size: value.length,
+        chunk_data: chunkBlob,
       },
       {
         headers: {

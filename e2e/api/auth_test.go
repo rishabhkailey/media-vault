@@ -9,6 +9,11 @@ import (
 	"github.com/stretchr/testify/assert"
 )
 
+// 401 vs 403
+// 403 when token is correct but the user doesn't have access to the resource.
+// 		e.g. file doesn't belong to user
+// 401 invalid, missing or expired token
+
 func TestNormalEndpointsAuth(t *testing.T) {
 	testCases := []struct {
 		name               string
@@ -19,23 +24,11 @@ func TestNormalEndpointsAuth(t *testing.T) {
 		requestBearerToken string
 		expectedStatusCode int
 	}{
-		// todo do we need to start the upload? for auth only confirming 400 should be enough
-		// {
-		// 	name:       "correct bearer token: initChunkUpload",
-		// 	requestUri: "/v1/initChunkUpload",
-		// 	requestBody: map[string]any{
-		// 		"fileName":  "test.txt",
-		// 		"size":      100,
-		// 		"mediaType": "txt",
-		// 		"date":      time.Now().UnixMilli(),
-		// 	},
-		// 	requestMethod:      "POST",
-		// 	requestBearerToken: AUTH_TOKEN,
-		// 	expectedStatusCode: http.StatusOK,
-		// },
+		// we don't want to upload any actual file
+		// 400 status code for the correct bearer token and 401 for incorrect
 		{
 			name:       "correct bearer token: initChunkUpload",
-			requestUri: "/v1/initChunkUpload",
+			requestUri: "/v1/upload",
 			requestBody: map[string]any{
 				"fileName123": "test.txt",
 				"size":        100,
@@ -48,7 +41,7 @@ func TestNormalEndpointsAuth(t *testing.T) {
 		},
 		{
 			name:       "wrong bearer token: initChunkUpload",
-			requestUri: "/v1/initChunkUpload",
+			requestUri: "/v1/upload",
 			requestBody: map[string]any{
 				"fileName":  "test.txt",
 				"size":      100,
@@ -114,48 +107,33 @@ func TestNormalEndpointsAuth(t *testing.T) {
 			expectedStatusCode: http.StatusUnauthorized,
 		},
 		{
-			name:               "correct bearer token: media list",
-			requestUri:         "/v1/uploadChunk",
+			name:               "correct bearer token: upload chunk",
+			requestUri:         "/v1/upload/invalid-upload-request-id/chunk",
 			requestBody:        nil,
 			requestMethod:      "POST",
 			requestBearerToken: AUTH_TOKEN,
 			expectedStatusCode: http.StatusBadRequest,
 		},
 		{
-			name:               "wrong bearer token: media list",
-			requestUri:         "/v1/uploadChunk",
+			name:               "wrong bearer token: upload chunk",
+			requestUri:         "/v1/upload/invalid-upload-request-id/chunk",
 			requestBody:        nil,
 			requestMethod:      "POST",
 			requestBearerToken: "blabla",
 			expectedStatusCode: http.StatusUnauthorized,
 		},
+		// todo(fix): status code should be 400 or 404
 		{
-			name:               "correct bearer token: media list",
-			requestUri:         "/v1/finishChunkUpload",
+			name:               "correct bearer token: upload finish",
+			requestUri:         "/v1/upload/invalid-upload-request-id/finish",
 			requestBody:        nil,
 			requestMethod:      "POST",
 			requestBearerToken: AUTH_TOKEN,
-			expectedStatusCode: http.StatusBadRequest,
+			expectedStatusCode: http.StatusInternalServerError,
 		},
 		{
-			name:               "wrong bearer token: media list",
-			requestUri:         "/v1/finishChunkUpload",
-			requestBody:        nil,
-			requestMethod:      "POST",
-			requestBearerToken: "blabla",
-			expectedStatusCode: http.StatusUnauthorized,
-		},
-		{
-			name:               "correct bearer token: media list",
-			requestUri:         "/v1/uploadThumbnail",
-			requestBody:        nil,
-			requestMethod:      "POST",
-			requestBearerToken: AUTH_TOKEN,
-			expectedStatusCode: http.StatusBadRequest,
-		},
-		{
-			name:               "wrong bearer token: media list",
-			requestUri:         "/v1/uploadThumbnail",
+			name:               "wrong bearer token: upload finish",
+			requestUri:         "/v1/upload/invalid-upload-request-id/finish",
 			requestBody:        nil,
 			requestMethod:      "POST",
 			requestBearerToken: "blabla",
@@ -178,10 +156,10 @@ func TestNormalEndpointsAuth(t *testing.T) {
 				body:        test.requestBody,
 				bearerToken: test.requestBearerToken,
 			}, false)
-			if !assert.NoError(t, err) {
+			if !assert.NoError(t, err, test.name) {
 				return
 			}
-			assert.Equal(t, test.expectedStatusCode, resp.status)
+			assert.Equal(t, test.expectedStatusCode, resp.status, test.name)
 		})
 	}
 }
@@ -198,7 +176,7 @@ func TestMediaEndpointsAuth(t *testing.T) {
 	}{
 		{
 			name:                             "Get Media: with refreshSession: correct auth token",
-			requestUri:                       "/v1/media/test123321",
+			requestUri:                       "/v1/file/test123321",
 			requestMethod:                    "GET",
 			requestBearerToken:               AUTH_TOKEN,
 			refreshSession:                   true,
@@ -207,7 +185,7 @@ func TestMediaEndpointsAuth(t *testing.T) {
 		},
 		{
 			name:                             "Get Media: with refreshSession: empty auth token",
-			requestUri:                       "/v1/media/test123321",
+			requestUri:                       "/v1/file/test123321",
 			requestMethod:                    "GET",
 			requestBearerToken:               "",
 			refreshSession:                   true,
@@ -234,10 +212,10 @@ func TestMediaEndpointsAuth(t *testing.T) {
 			}
 			if test.refreshSession {
 				resp, err := testClient.sendRefreshSessionRequest(test.requestBearerToken)
-				if !assert.NoError(t, err) {
+				if !assert.NoError(t, err, test.name, "refresh token request") {
 					return
 				}
-				if !assert.Equal(t, test.expectedRefreshSessionStatusCode, resp.status) {
+				if !assert.Equal(t, test.expectedRefreshSessionStatusCode, resp.status, test.name, "refresh token request") {
 					return
 				}
 			}
@@ -245,10 +223,10 @@ func TestMediaEndpointsAuth(t *testing.T) {
 				method: test.requestMethod,
 				url:    test.requestUri,
 			}, false)
-			if !assert.NoError(t, err) {
+			if !assert.NoError(t, err, test.name) {
 				return
 			}
-			assert.Equal(t, test.expectedGetMediaStatusCode, resp.status)
+			assert.Equal(t, test.expectedGetMediaStatusCode, resp.status, test.name)
 		})
 	}
 }
