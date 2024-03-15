@@ -133,14 +133,15 @@ func (server *Server) InitChunkUpload(c *gin.Context) {
 
 func (server *Server) UploadChunk(c *gin.Context) {
 	userID := c.GetString("user_id")
-	if len(userID) == 0 {
-		c.Error(
-			internalErrors.NewInternalServerError(
-				fmt.Errorf("[InitChunkUpload]: empty userID"),
-			),
-		)
+	uploadRequestID := c.Param("upload_request_id")
+	if len(uploadRequestID) == 0 {
+		c.Error(internalErrors.NewBadRequestError(
+			fmt.Errorf("[UploadChunk] got empty upload_request_id"),
+			"invalid upload request id",
+		))
 		return
 	}
+
 	var requestBody v1models.UploadChunkRequest
 	if err := c.Bind(&requestBody); err != nil {
 		c.Error(
@@ -163,7 +164,7 @@ func (server *Server) UploadChunk(c *gin.Context) {
 
 	n, err := server.MediaStorage.UploadChunk(c.Request.Context(), mediastorage.UploadChunkCmd{
 		UserID:          userID,
-		UploadRequestID: requestBody.RequestID,
+		UploadRequestID: uploadRequestID,
 		Index:           *requestBody.Index,
 		ChunkSize:       requestBody.ChunkSize,
 		Chunk:           chunkFile,
@@ -177,13 +178,21 @@ func (server *Server) UploadChunk(c *gin.Context) {
 		return
 	}
 	c.JSON(http.StatusOK, &v1models.UploadChunkResponse{
-		RequestID: requestBody.RequestID,
+		RequestID: uploadRequestID,
 		Uploaded:  n,
 	})
 }
 
 // thumbnail is required to be of jpeg type only
 func (server *Server) UploadThumbnail(c *gin.Context) {
+	uploadRequestID := c.Param("upload_request_id")
+	if len(uploadRequestID) == 0 {
+		c.Error(internalErrors.NewBadRequestError(
+			fmt.Errorf("[UploadChunk] got empty upload_request_id"),
+			"invalid upload request id",
+		))
+		return
+	}
 	var requestBody v1models.UploadThumbnailRequest
 	if err := c.Bind(&requestBody); err != nil {
 		c.Error(
@@ -213,7 +222,7 @@ func (server *Server) UploadThumbnail(c *gin.Context) {
 		return
 	}
 	media, err := server.Media.GetByUploadRequestID(c.Request.Context(), media.GetByUploadRequestQuery{
-		UploadRequestID: requestBody.RequestID,
+		UploadRequestID: uploadRequestID,
 	})
 	if errors.Is(err, gorm.ErrRecordNotFound) {
 		c.Error(internalErrors.ErrForbidden)
@@ -228,7 +237,7 @@ func (server *Server) UploadThumbnail(c *gin.Context) {
 		return
 	}
 	err = server.MediaStorage.ThumbnailUpload(c.Request.Context(), mediastorage.UploadThumbnailCmd{
-		RequestID:  requestBody.RequestID,
+		RequestID:  uploadRequestID,
 		UserID:     userID,
 		FileName:   media.FileName,
 		FileSize:   requestBody.Size,
@@ -260,6 +269,15 @@ func (server *Server) UploadThumbnail(c *gin.Context) {
 
 // this is for client to confirm if the upload has finished or not
 func (server *Server) FinishChunkUpload(c *gin.Context) {
+	uploadRequestID := c.Param("upload_request_id")
+	if len(uploadRequestID) == 0 {
+		c.Error(internalErrors.NewBadRequestError(
+			fmt.Errorf("[UploadChunk] got empty upload_request_id"),
+			"invalid upload request id",
+		))
+		return
+	}
+
 	var requestBody v1models.FinishUploadRequest
 	err := c.Bind(&requestBody)
 	if err != nil {
@@ -282,7 +300,7 @@ func (server *Server) FinishChunkUpload(c *gin.Context) {
 	}
 	err = server.MediaStorage.FinishChunkUpload(c.Request.Context(), mediastorage.FinishChunkUpload{
 		UserID:    userID,
-		RequestID: requestBody.RequestID,
+		RequestID: uploadRequestID,
 		CheckSum:  requestBody.Checksum,
 	})
 	if err != nil {
@@ -294,7 +312,7 @@ func (server *Server) FinishChunkUpload(c *gin.Context) {
 		return
 	}
 	uploadedMedia, err := server.Media.GetMediaWithMetadataByUploadRequestID(c.Request.Context(), media.GetByUploadRequestQuery{
-		UploadRequestID: requestBody.RequestID,
+		UploadRequestID: uploadRequestID,
 	})
 	if err != nil {
 		c.Error(

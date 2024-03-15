@@ -109,10 +109,10 @@ func (c *testHttpClient) sendInitChunkUploadRequest(fileName string, fileSize in
 		method: "POST",
 		url:    "/v1/initChunkUpload",
 		body: map[string]any{
-			"fileName":  fileName,
-			"Size":      fileSize,
-			"MediaType": mediaType,
-			"Date":      date,
+			"file_name":  fileName,
+			"Size":       fileSize,
+			"media_type": mediaType,
+			"Date":       date,
 		},
 		bearerToken: bearerToken,
 	}, true)
@@ -121,7 +121,7 @@ func (c *testHttpClient) sendInitChunkUploadRequest(fileName string, fileSize in
 func (c *testHttpClient) sendUploadChunkRequest(requestID string, index int64, chunkSize int64, chunkData string, fileName string, bearerToken string) (resp httpResponse, err error) {
 	var reqBody bytes.Buffer
 	writer := multipart.NewWriter(&reqBody)
-	writer.WriteField("requestID", requestID)
+	writer.WriteField("request_id", requestID)
 	writer.WriteField("index", fmt.Sprintf("%d", index))
 	writer.WriteField("chunkSize", fmt.Sprintf("%d", chunkSize))
 	part, err := writer.CreateFormFile("chunkData", fileName)
@@ -147,7 +147,7 @@ func (c *testHttpClient) sendUploadChunkRequest(requestID string, index int64, c
 func (c *testHttpClient) sendUploadThumbnailRequest(requestID string, thumbnailData string, fileName string, bearerToken string) (resp httpResponse, err error) {
 	var reqBody bytes.Buffer
 	writer := multipart.NewWriter(&reqBody)
-	writer.WriteField("requestID", requestID)
+	writer.WriteField("request_id", requestID)
 	writer.WriteField("size", fmt.Sprintf("%d", len(thumbnailData)))
 	part, err := writer.CreateFormFile("thumbnail", fileName)
 	if err != nil {
@@ -178,8 +178,8 @@ func (c *testHttpClient) sendFinishUploadRequest(requestID string, bearerToken s
 		method: "POST",
 		url:    "/v1/finishChunkUpload",
 		body: map[string]any{
-			"requestID": requestID,
-			"checksum":  "",
+			"request_id": requestID,
+			"checksum":   "",
 		},
 		bearerToken: bearerToken,
 		headers:     headers,
@@ -272,7 +272,7 @@ func (c *testHttpClient) UploadTest(t assert.TestingT, file testFile, chunkSize 
 	var requestID string
 	{
 		body := resp.body.(map[string]any)
-		value := body["requestID"]
+		value := body["request_id"]
 		requestID = value.(string)
 	}
 	if ok := assert.True(t, len(requestID) > 0, "requestID doesn't exist in reponse"); !ok {

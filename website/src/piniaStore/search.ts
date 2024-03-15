@@ -102,7 +102,7 @@ export const useSearchStore = defineStore("search", () => {
       query.value = _query;
       axios
         .get<Array<Media>>(
-          `/v1/search?query=${_query}&page=${nextPageNumber.value}&perPage=30&order=${orderBy.value}&sort=desc`,
+          `/v1/search?query=${_query}&page=${nextPageNumber.value}&per_page=30&order=${orderBy.value}&sort=desc`,
           {
             headers: {
               Authorization: `Bearer ${accessToken}`,

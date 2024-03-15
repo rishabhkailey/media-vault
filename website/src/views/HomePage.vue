@@ -1,10 +1,14 @@
 <script setup lang="ts">
 import MediaGrid from "@/components/MediaThumbnailPreview/MediaGrid.vue";
 import { useMediaStore } from "@/piniaStore/media";
-import { mediaPreviewRoute } from "@/router/routesConstants";
+import {
+  MEDIA_PREVIEW_ROUTE_NAME,
+  mediaPreviewRoute,
+} from "@/router/routesConstants";
 import { storeToRefs } from "pinia";
-import { useRouter } from "vue-router";
+import { useRoute, useRouter } from "vue-router";
 import { MEDIA_PREVIEW_CONTAINER_Z_INDEX } from "@/js/constants/z-index";
+import UserMediaCarousel from "@/components/MediaCarousel/UserMediaCarousel.vue";
 
 const router = useRouter();
 const mediaStore = useMediaStore();
@@ -12,7 +16,9 @@ const { mediaList, allMediaLoaded } = storeToRefs(mediaStore);
 const { loadMoreMedia, getMediaDateAccordingToOrderBy } = mediaStore;
 
 async function loadAllMediaUntil(date: Date): Promise<boolean> {
-  let lastMediaDate = mediaList.value[mediaList.value.length - 1].date;
+  let lastMediaDate = getMediaDateAccordingToOrderBy(
+    mediaList.value[mediaList.value.length - 1],
+  );
   while (
     date.getDate() === lastMediaDate.getDate() &&
     date.getFullYear() === lastMediaDate.getFullYear() &&
@@ -24,15 +30,13 @@ async function loadAllMediaUntil(date: Date): Promise<boolean> {
   }
   return true;
 }
-function handleThumbnailClick(
-  clickedMediaID: number,
-  clickedIndex: number,
-  thumbnailClickLocation: ThumbnailClickLocation | undefined,
-) {
+
+function handleThumbnailClick(clickedMediaID: number) {
   try {
-    router.push(
-      mediaPreviewRoute(clickedIndex, clickedMediaID, thumbnailClickLocation),
+    const clickedIndex = mediaList.value.findIndex(
+      (m) => m.id === clickedMediaID,
     );
+    router.push(mediaPreviewRoute(clickedIndex, clickedMediaID));
   } catch (err) {
     // todo error page?
     console.error("error in homepage", err);
@@ -49,9 +53,9 @@ function handleThumbnailClick(
     :media-date-getter="getMediaDateAccordingToOrderBy"
     @thumbnail-click="handleThumbnailClick"
   />
-  <Teleport to="body">
+  <Teleport v-if="useRoute().name === MEDIA_PREVIEW_ROUTE_NAME" to="body">
     <div class="media-preview-container">
-      <RouterView />
+      <UserMediaCarousel />
     </div>
   </Teleport>
 </template>

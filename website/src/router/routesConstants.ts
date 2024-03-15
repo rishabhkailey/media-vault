@@ -71,16 +71,14 @@ export function albumMediaPreviewRoute(
   index: number,
   mediaId: number,
   albumId: number,
-  thumbnailClickLocation?: ThumbnailClickLocation,
 ): RouteLocationRaw {
   return {
     name: ALBUM_MEDIA_PREVIEW_ROUTE_NAME,
     params: {
-      index: index,
       media_id: mediaId,
       album_id: albumId,
+      index: index,
     },
-    hash: `#${base64UrlEncode(thumbnailClickLocation)}`,
   };
 }
 
@@ -106,7 +104,6 @@ export function searchMediaPreviewRoute(
   index: number,
   mediaId: number,
   query: string,
-  thumbnailClickLocation?: ThumbnailClickLocation,
 ): RouteLocationRaw {
   return {
     name: SEARCH_MEDIA_PREVIEW_ROUTE_NAME,
@@ -115,14 +112,12 @@ export function searchMediaPreviewRoute(
       media_id: mediaId,
       query: query,
     },
-    hash: `#${base64UrlEncode(thumbnailClickLocation)}`,
   };
 }
 
 export function mediaPreviewRoute(
   index: number,
   mediaId: number,
-  thumbnailClickLocation?: ThumbnailClickLocation,
 ): RouteLocationRaw {
   return {
     name: MEDIA_PREVIEW_ROUTE_NAME,
@@ -130,6 +125,5 @@ export function mediaPreviewRoute(
       index: index,
       media_id: mediaId,
     },
-    hash: `#${base64UrlEncode(thumbnailClickLocation)}`,
   };
 }

@@ -12,7 +12,7 @@ import { useErrorsStore } from "@/piniaStore/errors";
 
 const mediaSelectionStore = useMediaSelectionStore();
 const { reset: resetMediaSelection, updateSelection } = mediaSelectionStore;
-const { selectedMediaIDs } = storeToRefs(mediaSelectionStore);
+const { selectedMediaMap } = storeToRefs(mediaSelectionStore);
 const { appendError } = useErrorsStore();
 const { deleteMultipleMedia } = useMediaStore();
 const { setGlobalLoading } = useLoadingStore();
@@ -21,7 +21,7 @@ const deleteConfirmationPopUp = ref(false);
 
 async function deleteSelectedMedia() {
   // we don't want this to be reactive
-  let mediaIDs = [...selectedMediaIDs.value];
+  let mediaIDs = [...selectedMediaMap.value.keys()];
   resetMediaSelection();
   setGlobalLoading(true, false, 0);
   try {
@@ -45,7 +45,7 @@ const addToAlbumErrorMessage = ref("");
 async function addToAlbumsConfirm(
   albumIDs: Array<number>,
 ): Promise<Array<number>> {
-  let mediaIDs = [...selectedMediaIDs.value];
+  let mediaIDs = [...selectedMediaMap.value.keys()];
   let failedAlbumIDs = [];
   addToAlbumInProgress.value = true;
   for (const albumID of albumIDs) {

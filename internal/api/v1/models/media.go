@@ -12,7 +12,7 @@ import (
 type GetMediaListRequest struct {
 	OrderBy     string     `form:"order" json:"order" binding:"required"`
 	Sort        string     `form:"sort" json:"sort" binding:"required"`
-	PerPage     int64      `form:"per_page" json:"perPage" binding:"required"`
+	PerPage     int64      `form:"per_page" json:"per_page" binding:"required"`
 	LastMediaID *uint      `form:"last_media_id" json:"last_media_id"`
 	LastDate    *time.Time `form:"last_date" json:"last_date"`
 }

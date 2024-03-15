@@ -6,9 +6,13 @@ import { useSearchStore } from "@/piniaStore/search";
 import { useAuthStore } from "@/piniaStore/auth";
 import { storeToRefs } from "pinia";
 import { getQueryParamStringValue } from "@/js/utils";
-import { searchMediaPreviewRoute } from "@/router/routesConstants";
+import {
+  SEARCH_MEDIA_PREVIEW_ROUTE_NAME,
+  searchMediaPreviewRoute,
+} from "@/router/routesConstants";
 import { MEDIA_PREVIEW_CONTAINER_Z_INDEX } from "@/js/constants/z-index";
 import ErrorMessage from "../Error/ErrorMessage.vue";
+import SearchMediaCarousel from "../MediaCarousel/SearchMediaCarousel.vue";
 const errorMessage = ref("");
 const router = useRouter();
 
@@ -54,6 +58,20 @@ function loadAllMediaUntil(date: Date): Promise<boolean> {
     return;
   });
 }
+
+function handleThumbnailClick(clickedMediaID: number) {
+  try {
+    const clickedIndex = mediaList.value.findIndex(
+      (m) => m.id === clickedMediaID,
+    );
+    router.push(
+      searchMediaPreviewRoute(clickedIndex, clickedMediaID, searchQuery.value),
+    );
+  } catch (err) {
+    // todo error page?
+    console.error("error in homepage", err);
+  }
+}
 </script>
 
 <template>
@@ -70,22 +88,15 @@ function loadAllMediaUntil(date: Date): Promise<boolean> {
     :load-more-media="() => loadMoreSearchResults(accessToken, searchQuery)"
     :load-all-media-until="loadAllMediaUntil"
     :media-date-getter="getMediaDateAccordingToOrderBy"
-    @thumbnail-click="
-      (clickedMediaID, clickedIndex, thumbnailClickLocation) => {
-        router.push(
-          searchMediaPreviewRoute(
-            clickedIndex,
-            clickedMediaID,
-            searchQuery,
-            thumbnailClickLocation,
-          ),
-        );
-      }
-    "
+    @thumbnail-click="handleThumbnailClick"
   />
-  <Teleport to="body">
+
+  <Teleport
+    v-if="useRoute().name === SEARCH_MEDIA_PREVIEW_ROUTE_NAME"
+    to="body"
+  >
     <div class="media-preview-container">
-      <RouterView />
+      <SearchMediaCarousel />
     </div>
   </Teleport>
 </template>

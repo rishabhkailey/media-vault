@@ -53,7 +53,7 @@ func (request *GetAlbumsRequest) Validate() error {
 }
 
 type GetAlbumRequest struct {
-	AlbumID uint `uri:"albumID" binding:"required"`
+	AlbumID uint `uri:"album_id" binding:"required"`
 }
 
 func (request *GetAlbumRequest) Validate() error {
@@ -64,7 +64,7 @@ func (request *GetAlbumRequest) Validate() error {
 }
 
 type PatchAlbumRequest struct {
-	ID           uint    `uri:"albumID" binding:"required"`
+	ID           uint    `uri:"album_id" binding:"required"`
 	Name         *string `json:"name"`
 	ThumbnailUrl *string `json:"thumbnail_url"`
 }
@@ -80,7 +80,7 @@ func (request *PatchAlbumRequest) Validate() error {
 }
 
 type DeleteAlbumRequest struct {
-	AlbumID uint `uri:"albumID" binding:"required"`
+	AlbumID uint `uri:"album_id" binding:"required"`
 }
 
 func (request *DeleteAlbumRequest) Validate() error {
@@ -91,7 +91,7 @@ func (request *DeleteAlbumRequest) Validate() error {
 }
 
 type GetAlbumMediaRequest struct {
-	AlbumID     uint   `uri:"albumID" binding:"required"`
+	AlbumID     uint   `uri:"album_id" binding:"required"`
 	OrderBy     string `form:"order" json:"order" binding:"required"`
 	Sort        string `form:"sort" json:"sort" binding:"required"`
 	PerPage     int64  `form:"per_page" json:"per_page" binding:"required"`
@@ -116,7 +116,7 @@ func (request *GetAlbumMediaRequest) Validate() error {
 }
 
 type AlbumAddMediaRequest struct {
-	AlbumID  uint   `uri:"albumID" binding:"required"`
+	AlbumID  uint   `uri:"album_id" binding:"required"`
 	MediaIDs []uint `json:"media_ids" binding:"required"`
 }
 
@@ -131,7 +131,7 @@ func (request *AlbumAddMediaRequest) Validate() error {
 }
 
 type AlbumRemoveMediaRequest struct {
-	AlbumID  uint   `uri:"albumID" binding:"required"`
+	AlbumID  uint   `uri:"album_id" binding:"required"`
 	MediaIDs []uint `json:"media_ids" binding:"required"`
 }
 

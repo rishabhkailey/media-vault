@@ -45,8 +45,7 @@ interface IndexMedia {
 interface MonthlyMedia {
   month: number;
   year: number;
-  media: Array<IndexMedia>;
-  indexOffset: number;
+  media: Array<Media>;
 }
 
 interface DailyMedia {
@@ -54,7 +53,7 @@ interface DailyMedia {
   day: number;
   year: number;
   date: number;
-  media: Array<IndexMedia>;
+  media: Array<Media>;
 }
 
 interface UserInfo {

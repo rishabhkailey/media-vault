@@ -1,6 +1,6 @@
 export function calculateThumbnailResolution(
   constraints: thumbnailConstraints,
-  imageResolution: WidthHeight
+  imageResolution: WidthHeight,
 ): {
   offset: point;
   destinationResolution: WidthHeight;
@@ -9,7 +9,7 @@ export function calculateThumbnailResolution(
   if (constraints.preserveAspectRatio) {
     return calculateThumbnailResolutionWithOriginalAspectRatio(
       constraints,
-      imageResolution
+      imageResolution,
     );
   }
   return calculate_16x9_9x16_resolution(constraints, imageResolution);
@@ -17,7 +17,7 @@ export function calculateThumbnailResolution(
 
 function calculateThumbnailResolutionWithOriginalAspectRatio(
   constraints: thumbnailConstraints,
-  imageResolution: WidthHeight
+  imageResolution: WidthHeight,
 ): {
   offset: point;
   destinationResolution: WidthHeight;
@@ -57,7 +57,7 @@ function calculateThumbnailResolutionWithOriginalAspectRatio(
 
 function calculate_16x9_9x16_resolution(
   constraints: thumbnailConstraints,
-  imageResolution: WidthHeight
+  imageResolution: WidthHeight,
 ): {
   offset: point;
   destinationResolution: WidthHeight;
@@ -109,7 +109,7 @@ function calculate_16x9_9x16_resolution(
     // source image height will remain same only width will be cropped
     sourceResolution.height = imageResolution.height;
     sourceResolution.width = Math.floor(
-      sourceResolution.height * requiredAspectRatio
+      sourceResolution.height * requiredAspectRatio,
     );
 
     // offset.y = actualImageWidth - actualImageWidthused / 2
@@ -120,7 +120,7 @@ function calculate_16x9_9x16_resolution(
     // source image width will remain same only height will be cropped
     sourceResolution.width = imageResolution.width;
     sourceResolution.height = Math.floor(
-      sourceResolution.width / requiredAspectRatio
+      sourceResolution.width / requiredAspectRatio,
     );
     // offset.y = actualImageHeight - actualImageHeightUsed / 2
     // eslint-disable-next-line prettier/prettier

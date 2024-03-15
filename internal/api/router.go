@@ -26,28 +26,23 @@ func NewRouter(v1ApiServer *v1Api.Server, websiteHandler *website.WebsiteHandler
 		v1UserProtected := v1.Group("/")
 		v1UserProtected.Use(v1ApiServer.UserAuthMiddleware)
 		{
-			// todo gitlab style api endpoints?
-			// POST /v1/upload (init)
-			// POST /v1/upload/:upload_request_id/chunk (upload chunk)
-			// POST /v1/upload/:upload_request_id/thumbnail (upload thumbnail)
-			// POST /v1/upload/:upload_request_id/finish (finish upload)
-			v1UserProtected.POST("/initChunkUpload", v1ApiServer.InitChunkUpload)
-			v1UserProtected.POST("/uploadChunk", v1ApiServer.UploadChunk)
-			v1UserProtected.POST("/finishChunkUpload", v1ApiServer.FinishChunkUpload)
-			v1UserProtected.POST("/uploadThumbnail", v1ApiServer.UploadThumbnail)
-			v1UserProtected.GET("/mediaList", v1ApiServer.MediaList)
+			v1UserProtected.POST("/upload", v1ApiServer.InitChunkUpload)
+			v1UserProtected.POST("/upload/:upload_request_id/chunk", v1ApiServer.UploadChunk)
+			v1UserProtected.POST("/upload/:upload_request_id/finish", v1ApiServer.FinishChunkUpload)
+			v1UserProtected.POST("/upload/:upload_request_id/thumbnail", v1ApiServer.UploadThumbnail)
+			v1UserProtected.GET("/media-list", v1ApiServer.MediaList)
 			v1UserProtected.GET("/media/:media_id", v1ApiServer.GetMedia)
 			v1UserProtected.GET("/search", v1ApiServer.Search)
 			v1UserProtected.DELETE("/media/:media_id", v1ApiServer.DeleteSingleMedia)
 			v1UserProtected.DELETE("/media", v1ApiServer.DeleteMedia)
 			v1UserProtected.POST("/album", v1ApiServer.CreateAlbum)
 			v1UserProtected.GET("/albums", v1ApiServer.GetAlbums)
-			v1UserProtected.GET("/album/:albumID", v1ApiServer.GetAlbum)
-			v1UserProtected.PATCH("/album/:albumID", v1ApiServer.PatchAlbum)
-			v1UserProtected.DELETE("/album/:albumID", v1ApiServer.DeleteAlbum)
-			v1UserProtected.GET("/album/:albumID/media", v1ApiServer.GetAlubmMedia)
-			v1UserProtected.POST("/album/:albumID/media", v1ApiServer.AlbumAddMedia)
-			v1UserProtected.DELETE("/album/:albumID/media", v1ApiServer.RemoveAlbumMedia)
+			v1UserProtected.GET("/album/:album_id", v1ApiServer.GetAlbum)
+			v1UserProtected.PATCH("/album/:album_id", v1ApiServer.PatchAlbum)
+			v1UserProtected.DELETE("/album/:album_id", v1ApiServer.DeleteAlbum)
+			v1UserProtected.GET("/album/:album_id/media", v1ApiServer.GetAlubmMedia)
+			v1UserProtected.POST("/album/:album_id/media", v1ApiServer.AlbumAddMedia)
+			v1UserProtected.DELETE("/album/:album_id/media", v1ApiServer.RemoveAlbumMedia)
 			v1UserProtected.GET("/user-info", v1ApiServer.GetUserInfo)
 			v1UserProtected.POST("/user-info", v1ApiServer.PostUserInfo)
 		}
@@ -56,15 +51,15 @@ func NewRouter(v1ApiServer *v1Api.Server, websiteHandler *website.WebsiteHandler
 		v1FileAccessProtected := v1.Group("/")
 		v1FileAccessProtected.Use(v1ApiServer.SessionBasedMediaFileAuthMiddleware)
 		{
-			v1FileAccessProtected.GET("/file/:fileName", v1ApiServer.GetMediaFile)
-			v1FileAccessProtected.GET("/file/:fileName/thumbnail", v1ApiServer.GetThumbnailFile)
+			v1FileAccessProtected.GET("/file/:file_name", v1ApiServer.GetMediaFile)
+			v1FileAccessProtected.GET("/file/:file_name/thumbnail", v1ApiServer.GetThumbnailFile)
 		}
 
 		// bearer token only
 		v1ProtectedBearerOnly := v1.Group("/")
 		v1ProtectedBearerOnly.Use(v1ApiServer.UserAuthMiddleware)
 		{
-			v1ProtectedBearerOnly.POST("/terminateSession", v1ApiServer.TerminateSession)
+			v1ProtectedBearerOnly.POST("/terminate-session", v1ApiServer.TerminateSession)
 		}
 	}
 	public := v1.Group("/public")

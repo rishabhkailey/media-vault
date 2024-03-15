@@ -129,7 +129,7 @@ func TestMediaList(t *testing.T) {
 			},
 		},
 		{
-			name: "bad request: negative perPage missing",
+			name: "bad request: negative per_page missing",
 			requestQuery: url.Values{
 				"sort":     {"asc"},
 				"order":    {"date"},
@@ -291,7 +291,7 @@ func TestMediaList(t *testing.T) {
 		server.Services.AuthService = &test.authService
 		server.Services.Media = &test.mediaService
 		url := url.URL{
-			Path:     "/v1/mediaList",
+			Path:     "/v1/media-list",
 			RawQuery: test.requestQuery.Encode(),
 		}
 		request, _ := http.NewRequest("GET", url.String(), strings.NewReader(test.requestQuery.Encode()))

@@ -2,16 +2,21 @@
 import { computed, ref, watch } from "vue";
 import { useDisplay } from "vuetify";
 
-const props = defineProps<{
-  modelValue: boolean;
-  absolutePosition: boolean;
-  selectIconSize: string | number;
-  loading: boolean;
-  showSelectButtonOnHover: boolean;
-  alwaysShowSelectButton: boolean;
-  alwaysShowSelectOnMobile: boolean;
-  selectOnContentClick: boolean;
-}>();
+const props = withDefaults(
+  defineProps<{
+    modelValue: boolean;
+    absolutePosition: boolean;
+    selectIconSize: string | number;
+    loading?: boolean;
+    showSelectButtonOnHover: boolean;
+    alwaysShowSelectButton: boolean;
+    alwaysShowSelectOnMobile: boolean;
+    selectOnContentClick: boolean;
+  }>(),
+  {
+    loading: false,
+  },
+);
 
 const { mobile: mobileDevice } = useDisplay();
 const allwaysShowSelectButton = computed<boolean>(() => {
@@ -41,7 +46,7 @@ const contentWrapper = ref<HTMLElement | undefined>(undefined);
 
 watch(
   () => props.selectOnContentClick,
-  (newValue, oldValue) => {
+  (newValue) => {
     if (contentWrapper.value === undefined) {
       return;
     }
@@ -52,9 +57,9 @@ watch(
     contentWrapper.value.removeEventListener(
       "click",
       contentClickHandler,
-      true
+      true,
     );
-  }
+  },
 );
 // const selected = ref(false);
 </script>
