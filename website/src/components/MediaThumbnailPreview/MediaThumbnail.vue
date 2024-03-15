@@ -18,7 +18,14 @@ const props = defineProps<{
     :transition="transition"
     :class="props.class"
     cover
-  />
+  >
+    <template #error>
+      <v-icon
+        icon="mdi-image-broken-variant"
+        :style="`font-size: ${width}px;`"
+      />
+    </template>
+  </v-img>
   <div
     v-else
     :style="`height: ${height}px; width: ${width}px;`"
