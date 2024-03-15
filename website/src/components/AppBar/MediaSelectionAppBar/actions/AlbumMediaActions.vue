@@ -85,6 +85,7 @@ function removeSelectedMedia() {
           <template v-slot:activator="{ props }">
             <v-btn
               icon="mdi-image-remove-outline"
+              data-test-id="appbar-album-actions-remove-from-album"
               @click.stop="() => (removedMediaFromAlbumPopUp = true)"
               color="white"
               v-bind="props"
@@ -106,6 +107,7 @@ function removeSelectedMedia() {
           :confirm-in-progress="removeSelectedMediaInProgress"
           @cancel="() => (removedMediaFromAlbumPopUp = false)"
           @confirm="removeSelectedMedia"
+          data-test-id="appbar-album-actions-remove-from-album-confrim"
         />
       </transition>
     </div>
@@ -139,6 +141,7 @@ function removeSelectedMedia() {
           :confirm-in-progress="false"
           @cancel="() => (deleteConfirmationPopUp = false)"
           @confirm="deleteSelectedMedia"
+          data-test-id="appbar-album-actions-delete-media"
         />
       </transition>
     </div>

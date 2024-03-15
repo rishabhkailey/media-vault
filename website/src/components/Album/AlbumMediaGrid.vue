@@ -120,6 +120,7 @@ onMounted(() => {
               deleteConfirmationOverlay = true;
             }
           "
+          data-test-id="delete-album-button"
           >Delete Album</v-btn
         >
         <ConfirmationModal
@@ -140,6 +141,7 @@ onMounted(() => {
             }
           "
           @confirm="() => onDeleteConfirm()"
+          data-test-id="delete-album-confirmation"
         />
       </v-toolbar>
     </v-row>

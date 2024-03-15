@@ -102,6 +102,7 @@ const dayMediaSelected = computed(() => {
             emits('thumbnailClick', props.mediaList[index].id);
           }
         "
+        :data-test-id="`thumbnail_container_${props.mediaList[index].id}`"
       >
         <SelectWrapper
           :loading="false"

@@ -9,6 +9,7 @@ const props = defineProps<{
   confirmInProgress: boolean;
   modelValue: boolean;
   errorMessage: string;
+  dataTestId: string; // used for e2e testing
 }>();
 
 const emits = defineEmits<{
@@ -22,6 +23,7 @@ const emits = defineEmits<{
     :model-value="props.modelValue"
     @update:model-value="(value) => emits('update:modelValue', value)"
     class="align-center justify-center"
+    :data-test-id="props.dataTestId"
   >
     <v-card :subtitle="props.title" style="min-width: 300px; max-width: 500px">
       <v-card-text>
@@ -40,6 +42,7 @@ const emits = defineEmits<{
                 emits('cancel');
               }
             "
+            data-test-id="cancel-button"
             :color="props.cancelButtonText"
           >
             {{ props.cancelButtonText }}
@@ -48,6 +51,7 @@ const emits = defineEmits<{
             :color="props.confirmButtonColor"
             variant="text"
             :loading="props.confirmInProgress"
+            data-test-id="confirm-button"
             @click="() => emits('confirm')"
             >{{ props.confirmButtonText }}</v-btn
           >

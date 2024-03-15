@@ -76,6 +76,7 @@ async function addToAlbumsConfirm(
           @click.stop="() => (addToAlbumConfirmationPopUp = true)"
           color="white"
           v-bind="props"
+          data-test-id="appbar-add-to-album-button"
         />
       </template>
     </v-tooltip>
@@ -101,6 +102,7 @@ async function addToAlbumsConfirm(
           icon="mdi-trash-can-outline"
           @click.stop="() => (deleteConfirmationPopUp = true)"
           color="white"
+          data-test-id="appbar-delete-media-button"
           v-bind="props"
         />
       </template>
@@ -118,6 +120,7 @@ async function addToAlbumsConfirm(
       :confirm-in-progress="false"
       @cancel="() => (deleteConfirmationPopUp = false)"
       @confirm="deleteSelectedMedia"
+      data-test-id="appbar-delete-media-confirmation"
     />
   </v-row>
 </template>

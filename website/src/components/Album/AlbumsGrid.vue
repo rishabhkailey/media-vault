@@ -3,7 +3,6 @@ import { useAlbumStore } from "@/piniaStore/album";
 import CreateAlbumModal from "./CreateAlbumModal.vue";
 import { ref } from "vue";
 import { storeToRefs } from "pinia";
-import { useLoadingStore } from "@/piniaStore/loading";
 import AlbumCard from "./AlbumCard.vue";
 import { useRouter } from "vue-router";
 import KebabMenuWrapper from "../KebabMenuWrapper/KebabMenuWrapper.vue";
@@ -42,6 +41,7 @@ function onDeleteConfirm(albumID: number) {
 }
 </script>
 <template>
+  <!-- <v-container class="bg-secondary-background ma-0 pa-0"> -->
   <v-col>
     <v-row>
       <v-toolbar :collapse="false" title="Albums" color="surface">
@@ -52,6 +52,7 @@ function onDeleteConfirm(albumID: number) {
               showCreateAlbumModal = true;
             }
           "
+          data-test-id="album-create-button"
           >Create</v-btn
         >
         <CreateAlbumModal v-model="showCreateAlbumModal" />
@@ -60,12 +61,16 @@ function onDeleteConfirm(albumID: number) {
     <v-row>
       <v-divider class="border-opacity-25"></v-divider>
     </v-row>
+    <!-- <SizeWrapper v-slot="{ width }"> -->
+    <!-- cols = 12 (default will only work for xs) -->
     <v-row>
-      <!-- <SizeWrapper v-slot="{ width }"> -->
-      <!-- cols = 12 (default will only work for xs) -->
       <v-infinite-scroll
         :items="albums"
-        style="width: 100%; height: 100%"
+        empty-text="No more albums"
+        aria-errormessage="failed to load data from server"
+        direction="vertical"
+        style="width: 100%; height: 100%; overflow-x: hidden"
+        min-height="50vh"
         @load="
           ({ done }) => {
             loadMoreAlbums()
@@ -78,9 +83,7 @@ function onDeleteConfirm(albumID: number) {
           }
         "
       >
-        <template #error> failed to load data from server </template>
-        <template #empty> No more albums </template>
-        <template #default>
+        <v-row>
           <v-col
             :xxl="2"
             :xl="2"
@@ -88,9 +91,9 @@ function onDeleteConfirm(albumID: number) {
             :md="3"
             :sm="6"
             :xs="12"
-            :cols="12"
             :key="`${index}+${album.id}`"
             v-for="(album, index) in albums"
+            :data-test-id="`album_card_container_${album.id}`"
           >
             <KebabMenuWrapper
               :show-select-button-on-hover="true"
@@ -120,29 +123,31 @@ function onDeleteConfirm(albumID: number) {
               </template>
             </KebabMenuWrapper>
           </v-col>
-        </template>
+        </v-row>
       </v-infinite-scroll>
-      <ConfirmationPopupVue
-        title="Delete album?"
-        message="Deleting an album is permanent. Photos and videos that were in a
-            deleted album will not be deleted."
-        cancel-button-text="keep"
-        cancel-button-color=""
-        confirm-button-text="Delete"
-        confirm-button-color="red"
-        :confirm-in-progress="deleteInProgress"
-        v-model:model-value="deleteConfirmationOverlay"
-        :error-message="deleteErrorMessage"
-        @cancel="
-          () => {
-            deleteInProgress = false;
-            deleteConfirmationOverlay = false;
-            toDeleteAlbumID = 0;
-            deleteErrorMessage = '';
-          }
-        "
-        @confirm="() => onDeleteConfirm(toDeleteAlbumID)"
-      />
     </v-row>
+    <ConfirmationPopupVue
+      title="Delete album?"
+      message="Deleting an album is permanent. Photos and videos that were in a
+            deleted album will not be deleted."
+      cancel-button-text="keep"
+      cancel-button-color=""
+      confirm-button-text="Delete"
+      confirm-button-color="red"
+      :confirm-in-progress="deleteInProgress"
+      v-model:model-value="deleteConfirmationOverlay"
+      :error-message="deleteErrorMessage"
+      @cancel="
+        () => {
+          deleteInProgress = false;
+          deleteConfirmationOverlay = false;
+          toDeleteAlbumID = 0;
+          deleteErrorMessage = '';
+        }
+      "
+      @confirm="() => onDeleteConfirm(toDeleteAlbumID)"
+      data-test-id="delete-album-popup"
+    />
   </v-col>
+  <!-- </v-container> -->
 </template>
