@@ -7,6 +7,7 @@ services:
       dockerfile: Dockerfile
     volumes:
       - ../../:/workspaces/media-vault:cached
+      # relative to deployment/development
     command: sleep infinity
     network_mode: "service:nginx"
 
@@ -15,7 +16,8 @@ services:
       context: ../../.devcontainer/website
       dockerfile: Dockerfile
     volumes:
-      - ../../website:/workspaces/website:cached
+      # relative to deployment/development 
+      - ../../:/workspaces/media-vault:cached
     command: sleep infinity
 
   nginx:

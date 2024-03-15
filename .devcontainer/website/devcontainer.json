@@ -10,7 +10,7 @@
 		// , "debug/docker-compose.yml"
 	],
 	"service": "media-vault-ui",
-	"workspaceFolder": "/workspaces/website",
+	"workspaceFolder": "/workspaces/media-vault/website",
 	"customizations": {
 		"vscode": {
 			"extensions": [
