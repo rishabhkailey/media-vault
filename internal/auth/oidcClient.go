@@ -135,7 +135,7 @@ func (client *OidcClient) IntrospectToken(token string) (*TokenInfo, error) {
 		return nil, fmt.Errorf("could not unmarshal json response: %w", err)
 	}
 	if !tokenInfo.Active || tokenInfo.ExpireTime < time.Now().Unix() {
-		return nil, fmt.Errorf("either token is expired or it is not active: %w", authservice.ErrForbidden)
+		return nil, fmt.Errorf("either token is expired or it is not active: %w", authservice.ErrUnauthorized)
 	}
 	if !slices.Contains(tokenInfo.Audience.List(), client.Oauth2Config.ClientID) {
 		return nil, fmt.Errorf("audience mismatch: %w", authservice.ErrForbidden)

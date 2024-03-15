@@ -107,12 +107,12 @@ func (c *testHttpClient) sendHttpRequest(req httpRequest, jsonResponse bool) (re
 func (c *testHttpClient) sendInitChunkUploadRequest(fileName string, fileSize int64, mediaType string, date int64, bearerToken string) (httpResponse, error) {
 	return c.sendHttpRequest(httpRequest{
 		method: "POST",
-		url:    "/v1/initChunkUpload",
+		url:    "/v1/upload",
 		body: map[string]any{
 			"file_name":  fileName,
 			"Size":       fileSize,
 			"media_type": mediaType,
-			"Date":       date,
+			"date":       date,
 		},
 		bearerToken: bearerToken,
 	}, true)
@@ -121,10 +121,9 @@ func (c *testHttpClient) sendInitChunkUploadRequest(fileName string, fileSize in
 func (c *testHttpClient) sendUploadChunkRequest(requestID string, index int64, chunkSize int64, chunkData string, fileName string, bearerToken string) (resp httpResponse, err error) {
 	var reqBody bytes.Buffer
 	writer := multipart.NewWriter(&reqBody)
-	writer.WriteField("request_id", requestID)
 	writer.WriteField("index", fmt.Sprintf("%d", index))
-	writer.WriteField("chunkSize", fmt.Sprintf("%d", chunkSize))
-	part, err := writer.CreateFormFile("chunkData", fileName)
+	writer.WriteField("chunk_size", fmt.Sprintf("%d", chunkSize))
+	part, err := writer.CreateFormFile("chunk_data", fileName)
 	if err != nil {
 		return
 	}
@@ -137,7 +136,7 @@ func (c *testHttpClient) sendUploadChunkRequest(requestID string, index int64, c
 	headers.Add("Content-Type", writer.FormDataContentType())
 	resp, err = c.sendHttpRequest(httpRequest{
 		method:      "POST",
-		url:         "/v1/uploadChunk",
+		url:         fmt.Sprintf("/v1/upload/%s/chunk", requestID),
 		bodyReader:  &reqBody,
 		bearerToken: bearerToken,
 		headers:     headers,
@@ -147,7 +146,6 @@ func (c *testHttpClient) sendUploadChunkRequest(requestID string, index int64, c
 func (c *testHttpClient) sendUploadThumbnailRequest(requestID string, thumbnailData string, fileName string, bearerToken string) (resp httpResponse, err error) {
 	var reqBody bytes.Buffer
 	writer := multipart.NewWriter(&reqBody)
-	writer.WriteField("request_id", requestID)
 	writer.WriteField("size", fmt.Sprintf("%d", len(thumbnailData)))
 	part, err := writer.CreateFormFile("thumbnail", fileName)
 	if err != nil {
@@ -164,7 +162,7 @@ func (c *testHttpClient) sendUploadThumbnailRequest(requestID string, thumbnailD
 
 	return c.sendHttpRequest(httpRequest{
 		method:      "POST",
-		url:         "/v1/uploadThumbnail",
+		url:         fmt.Sprintf("/v1/upload/%s/thumbnail", requestID),
 		bodyReader:  &reqBody,
 		bearerToken: bearerToken,
 		headers:     headers,
@@ -176,10 +174,9 @@ func (c *testHttpClient) sendFinishUploadRequest(requestID string, bearerToken s
 	headers.Add("content-type", "application/json")
 	return c.sendHttpRequest(httpRequest{
 		method: "POST",
-		url:    "/v1/finishChunkUpload",
+		url:    fmt.Sprintf("/v1/upload/%s/finish", requestID),
 		body: map[string]any{
-			"request_id": requestID,
-			"checksum":   "",
+			"checksum": "",
 		},
 		bearerToken: bearerToken,
 		headers:     headers,
@@ -190,7 +187,7 @@ func (c *testHttpClient) sendRefreshSessionRequest(bearerToken string) (resp htt
 	return c.sendHttpRequest(httpRequest{
 		method:      "POST",
 		bearerToken: bearerToken,
-		url:         "/v1/refreshSession",
+		url:         "/v1/refresh-session",
 	}, true)
 
 }
@@ -235,6 +232,7 @@ func randomString(n int64) string {
 }
 
 type testFile struct {
+	id            uint
 	name          string
 	size          int64
 	date          int64
@@ -461,18 +459,32 @@ func (c *testHttpClient) GenerateAndUploadTestFiles(t assert.TestingT, n int, fi
 			value := body["id"]
 			id = uint(value.(float64))
 		}
+		file.id = id
 		mediaIDs = append(mediaIDs, id)
 		files = append(files, file)
 	}
 	return
 }
 
-func (c *testHttpClient) DeleteTestMediaFiles(t assert.TestingT, mediaIDs []uint, bearerToken string) (errs []error) {
-	for _, mediaId := range mediaIDs {
-		_, err := c.DeleteMediaTest(t, mediaId, bearerToken)
-		if err != nil {
-			errs = append(errs, err)
-		}
+func (c *testHttpClient) DeleteTestMediaFiles(t assert.TestingT, mediaIDs []uint, bearerToken string) (err error) {
+	headers := http.Header{}
+	headers.Add("content-type", "application/json")
+	resp, err := c.sendHttpRequest(
+		httpRequest{
+			method:      "DELETE",
+			url:         "/v1/media",
+			bearerToken: bearerToken,
+			body: map[string]any{
+				"media_ids": mediaIDs,
+			},
+			headers: headers,
+		}, false,
+	)
+	if !assert.NoError(t, err, "delete media request") {
+		return fmt.Errorf("[testHttpClient.DeleteMediaTest] deleting %v media failed: %w", mediaIDs, err)
 	}
-	return
+	if !assert.Equal(t, http.StatusOK, resp.status, "delete media request status code") {
+		return fmt.Errorf("[testHttpClient.DeleteMediaTest] deleting %v media failed with status %d", mediaIDs, resp.status)
+	}
+	return err
 }

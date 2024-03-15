@@ -59,7 +59,7 @@ func TestRefreshSession(t *testing.T) {
 	for _, test := range testCases {
 		t.Run(test.name, func(t *testing.T) {
 			server.Services.AuthService = &test.authService
-			request, _ := http.NewRequest("POST", "/v1/refreshSession", nil)
+			request, _ := http.NewRequest("POST", "/v1/refresh-session", nil)
 			recorder := httptest.NewRecorder()
 			router.ServeHTTP(recorder, request)
 			if err := verifyMapResponse(t, *recorder, test.expectedResponse); err != nil {

@@ -104,11 +104,6 @@ func (server *Server) SessionBasedMediaFileAuthMiddleware(c *gin.Context) {
 		c.Error(internalErrors.NewForbiddenError(err))
 		return
 	}
-	if errors.Is(err, authservice.ErrForbidden) {
-		c.Abort()
-		c.Error(internalErrors.NewForbiddenError(err))
-		return
-	}
 	if err != nil {
 		c.Abort()
 		c.Error(internalErrors.NewInternalServerError(err))
