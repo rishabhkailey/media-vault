@@ -11,7 +11,10 @@ const display = useDisplay();
 
 <template>
   <div>
-    <video :width="Math.floor(display.width.value * 0.9)" controls>
+    <video
+      style="max-width: 100vw; max-height: 100vh"
+      controls
+    >
       <source :src="props.src.src" :type="props.src.type" />
     </video>
     <!-- <video-player
