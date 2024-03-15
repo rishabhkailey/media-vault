@@ -94,6 +94,7 @@ watch(
               @click.stop="clickHandler"
               :color="props.modelValue ? 'primary' : 'grey  '"
               :size="props.selectIconSize"
+              data-test-id="select-button"
             />
           </div>
           <!-- </v-scale-transition> -->

@@ -18,6 +18,7 @@ const smallDisplay = computed(
 
 <template>
   <v-navigation-drawer
+    data-test-id="side-bar"
     :model-value="props.modelValue"
     @update:model-value="
       (newValue) => {
@@ -37,6 +38,7 @@ const smallDisplay = computed(
         :to="homeRoute()"
         :exact="true"
         color="primary"
+        data-test-id="sidebar-home-group"
       ></v-list-item>
       <AlbumsVerticalList />
     </v-list>

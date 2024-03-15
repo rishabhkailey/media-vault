@@ -55,11 +55,13 @@ function createAlbumSubmit() {
         v-model="isFormValid"
         @submit.prevent="createAlbumSubmit"
         class="my-2"
+        data-test-id="create-album-form"
       >
         <v-text-field
           v-model="albumName"
           :rules="albumNameRules"
           label="Album name"
+          data-test-id="create-album-form-name-input"
         ></v-text-field>
         <v-btn
           :loading="albumCreationInProgress"
@@ -67,6 +69,7 @@ function createAlbumSubmit() {
           block
           class="mt-2"
           text="Create"
+          data-test-id="create-album-form-submit-button"
         ></v-btn>
       </v-form>
       <v-alert type="error" v-if="errorMessage.length > 0">

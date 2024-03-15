@@ -44,6 +44,7 @@ const contentWrapper = ref<HTMLElement | undefined>(undefined);
               <v-menu>
                 <template v-slot:activator="{ props }">
                   <v-icon
+                    data-test-id="album-menu-button"
                     icon="mdi-dots-vertical"
                     class="mr-2"
                     @click.stop="clickHandler"

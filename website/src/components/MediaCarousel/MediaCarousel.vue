@@ -277,6 +277,7 @@ async function close() {
         icon="mdi-close"
         @click.stop="close"
         style="background: none; border: none; box-shadow: none"
+        data-test-id="media-carousel-close-button"
       >
         <v-icon color="white">mdi-close</v-icon>
       </v-btn>

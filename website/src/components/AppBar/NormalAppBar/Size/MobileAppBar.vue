@@ -25,15 +25,17 @@ const emits = defineEmits<{
 <template>
   <v-row class="d-flex align-center ml-2 mr-3">
     <!-- start -->
-    <v-col
-      cols="2"
-      @click.stop="
-        () => {
-          emits('update:navigationBar', !props.navigationBar);
-        }
-      "
-    >
-      <v-btn icon="mdi-menu"> </v-btn>
+    <v-col cols="2">
+      <v-btn
+        icon="mdi-menu"
+        data-test-id="open-close-sidebar-button"
+        @click.stop="
+          () => {
+            emits('update:navigationBar', !props.navigationBar);
+          }
+        "
+      >
+      </v-btn>
     </v-col>
     <!-- end -->
     <v-col cols="10">

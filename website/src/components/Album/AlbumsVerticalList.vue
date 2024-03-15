@@ -30,6 +30,7 @@ const albumsSubSlice = computed<Array<Album>>(() => {
           }
         "
         value="Albums"
+        data-test-id="sidebar-albums-group"
       >
         <template #append>
           <v-icon
@@ -66,6 +67,7 @@ const albumsSubSlice = computed<Array<Album>>(() => {
           :value="album.name"
           :to="albumRoute(album.id)"
           color="primary"
+          :data-test-id="`sidebar-albums-group-item-${album.id}`"
         >
           <template #prepend>
             <div class="mr-3">

@@ -68,6 +68,7 @@ const { albums } = storeToRefs(albumStore);
               :key="album.id"
               :value="album.id"
               v-model="selectedAlbums"
+              :data-test-id="`appbar-add-to-album-checkbox-${album.id}`"
             >
               <template #label>
                 <v-list-item
@@ -99,6 +100,7 @@ const { albums } = storeToRefs(albumStore);
             variant="text"
             :loading="props.confirmInProgress"
             @click="() => emits('confirm', selectedAlbums)"
+            data-test-id="appbar-add-to-album-confirm-button"
           >
             {{ props.confirmButtonText }}
           </v-btn>
