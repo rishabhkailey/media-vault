@@ -1,0 +1,8 @@
+{
+  "devDependencies": {
+    "cypress": "^13.6.6",
+    "eslint": "^8.57.0",
+    "typescript": "^5.4.2",
+    "typescript-eslint": "^7.2.0"
+  }
+}

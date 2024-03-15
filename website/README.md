@@ -5,5 +5,5 @@ cd src/js/serviceWorker
 npx webpack --mode development --config webpack.config.cjs
 
 cd ../../..
-
+yarn run dev
 ```
