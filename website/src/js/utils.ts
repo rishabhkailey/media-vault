@@ -94,25 +94,6 @@ export function promiseTimeout(
   });
 }
 
-export function getFileType(file: File): string {
-  const extension = file.name.split(".").pop()?.toLocaleLowerCase();
-  switch (extension) {
-    case "png":
-      return "image/png";
-    case "jpg":
-      return "image/jpeg";
-    case "jpeg":
-      return "image/jpeg";
-    case "webp":
-      return "image/webp";
-    case "mp4":
-      return "video/mp4";
-    case "webm":
-      return "video/webm";
-  }
-  return "unknown";
-}
-
 // useful for creating keys for components to rerender them on route change
 export function generateQueryParamsKey(
   query: LocationQuery,

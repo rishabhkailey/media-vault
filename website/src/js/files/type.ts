@@ -1,0 +1,42 @@
+export const PDF_TYPE = "application/pdf";
+export const JPEG_TYPE = "image/jpeg";
+export const PNG_TYPE = "image/png";
+export const WEBP_TYPE = "image/webp";
+export const GIF_TYPE = "image/gif";
+export const MP4_TYPE = "video/mp4";
+export const WEBM_TYPE = "video/webm";
+
+export function isImage(contentType: string): boolean {
+  return [JPEG_TYPE, PNG_TYPE, WEBP_TYPE, GIF_TYPE].includes(contentType);
+}
+
+export function isVideo(contentType: string): boolean {
+  return [MP4_TYPE, WEBM_TYPE].includes(contentType);
+}
+
+export function isPdf(contentType: string): boolean {
+  return contentType === PDF_TYPE;
+}
+
+export function getFileType(file: File): string {
+  const extension = file.name.split(".").pop()?.toLocaleLowerCase();
+  switch (extension) {
+    case "png":
+      return PNG_TYPE;
+    case "jpg":
+      return JPEG_TYPE;
+    case "jpeg":
+      return JPEG_TYPE;
+    case "webp":
+      return WEBP_TYPE;
+    case "gif":
+      return GIF_TYPE;
+    case "mp4":
+      return MP4_TYPE;
+    case "webm":
+      return WEBM_TYPE;
+    case "pdf":
+      return PDF_TYPE;
+  }
+  return "unknown";
+}

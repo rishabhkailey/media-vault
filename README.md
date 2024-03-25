@@ -29,6 +29,7 @@ Media Vault empowers you to take control of your personal media and back it up s
 * Caching: **Redis**
 * Search: **MeiliSearch**
 * Authentication and User management: **Keycloak**
+* File Storage: **MinIO**
 
 ## Getting Started
 For detailed instructions on setting up and running Media Vault locally, please refer to our deployment guide: Link to [deployment/README.md](deployment/README.md)

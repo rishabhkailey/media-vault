@@ -1,4 +1,6 @@
 <script setup lang="ts">
+import { isPdf } from "@/js/files/type";
+
 const props = defineProps<{
   media: Media;
   class: any;
@@ -33,6 +35,12 @@ const props = defineProps<{
     :class="props.class"
   >
     <v-icon
+      v-if="isPdf(media.type)"
+      icon="mdi-file-pdf-box"
+      :style="`font-size: ${width}px;`"
+    />
+    <v-icon
+      v-else
       icon="mdi-file-document-outline"
       :style="`font-size: ${width}px;`"
     />
