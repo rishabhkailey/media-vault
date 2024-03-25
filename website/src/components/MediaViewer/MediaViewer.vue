@@ -4,7 +4,8 @@ import ImageViewer from "@/components/MediaViewer/ImageViewer.vue";
 import VideoViewer from "@/components/MediaViewer/VideoViewer.vue";
 import PdfViewer from "@/components/MediaViewer/PdfViewer.vue";
 import UnknownMediaViewer from "@/components/MediaViewer/UnknownMediaViewer.vue";
-import { isImage, isPdf, isVideo } from "@/js/files/type";
+import { isAudio, isImage, isPdf, isVideo } from "@/js/files/type";
+import AudioViewer from "./AudioViewer.vue";
 
 const props = defineProps<{
   media: Media;
@@ -30,8 +31,17 @@ const props = defineProps<{
         src: props.media.url,
         type: props.media.type,
       }"
+      :media-id="props.media.id"
     />
     <PdfViewer v-else-if="isPdf(props.media.type)" :src="props.media.url" />
+    <AudioViewer
+      v-else-if="isAudio(props.media.type)"
+      :src="{
+        src: props.media.url,
+        type: props.media.type,
+      }"
+      :media-id="props.media.id"
+    />
     <UnknownMediaViewer :media="props.media" v-else />
   </div>
 </template>

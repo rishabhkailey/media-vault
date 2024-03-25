@@ -4,8 +4,8 @@ import { ref, watch } from "vue";
 import { useRoute } from "vue-router";
 
 const props = defineProps<{
-  mediaId: number;
   src: { src: string; type: string };
+  mediaId: number;
 }>();
 
 const playerRef = ref<HTMLVideoElement | undefined>(undefined);
@@ -14,7 +14,7 @@ watch(
   () => getQueryParamNumberValue(route.params, "media_id"),
   () => {
     if (props.mediaId !== getQueryParamNumberValue(route.params, "media_id")) {
-      console.debug("pausing video");
+      console.log("pausing audio");
       playerRef.value?.pause();
     }
   },
@@ -24,7 +24,7 @@ watch(
 <template>
   <video
     ref="playerRef"
-    style="max-width: 100vw; max-height: 100vh"
+    style="width: 100vw; max-height: 100vh"
     controls
     autoplay
   >
