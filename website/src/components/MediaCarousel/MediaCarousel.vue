@@ -254,6 +254,10 @@ async function close() {
   }
   emits("close");
 }
+
+function openInNew() {
+  window.open(props.mediaList[props.index].url);
+}
 </script>
 
 <template>
@@ -266,21 +270,42 @@ async function close() {
     <div
       class="pt-1 pr-4 d-flex justify-end align-center media-carousel-header"
     >
-      <v-btn
-        icon="mdi-download"
-        @click.stop="() => downloadMedia(media)"
-        style="background: none; border: none; box-shadow: none"
+      <v-tooltip
+        text="Opens in new tab or downloads if unsupported"
+        location="bottom"
       >
-        <v-icon color="white">mdi-download</v-icon>
-      </v-btn>
-      <v-btn
-        icon="mdi-close"
-        @click.stop="close"
-        style="background: none; border: none; box-shadow: none"
-        data-test-id="media-carousel-close-button"
-      >
-        <v-icon color="white">mdi-close</v-icon>
-      </v-btn>
+        <template v-slot:activator="{ props }">
+          <v-btn
+            icon="mdi-open-in-new"
+            @click.stop="openInNew"
+            style="background: none; border: none; box-shadow: none"
+            v-bind="props"
+          />
+        </template>
+      </v-tooltip>
+
+      <v-tooltip text="Download" location="bottom">
+        <template v-slot:activator="{ props }">
+          <v-btn
+            icon="mdi-download"
+            @click.stop="() => downloadMedia(media)"
+            style="background: none; border: none; box-shadow: none"
+            v-bind="props"
+          />
+        </template>
+      </v-tooltip>
+
+      <v-tooltip text="Close" location="bottom">
+        <template v-slot:activator="{ props }">
+          <v-btn
+            icon="mdi-close"
+            @click.stop="close"
+            style="background: none; border: none; box-shadow: none"
+            data-test-id="media-carousel-close-button"
+            v-bind="props"
+          />
+        </template>
+      </v-tooltip>
     </div>
 
     <!-- v-row -->
@@ -335,6 +360,15 @@ async function close() {
 
 <style scoped>
 .media-carousel-header {
+  box-shadow: 0px 5px 15px rgb(50, 50, 50, 0.3);
+  position: absolute;
+  width: 100vw;
+  top: 0;
+  z-index: v-bind(MEDIA_CAROUSEL_HEADER_Z_INDEX);
+  background-color: rgba(0, 0, 0, 0.4);
+  height: 4em;
+}
+.media-carousel-header:hover {
   box-shadow: 0px 5px 15px rgb(50, 50, 50, 0.3);
   position: absolute;
   width: 100vw;

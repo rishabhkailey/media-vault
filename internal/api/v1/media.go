@@ -181,7 +181,9 @@ func (server *Server) GetMediaFile(c *gin.Context) {
 
 func (server *Server) getMediaFile(c *gin.Context, fileName string, contentType string) {
 	// we can not set headers and status once we have started writting the response
-	c.Header("Content-Type", contentType)
+	if contentType != mediametadata.TYPE_UNKNOWN {
+		c.Header("Content-Type", contentType)
+	}
 	c.Header("Connection", "keep-alive")
 	c.Status(http.StatusOK)
 	err := server.MediaStorage.HttpGetMediaHandler(c.Request.Context(), mediastorage.HttpGetMediaHandlerQuery{
@@ -204,7 +206,9 @@ func (server *Server) getMediaFile(c *gin.Context, fileName string, contentType 
 // https://vjs.zencdn.net/v/oceans.mp4 this return a 200 response with content length only?
 func (server *Server) GetMediaFileRange(c *gin.Context, r utils.Range, fileName string, contentType string) {
 	c.Status(http.StatusPartialContent)
-	c.Header("Content-Type", contentType)
+	if contentType != mediametadata.TYPE_UNKNOWN {
+		c.Header("Content-Type", contentType)
+	}
 	c.Header("Connection", "keep-alive")
 	c.Header("Accept-Ranges", "bytes")
 	err := server.MediaStorage.HttpGetRangeHandler(c.Request.Context(), mediastorage.HttpGetRangeHandlerQuery{

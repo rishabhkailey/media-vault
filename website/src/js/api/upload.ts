@@ -1,6 +1,6 @@
 import axios, { type AxiosResponse } from "axios";
 import { Chacha20 } from "ts-chacha20";
-import { getFileType } from "@/js/utils";
+import { getFileType } from "@/js/files/type";
 import { generateThumbnailAsArrayBuffer } from "@/js/thumbnail/thumbnail";
 import { getNonceFromFileName } from "../crypto/utils";
 

@@ -1,4 +1,4 @@
-import { getFileType } from "@/js/utils";
+import { getFileType } from "@/js/files/type";
 import { calculateThumbnailResolution } from "./resolution";
 
 export function generateThumbnailAsArrayBuffer(
