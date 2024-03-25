@@ -5,6 +5,8 @@ export const WEBP_TYPE = "image/webp";
 export const GIF_TYPE = "image/gif";
 export const MP4_TYPE = "video/mp4";
 export const WEBM_TYPE = "video/webm";
+export const MOV_TYPE = "video/quicktime";
+export const AVI_TYPE = "video/x-msvideo";
 export const MP3_TYPE = "audio/mp3";
 export const WAV_TYPE = "audio/wav";
 export const OGG_TYPE = "audio/ogg";
@@ -14,7 +16,12 @@ export function isImage(contentType: string): boolean {
 }
 
 export function isVideo(contentType: string): boolean {
-  return [MP4_TYPE, WEBM_TYPE].includes(contentType);
+  return [MP4_TYPE, WEBM_TYPE, MOV_TYPE, AVI_TYPE].includes(contentType);
+}
+
+export function isVideoFormatSupported(contentType: string): boolean {
+  const videoElement = document.createElement("video");
+  return videoElement.canPlayType(contentType) !== "";
 }
 
 export function isPdf(contentType: string): boolean {
@@ -50,6 +57,10 @@ export function getFileType(file: File): string {
       return WAV_TYPE;
     case "ogg":
       return OGG_TYPE;
+    case "mov":
+      return MOV_TYPE;
+    case "avi":
+      return AVI_TYPE;
   }
   return "unknown";
 }

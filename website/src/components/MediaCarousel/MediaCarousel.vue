@@ -279,7 +279,6 @@ function openInNew() {
             icon="mdi-open-in-new"
             @click.stop="openInNew"
             style="background: none; border: none; box-shadow: none"
-            data-test-id="media-carousel-close-button"
             v-bind="props"
           />
         </template>

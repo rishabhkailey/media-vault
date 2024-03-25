@@ -29,5 +29,9 @@ watch(
     autoplay
   >
     <source :src="props.src.src" :type="props.src.type" />
+    <!-- if the specified video type is not supported then try using video/mp4 -->
+    <source :src="props.src.src" type="video/mp4" />
+    <!-- in the end let the browser guess the type -->
+    <source :src="props.src.src" />
   </video>
 </template>
