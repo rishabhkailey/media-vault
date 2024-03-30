@@ -95,7 +95,7 @@ function handleThumbnailClick(clickedMediaID: number) {
     v-if="useRoute().name === SEARCH_MEDIA_PREVIEW_ROUTE_NAME"
     to="body"
   >
-    <div class="media-preview-container">
+    <div class="media-preview-container" id="search_media_preview_container">
       <SearchMediaCarousel />
     </div>
   </Teleport>

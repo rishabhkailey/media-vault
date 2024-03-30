@@ -54,7 +54,7 @@ function handleThumbnailClick(clickedMediaID: number) {
     @thumbnail-click="handleThumbnailClick"
   />
   <Teleport v-if="useRoute().name === MEDIA_PREVIEW_ROUTE_NAME" to="body">
-    <div class="media-preview-container">
+    <div class="media-preview-container" id="user_media_preview_container">
       <UserMediaCarousel />
     </div>
   </Teleport>

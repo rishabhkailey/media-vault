@@ -22,12 +22,18 @@ watch(
 </script>
 
 <template>
-  <video
-    ref="playerRef"
-    style="width: 100vw; max-height: 100vh"
-    controls
-    autoplay
-  >
-    <source :src="props.src.src" :type="props.src.type" />
-  </video>
+  <div class="d-flex flex-column justify-center-align-center h-100 w-100">
+    <div class="d-flex justify-center align-center" style="flex: 1">
+      <v-icon icon="mdi-file-music" style="font-size: 15em" />
+    </div>
+    <audio
+      class="align-end"
+      ref="playerRef"
+      style="width: 100vw; align-self: flex-end"
+      controls
+      autoplay
+    >
+      <source :src="props.src.src" :type="props.src.type" />
+    </audio>
+  </div>
 </template>

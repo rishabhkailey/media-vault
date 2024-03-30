@@ -1,6 +1,7 @@
 <script setup lang="ts">
 import { useSearchStore } from "@/piniaStore/search";
 import MediaCarousel from "@/components/MediaCarousel/MediaCarousel.vue";
+import OpenCloseAnimation from "@/components/Animations/OpenCloseAnimation.vue";
 import { storeToRefs } from "pinia";
 import { onBeforeMount, ref } from "vue";
 import { useRoute, useRouter } from "vue-router";
@@ -117,19 +118,32 @@ onBeforeMount(() => {
 });
 </script>
 <template>
-  <MediaCarousel
-    :loading="loading"
-    :index="index"
-    @update:index="updateIndex"
-    :media-list="mediaList"
-    :load-more-media="loadMoreMedia"
-    :all-media-loaded="allMediaLoaded"
-    route-name="MediaPreview"
-    :animation-origin-selector="`#thumbnail_${mediaList[index]?.id}`"
-    @close="
-      () => {
-        router.push(searchRoute(query));
-      }
-    "
-  />
+  <OpenCloseAnimation
+    :source-element-selector="`#thumbnail_${mediaList[index]?.id}`"
+    :target-element-selector="`#search_media_preview_container`"
+    :_key="`${mediaList[index]?.id}`"
+    :time-ms="150"
+    class=""
+    style="width: 100vw; height: 100vh"
+  >
+    <template #default="{ closeAnimation }">
+      <MediaCarousel
+        :loading="loading"
+        :index="index"
+        :media-list="mediaList"
+        :load-more-media="loadMoreMedia"
+        :all-media-loaded="allMediaLoaded"
+        :animation-origin-selector="`#thumbnail_${mediaList[index]?.id}`"
+        @update:index="updateIndex"
+        @close="
+          async () => {
+            try {
+              await closeAnimation();
+            } catch {}
+            router.push(searchRoute(query));
+          }
+        "
+      />
+    </template>
+  </OpenCloseAnimation>
 </template>

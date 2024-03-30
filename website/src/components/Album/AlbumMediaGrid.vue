@@ -162,7 +162,7 @@ onMounted(() => {
   </v-col>
   <!-- todo move these to view instead of components -->
   <Teleport v-if="useRoute().name === ALBUM_MEDIA_PREVIEW_ROUTE_NAME" to="body">
-    <div class="media-preview-container">
+    <div class="media-preview-container" id="album_media_preview_container">
       <AlbumMediaCarousel />
     </div>
   </Teleport>
