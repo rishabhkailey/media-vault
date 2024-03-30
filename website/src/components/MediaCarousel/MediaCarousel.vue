@@ -6,6 +6,7 @@ import { onMounted } from "vue";
 import { ref } from "vue";
 import { MEDIA_CAROUSEL_HEADER_Z_INDEX } from "@/js/constants/z-index";
 import { useErrorsStore } from "@/piniaStore/errors";
+import { download } from "@/js/encryptedFileDownload";
 
 const props = withDefaults(
   defineProps<{
@@ -126,13 +127,43 @@ function touchEnd() {
   touchEndX.value = undefined;
 }
 
+function onKeyPress(event: KeyboardEvent) {
+  console.log(event);
+  if (event.key == "Escape") {
+    emits("close");
+  }
+}
+
 onMounted(() => {
   loadMoreMediaIfRequired();
+  document.addEventListener("keyup", onKeyPress);
 });
 
 onUpdated(() => {
   loadMoreMediaIfRequired();
+  document.removeEventListener("keypress", onKeyPress);
 });
+
+function openInNew() {
+  window.open(props.mediaList[props.index].url);
+}
+
+function downloadMedia() {
+  if (media.value === undefined) {
+    return;
+  }
+  const mediaToDownload = media.value;
+  download(mediaToDownload.url, mediaToDownload.name).catch((err) => {
+    let errorMessage = "";
+    if (typeof err === "string") {
+      errorMessage = err;
+    }
+    if (err instanceof Error) {
+      errorMessage = err.message + " " + err.stack;
+    }
+    appendError(`Download failed ${mediaToDownload.name}`, errorMessage, -1);
+  });
+}
 </script>
 
 <template>
@@ -140,6 +171,8 @@ onUpdated(() => {
   <MediaCarouselHeader
     class="pt-1 pr-4 d-flex justify-end align-center media-carousel-header"
     @close="() => emits('close')"
+    @open-in-new-window="openInNew"
+    @download="downloadMedia"
   />
   <!-- content -->
   <div
