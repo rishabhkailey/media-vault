@@ -673,3 +673,24 @@ func isUniqueConstraintError(err error) bool {
 	}
 	return false
 }
+
+func (s *sqlStore) GetByIDsOrderByCreatedAt(ctx context.Context, ids []uint, sort string) (albums []storemodels.AlbumModel, err error) {
+	err = s.db.WithContext(ctx).
+		Model(&storemodels.AlbumModel{}).
+		Where("id IN (?)", ids).
+		Order(
+			fmt.Sprintf(`"created_at" %s`, sort),
+		).
+		Find(&albums).Error
+	return
+}
+func (s *sqlStore) GetByIDsOrderByUploadedAt(ctx context.Context, ids []uint, sort string) (albums []storemodels.AlbumModel, err error) {
+	err = s.db.WithContext(ctx).
+		Model(&storemodels.AlbumModel{}).
+		Where("id IN (?)", ids).
+		Order(
+			fmt.Sprintf(`"updated_at" %s`, sort),
+		).
+		Find(&albums).Error
+	return
+}

@@ -16,4 +16,5 @@ type Service interface {
 	DeleteAlbum(context.Context, DeleteAlbumCmd) error
 	// album will not be loaded only media will be present
 	GetAlbumMedia(context.Context, GetAlbumMediaQuery) ([]storemodels.AlbumMediaBindingsModel, error)
+	GetByIdsWithSort(context.Context, GetByIDsWithSortQuery) ([]storemodels.AlbumModel, error)
 }

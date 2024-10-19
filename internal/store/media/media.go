@@ -10,7 +10,7 @@ import (
 
 type Store interface {
 	WithTransaction(*gorm.DB) Store
-	// media(2nd argument) pointer because gorm adds the missing info like ID, create_at to the pointer it self.
+	// media(2nd argument) pointer because gorm adds the missing info like ID, created_at to the pointer it self.
 	Insert(context.Context, *storemodels.MediaModel) (uint, error)
 	// deletes usermediabinding, medialabumbinding, media and media metadata
 	CascadeDeleteOne(ctx context.Context, mediaID uint, userID string, mediaMetadataId uint) error

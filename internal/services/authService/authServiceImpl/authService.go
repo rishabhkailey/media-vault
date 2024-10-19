@@ -81,7 +81,7 @@ func (s *Service) getUserAccess(ctx context.Context, r *http.Request, w http.Res
 		return
 	}
 	logrus.Debug("[AuthService.getUserAccess] unable to get user scope from session: %w", err)
-	userID, userScope, userRoles, expireTime, err := s.getUserAccessFromOidcProvider(ctx, r, w)
+	userID, userScope, userRoles, expireTime, err := s.getUserAccessFromOidcProvider(r)
 	if err == nil {
 		err := s.saveUserAccessInSession(ctx, r, w, userID, userScope, userRoles, expireTime)
 		if err != nil {
@@ -123,9 +123,7 @@ func (s *Service) getUserAccessFromSession(r *http.Request, w http.ResponseWrite
 }
 
 func (s *Service) getUserAccessFromOidcProvider(
-	ctx context.Context,
 	r *http.Request,
-	w http.ResponseWriter,
 ) (
 	userID string,
 	userScope string,
@@ -138,7 +136,7 @@ func (s *Service) getUserAccessFromOidcProvider(
 		err = authservice.ErrUnauthorized
 		return
 	}
-	tokenInfo, err := s.oidcClient.IntrospectToken(token)
+	tokenInfo, err := s.oidcClient.IntrospectToken(r.Context(), token)
 	if err != nil {
 		err = fmt.Errorf("[AuthService.getUserAccessFromOidcProvider] token interospection failed: %w", err)
 		return
@@ -246,7 +244,7 @@ func (s *Service) SaveUserMediaAccessInSession(ctx context.Context, r *http.Requ
 }
 
 func (s *Service) RefreshSession(query authservice.RefreshSessionQuery) (expireTime int64, err error) {
-	userID, userScope, userRoles, expireTime, err := s.getUserAccessFromOidcProvider(query.Request.Context(), query.Request, query.ResponseWriter)
+	userID, userScope, userRoles, expireTime, err := s.getUserAccessFromOidcProvider(query.Request)
 	if err != nil {
 		return
 	}

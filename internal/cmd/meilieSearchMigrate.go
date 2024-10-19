@@ -21,7 +21,7 @@ func getMediaBatch(db *gorm.DB, offset int, limit int) (mediaList []storemodels.
 	return
 }
 
-func MeiliSearchMigrate(gormDB *gorm.DB, meiliSearch *meilisearch.Client, batchSize int) error {
+func MeiliSearchMigrate(gormDB *gorm.DB, meiliSearch meilisearch.ServiceManager, batchSize int) error {
 	var total int64 = 0
 	if err := gormDB.Model(&storemodels.UserMediaBindingsModel{}).Count(&total).Error; err != nil {
 		return fmt.Errorf("[MeiliSearchMigrate] count failed: %w", err)
@@ -56,12 +56,12 @@ func MeiliSearchMigrate(gormDB *gorm.DB, meiliSearch *meilisearch.Client, batchS
 		logrus.Infof("[MeiliSearchMigrate] batch %d is proccessing", batchNumber)
 		waitGroup.Add(1)
 		go func(batchNumber int) {
-			task, err := meiliSearch.WaitForTask(taskID)
+			task, err := meiliSearch.WaitForTask(taskID, 0)
 			if err == nil && task.Status == meilisearch.TaskStatusFailed {
 				err = errors.New(task.Error.Message)
 			}
 			if err != nil {
-				logrus.Errorf("[MeiliSearchMigrate] batch %d failed: %w", batchNumber, err)
+				logrus.Errorf("[MeiliSearchMigrate] batch %d failed: %v", batchNumber, err)
 			} else {
 				logrus.Infof("[MeiliSearchMigrate] batch %d %v", batchNumber, task.Status)
 			}

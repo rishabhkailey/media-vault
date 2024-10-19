@@ -101,12 +101,12 @@ type TokenInfo struct {
 	// TODO: the above RealmAccess claim name is configurable in mappers settings of keycloak
 }
 
-func (client *OidcClient) IntrospectToken(token string) (*TokenInfo, error) {
+func (client *OidcClient) IntrospectToken(ctx context.Context, token string) (*TokenInfo, error) {
 	// todo set basic auth header? not sure if it is required
 	data := url.Values{
 		"token": []string{token},
 	}
-	req, err := http.NewRequest(http.MethodPost, client.ProviderMetadata.IntrospectionEndpoint, strings.NewReader(data.Encode()))
+	req, err := http.NewRequestWithContext(ctx, http.MethodPost, client.ProviderMetadata.IntrospectionEndpoint, strings.NewReader(data.Encode()))
 	if err != nil {
 		return nil, fmt.Errorf("failed to create interospectToken request: %v", err)
 	}

@@ -49,13 +49,6 @@ type Store interface {
 	GetByID(ctx context.Context,
 		albumID uint,
 	) (result storemodels.AlbumModel, err error)
-	// GetMediaByAlbumId(ctx context.Context,
-	// 	albumID uint,
-	// 	orderBy string,
-	// 	sort string,
-	// 	limit int,
-	// 	offset int,
-	// ) (mediaList []media.Media, err error)
 	GetMediaByAlbumIdOrderByDate(ctx context.Context,
 		albumID uint,
 		lastMediaID *uint,
@@ -89,4 +82,14 @@ type Store interface {
 	DeleteAlbum(ctx context.Context,
 		albumID uint,
 	) error
+	GetByIDsOrderByCreatedAt(
+		ctx context.Context,
+		ids []uint,
+		sort string,
+	) (albums []storemodels.AlbumModel, err error)
+	GetByIDsOrderByUploadedAt(
+		ctx context.Context,
+		ids []uint,
+		sort string,
+	) (albums []storemodels.AlbumModel, err error)
 }

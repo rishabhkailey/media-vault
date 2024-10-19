@@ -82,6 +82,17 @@ func (s *Service) GetUserAlbums(ctx context.Context, query album.GetUserAlbumsQu
 	}
 }
 
+func (s *Service) GetByIdsWithSort(ctx context.Context, query album.GetByIDsWithSortQuery) ([]storemodels.AlbumModel, error) {
+	switch query.OrderBy {
+	case album.ORDER_BY_CREATED_AT:
+		return s.store.AlbumStore.GetByIDsOrderByCreatedAt(ctx, query.IDs, query.Sort)
+	case album.ORDER_BY_UPDATED_AT:
+		return s.store.AlbumStore.GetByIDsOrderByUploadedAt(ctx, query.IDs, query.Sort)
+	default:
+		return []storemodels.AlbumModel{}, fmt.Errorf("[Services.Album.GetByIDsWithSort] invalid order by: %s", query.OrderBy)
+	}
+}
+
 func (s *Service) GetUserAlbum(ctx context.Context, query album.GetUserAlbumQuery) (album storemodels.AlbumModel, err error) {
 	ok, err := s.store.AlbumStore.CheckAlbumBelongsToUser(ctx, query.UserID, query.AlbumID)
 	if err != nil {

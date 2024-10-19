@@ -3,7 +3,6 @@ package config
 import (
 	"strings"
 
-	"github.com/meilisearch/meilisearch-go"
 	"github.com/sirupsen/logrus"
 	"github.com/spf13/viper"
 )
@@ -64,7 +63,8 @@ type OIDC struct {
 }
 
 type MeiliSearch struct {
-	meilisearch.ClientConfig
+	Host   string
+	APIKey string
 }
 
 type Config struct {
@@ -133,10 +133,8 @@ func GetConfig() (*Config, error) {
 			},
 		},
 		MeiliSearch: MeiliSearch{
-			meilisearch.ClientConfig{
-				Host:   viper.GetString("meiliSearch.host"),
-				APIKey: viper.GetString("meiliSearch.APIKey"),
-			},
+			Host:   viper.GetString("meiliSearch.host"),
+			APIKey: viper.GetString("meiliSearch.APIKey"),
 		},
 		WebUIConfig: WebUIConfig{
 			// todo: add check for directory so user doesn't accidently expose sensitive files

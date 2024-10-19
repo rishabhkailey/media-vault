@@ -10,6 +10,8 @@ import (
 	authservice "github.com/rishabhkailey/media-vault/internal/services/authService"
 )
 
+// todo middleware for setting context timeouts
+
 func (server *Server) UserAuthMiddleware(c *gin.Context) {
 	userID, err := server.AuthService.ValidateUserAccess(authservice.ValidateUserAccessQuery{
 		SessionStoreQuery: authservice.SessionStoreQuery{

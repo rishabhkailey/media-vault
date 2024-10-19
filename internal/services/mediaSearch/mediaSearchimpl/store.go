@@ -21,13 +21,13 @@ type store interface {
 }
 
 type meiliSearchStore struct {
-	cli   *meilisearch.Client
-	index *meilisearch.Index
+	cli   meilisearch.ServiceManager
+	index meilisearch.IndexManager
 }
 
 var _ store = (*meiliSearchStore)(nil)
 
-func newMeiliSearchStore(cli *meilisearch.Client) (*meiliSearchStore, error) {
+func newMeiliSearchStore(cli meilisearch.ServiceManager) (*meiliSearchStore, error) {
 	mediaIndex := cli.Index("media")
 
 	// UpdateSearchableAttributes
@@ -35,7 +35,7 @@ func newMeiliSearchStore(cli *meilisearch.Client) (*meiliSearchStore, error) {
 	if err != nil {
 		return nil, fmt.Errorf("[newMeiliSearchStore] update searchable attributes failed: %w", err)
 	}
-	task, err := cli.WaitForTask(resp.TaskUID)
+	task, err := cli.WaitForTask(resp.TaskUID, 0)
 	if err == nil && task.Status == meilisearch.TaskStatusFailed {
 		err = errors.New(task.Error.Message)
 	}
@@ -50,7 +50,7 @@ func newMeiliSearchStore(cli *meilisearch.Client) (*meiliSearchStore, error) {
 	if err != nil {
 		return nil, fmt.Errorf("[newMeiliSearchStore] update searchable attributes failed: %w", err)
 	}
-	task, err = cli.WaitForTask(resp.TaskUID)
+	task, err = cli.WaitForTask(resp.TaskUID, 0)
 	if err == nil && task.Status == meilisearch.TaskStatusFailed {
 		err = errors.New(task.Error.Message)
 	}
@@ -65,7 +65,7 @@ func newMeiliSearchStore(cli *meilisearch.Client) (*meiliSearchStore, error) {
 	if err != nil {
 		return nil, fmt.Errorf("[newMeiliSearchStore] update searchable attributes failed: %w", err)
 	}
-	task, err = cli.WaitForTask(resp.TaskUID)
+	task, err = cli.WaitForTask(resp.TaskUID, 0)
 	if err == nil && task.Status == meilisearch.TaskStatusFailed {
 		err = errors.New(task.Error.Message)
 	}
@@ -98,7 +98,7 @@ func (s *meiliSearchStore) Delete(ctx context.Context, ids []string) (int64, err
 }
 
 func (s *meiliSearchStore) MonitorTask(taskID int64, taskName string) error {
-	task, err := s.cli.WaitForTask(taskID)
+	task, err := s.cli.WaitForTask(taskID, 0)
 	if err == nil && task.Status == meilisearch.TaskStatusFailed {
 		err = errors.New(task.Error.Message)
 	}

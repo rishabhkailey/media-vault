@@ -15,7 +15,7 @@ type Service struct {
 
 var _ mediasearch.Service = (*Service)(nil)
 
-func NewService(ms *meilisearch.Client) (mediasearch.Service, error) {
+func NewService(ms meilisearch.ServiceManager) (mediasearch.Service, error) {
 	store, err := newMeiliSearchStore(ms)
 	if err != nil {
 		return nil, err

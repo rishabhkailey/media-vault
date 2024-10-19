@@ -30,6 +30,21 @@ type AlbumResponse struct {
 	MediaCount   int       `json:"media_count"`
 }
 
+func NewAlbumResponse(albums []storemodels.AlbumModel) []AlbumResponse {
+	albumsResponse := make([]AlbumResponse, len(albums))
+	for i, album := range albums {
+		albumsResponse[i] = AlbumResponse{
+			ID:           album.ID,
+			Name:         album.Name,
+			CreatedAt:    album.CreatedAt,
+			UpdatedAt:    album.UpdatedAt,
+			ThumbnailUrl: album.ThumbnailUrl,
+			MediaCount:   album.MediaCount,
+		}
+	}
+	return albumsResponse
+}
+
 type GetAlbumsRequest struct {
 	OrderBy     string `form:"order" json:"order" binding:"required"`
 	Sort        string `form:"sort" json:"sort" binding:"required"`

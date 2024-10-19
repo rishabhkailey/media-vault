@@ -9,6 +9,8 @@ import (
 	"github.com/rishabhkailey/media-vault/internal/auth"
 	"github.com/rishabhkailey/media-vault/internal/services/album"
 	"github.com/rishabhkailey/media-vault/internal/services/album/albumimpl"
+	albumsearch "github.com/rishabhkailey/media-vault/internal/services/album_search"
+	albumsearchimpl "github.com/rishabhkailey/media-vault/internal/services/album_search/impl"
 	authservice "github.com/rishabhkailey/media-vault/internal/services/authService"
 	authserviceimpl "github.com/rishabhkailey/media-vault/internal/services/authService/authServiceImpl"
 	"github.com/rishabhkailey/media-vault/internal/services/media"
@@ -40,11 +42,12 @@ type Services struct {
 	AuthService       authservice.Service
 	AlbumService      album.Service
 	UserInfoService   userinfo.Service
+	AlbumSearch       albumsearch.Service
 }
 
 func NewServices(
 	db *gorm.DB,
-	ms *meilisearch.Client,
+	ms meilisearch.ServiceManager,
 	minio *minio.Client,
 	minioBucket string,
 	redis *redis.Client,
@@ -92,6 +95,12 @@ func NewServices(
 	if err != nil {
 		return nil, err
 	}
+
+	albumSearch, err := albumsearchimpl.NewService(ms)
+	if err != nil {
+		return nil, err
+	}
+
 	return &Services{
 		db:                db,
 		Media:             mediaService,
@@ -103,6 +112,7 @@ func NewServices(
 		AuthService:       authService,
 		AlbumService:      albumService,
 		UserInfoService:   userInfoService,
+		AlbumSearch:       albumSearch,
 	}, nil
 }
 

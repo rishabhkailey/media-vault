@@ -5,11 +5,8 @@ import (
 	"github.com/rishabhkailey/media-vault/internal/config"
 )
 
-func NewMeiliSearchClient(config config.MeiliSearch) (*meilisearch.Client, error) {
-	client := meilisearch.NewClient(meilisearch.ClientConfig{
-		Host:   config.Host,
-		APIKey: config.APIKey,
-	})
+func NewMeiliSearchClient(config config.MeiliSearch) (meilisearch.ServiceManager, error) {
+	client := meilisearch.New(config.Host, meilisearch.WithAPIKey(config.APIKey))
 	if _, err := client.Health(); err != nil {
 		return nil, err
 	}

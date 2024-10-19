@@ -9,7 +9,17 @@ import (
 const (
 	MAX_ALBUMS_PER_PAGE_VALUE      int   = 100
 	MAX_ALBUM_MEDIA_PER_PAGE_VALUE int64 = 100
+	ORDER_BY_CREATED_AT                  = "created_at"
+	ORDER_BY_UPDATED_AT                  = "updated_at"
 )
+
+func GetValidOrderByValues() []string {
+	return []string{ORDER_BY_CREATED_AT, ORDER_BY_UPDATED_AT}
+}
+
+func GetValidSortValues() []string {
+	return []string{"asc", "desc"}
+}
 
 var (
 	AlbumSortKeywordMapping = map[string]album.Sort{
@@ -88,4 +98,10 @@ type UpdateAlbumCmd struct {
 	AlbumID      uint
 	Name         *string
 	ThumbnailUrl *string
+}
+
+type GetByIDsWithSortQuery struct {
+	IDs     []uint
+	OrderBy string
+	Sort    string
 }

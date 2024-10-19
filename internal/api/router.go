@@ -33,6 +33,7 @@ func NewRouter(v1ApiServer *v1Api.Server, websiteHandler *website.WebsiteHandler
 			v1UserProtected.GET("/media-list", v1ApiServer.MediaList)
 			v1UserProtected.GET("/media/:media_id", v1ApiServer.GetMedia)
 			v1UserProtected.GET("/search", v1ApiServer.Search)
+			v1UserProtected.POST("/search/album", v1ApiServer.SearchAlbum)
 			v1UserProtected.DELETE("/media/:media_id", v1ApiServer.DeleteSingleMedia)
 			v1UserProtected.DELETE("/media", v1ApiServer.DeleteMedia)
 			v1UserProtected.POST("/album", v1ApiServer.CreateAlbum)

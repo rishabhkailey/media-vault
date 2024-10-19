@@ -5,6 +5,7 @@ import (
 	"net/http"
 
 	"github.com/gin-gonic/gin"
+	"github.com/sirupsen/logrus"
 
 	v1models "github.com/rishabhkailey/media-vault/internal/api/v1/models"
 	internalErrors "github.com/rishabhkailey/media-vault/internal/errors"
@@ -49,6 +50,15 @@ func (server *Server) CreateAlbum(c *gin.Context) {
 		c.Error(err)
 		return
 	}
+	go func() {
+		_, err := server.AlbumSearch.CreateOne(c.Request.Context(), album, userID)
+		if err != nil {
+			logrus.WithFields(logrus.Fields{
+				"album_id": album.ID,
+			}).Error("failed to create album search index")
+		}
+	}()
+
 	response := v1models.AlbumResponse{
 		ID:           album.ID,
 		Name:         album.Name,
@@ -100,18 +110,7 @@ func (server *Server) GetAlbums(c *gin.Context) {
 		c.Error(err)
 		return
 	}
-	albumsResponse := []v1models.AlbumResponse{}
-	for _, album := range albums {
-		albumsResponse = append(albumsResponse, v1models.AlbumResponse{
-			ID:           album.ID,
-			Name:         album.Name,
-			CreatedAt:    album.CreatedAt,
-			UpdatedAt:    album.UpdatedAt,
-			ThumbnailUrl: album.ThumbnailUrl,
-			MediaCount:   album.MediaCount,
-		})
-	}
-	c.JSON(http.StatusOK, &albumsResponse)
+	c.JSON(http.StatusOK, v1models.NewAlbumResponse(albums))
 }
 
 func (server *Server) DeleteAlbum(c *gin.Context) {
